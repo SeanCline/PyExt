@@ -1,0 +1,9 @@
+# User files
+*.*proj.user
+.vs/
+
+# Build artifacts.
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/

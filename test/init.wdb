@@ -1,0 +1,11 @@
+.sympath "symsrv*c:\symbols*https://msdl.microsoft.com/download/symbols;c:\pythonsymbols\2.7.13\"
+.reload
+
+!umstack
+
+kv
+~0s;
+.frame 0n22
+dv /t /v
+??f
+!pyobj f->f_globals

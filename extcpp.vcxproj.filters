@@ -1,0 +1,93 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="extension.cpp" />
+    <ClCompile Include="ummods.cpp" />
+    <ClCompile Include="globals.cpp" />
+    <ClCompile Include="umstack.cpp" />
+    <ClCompile Include="$(WindowsSdkDir)\Debuggers\inc\engextcpp.cpp" />
+    <ClCompile Include="objects\objects.cpp">
+      <Filter>objects</Filter>
+    </ClCompile>
+    <ClCompile Include="objects\RemotePyObject.cpp">
+      <Filter>objects</Filter>
+    </ClCompile>
+    <ClCompile Include="objects\RemotePyVarObject.cpp">
+      <Filter>objects</Filter>
+    </ClCompile>
+    <ClCompile Include="objects\RemotePyStringObject.cpp">
+      <Filter>objects</Filter>
+    </ClCompile>
+    <ClCompile Include="util\to_string.cpp">
+      <Filter>util</Filter>
+    </ClCompile>
+    <ClCompile Include="objects\RemotePyListObject.cpp">
+      <Filter>objects</Filter>
+    </ClCompile>
+    <ClCompile Include="objects\RemotePyDictObject.cpp">
+      <Filter>objects</Filter>
+    </ClCompile>
+    <ClCompile Include="objects\RemotePyNoneObject.cpp">
+      <Filter>objects</Filter>
+    </ClCompile>
+    <ClCompile Include="objects\RemotePyIntObject.cpp">
+      <Filter>objects</Filter>
+    </ClCompile>
+    <ClCompile Include="objects\RemotePyLongObject.cpp">
+      <Filter>objects</Filter>
+    </ClCompile>
+    <ClCompile Include="objects\RemotePyTupleObject.cpp">
+      <Filter>objects</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="extension.h" />
+    <ClInclude Include="objects\objects.h">
+      <Filter>objects</Filter>
+    </ClInclude>
+    <ClInclude Include="objects\RemotePyObject.h">
+      <Filter>objects</Filter>
+    </ClInclude>
+    <ClInclude Include="objects\RemotePyVarObject.h">
+      <Filter>objects</Filter>
+    </ClInclude>
+    <ClInclude Include="objects\RemotePyStringObject.h">
+      <Filter>objects</Filter>
+    </ClInclude>
+    <ClInclude Include="util\to_string.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="objects\RemotePyListObject.h">
+      <Filter>objects</Filter>
+    </ClInclude>
+    <ClInclude Include="objects\RemotePyDictObject.h">
+      <Filter>objects</Filter>
+    </ClInclude>
+    <ClInclude Include="objects\RemotePyNoneObject.h">
+      <Filter>objects</Filter>
+    </ClInclude>
+    <ClInclude Include="objects\RemotePyIntObject.h">
+      <Filter>objects</Filter>
+    </ClInclude>
+    <ClInclude Include="objects\RemotePyLongObject.h">
+      <Filter>objects</Filter>
+    </ClInclude>
+    <ClInclude Include="objects\RemotePyTupleObject.h">
+      <Filter>objects</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="extcpp.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="extcpp.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="objects">
+      <UniqueIdentifier>{e7028069-0f41-4bc1-88dc-de866e1baa27}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="util">
+      <UniqueIdentifier>{264811ac-6074-43e6-8b9a-13a63bf3be85}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

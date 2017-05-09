@@ -1,0 +1,14 @@
+LIBRARY
+EXPORTS
+
+; EngExtCpp exports.
+	DebugExtensionInitialize
+	DebugExtensionUninitialize
+	DebugExtensionNotify
+	KnownStructOutputEx
+	help
+
+; Extension commands.
+	pyobj
+	ummods
+	umstack
