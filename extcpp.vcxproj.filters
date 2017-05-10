@@ -39,6 +39,18 @@
     <ClCompile Include="objects\RemotePyTupleObject.cpp">
       <Filter>objects</Filter>
     </ClCompile>
+    <ClCompile Include="objects\RemotePyFloatObject.cpp">
+      <Filter>objects</Filter>
+    </ClCompile>
+    <ClCompile Include="objects\RemotePyBoolObject.cpp">
+      <Filter>objects</Filter>
+    </ClCompile>
+    <ClCompile Include="objects\RemotePyNotImplementedObject.cpp">
+      <Filter>objects</Filter>
+    </ClCompile>
+    <ClCompile Include="objects\RemotePyComplexObject.cpp">
+      <Filter>objects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="extension.h" />
@@ -73,6 +85,18 @@
       <Filter>objects</Filter>
     </ClInclude>
     <ClInclude Include="objects\RemotePyTupleObject.h">
+      <Filter>objects</Filter>
+    </ClInclude>
+    <ClInclude Include="objects\RemotePyFloatObject.h">
+      <Filter>objects</Filter>
+    </ClInclude>
+    <ClInclude Include="objects\RemotePyBoolObject.h">
+      <Filter>objects</Filter>
+    </ClInclude>
+    <ClInclude Include="objects\RemotePyNotImplementedObject.h">
+      <Filter>objects</Filter>
+    </ClInclude>
+    <ClInclude Include="objects\RemotePyComplexObject.h">
       <Filter>objects</Filter>
     </ClInclude>
   </ItemGroup>

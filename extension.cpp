@@ -12,14 +12,14 @@ EXT_CLASS::EXT_CLASS()
 {
 	// Set up our known struct handlers.
 	// Windbg uses these to know how to pretty-print types.
+	auto handler = static_cast<ExtKnownStructMethod>(&EXT_CLASS::KnownStructObjectHandler);
 	static ExtKnownStruct knownstructs[] = {
-		{ "PyObject",     static_cast<ExtKnownStructMethod>(&EXT_CLASS::KnownStructObjectHandler), true },
-		{ "_object",      static_cast<ExtKnownStructMethod>(&EXT_CLASS::KnownStructObjectHandler), true },
-		{ "_object*",      static_cast<ExtKnownStructMethod>(&EXT_CLASS::KnownStructObjectHandler), true },
-		{ "_object *",      static_cast<ExtKnownStructMethod>(&EXT_CLASS::KnownStructObjectHandler), true },
-		{ "struct _object *",      static_cast<ExtKnownStructMethod>(&EXT_CLASS::KnownStructObjectHandler), true },
-		{ "PyCodeObject", static_cast<ExtKnownStructMethod>(&EXT_CLASS::KnownStructObjectHandler), true },
-		{ "_frame",       static_cast<ExtKnownStructMethod>(&EXT_CLASS::KnownStructObjectHandler), true },
+		{ "PyObject",      handler, true },
+		{ "_object",       handler, true },
+		{ "_frame",        handler, true },
+		{ "PyFrameObject", handler, true },
+		{ "PyCodeObject",  handler, true },
+		{ "_typeobject",   handler, true },
 		{ nullptr, nullptr, false }
 	};
 

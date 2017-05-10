@@ -34,7 +34,7 @@ string RemotePyObject::getTypeName() const
 
 string RemotePyObject::repr(bool pretty) const
 {
-	return "<Unknown Object Type: " + getTypeName() + ">";
+	return "<" + getTypeName() + " object>";
 }
 
 

@@ -11,7 +11,7 @@ class RemotePyTupleObject : public RemotePyVarObject
 {
 
 public: // Construction/Destruction.
-	RemotePyTupleObject(Offset objectAddress);
+	explicit RemotePyTupleObject(Offset objectAddress);
 
 public: // Members.
 	SSize numItems() const;

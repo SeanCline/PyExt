@@ -11,7 +11,7 @@ class RemotePyListObject : public RemotePyVarObject
 {
 
 public: // Construction/Destruction.
-	RemotePyListObject(Offset objectAddress);
+	explicit RemotePyListObject(Offset objectAddress);
 
 public: // Members.
 	SSize numItems() const;

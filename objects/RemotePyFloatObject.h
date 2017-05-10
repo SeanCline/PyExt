@@ -4,15 +4,15 @@
 #include <string>
 #include <cstdint>
 
-// Represents a PyIntObject in the debuggee's address space.
-class RemotePyIntObject : public RemotePyObject
+// Represents a PyFloatObject in the debuggee's address space.
+class RemotePyFloatObject : public RemotePyObject
 {
 
 public: // Construction/Destruction.
-	explicit RemotePyIntObject(Offset objectAddress);
+	explicit RemotePyFloatObject(Offset objectAddress);
 
 public: // Members.
-	int32_t intValue() const;
+	double floatValue() const;
 	std::string repr(bool pretty = true) const override;
 
 };

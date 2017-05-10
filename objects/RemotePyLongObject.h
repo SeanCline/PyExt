@@ -9,7 +9,7 @@ class RemotePyLongObject : public RemotePyVarObject
 {
 
 public: // Construction/Destruction.
-	RemotePyLongObject(Offset objectAddress);
+	explicit RemotePyLongObject(Offset objectAddress);
 
 public: // Members.
 	bool isNegative() const;

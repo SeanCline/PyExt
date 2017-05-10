@@ -9,7 +9,7 @@ class RemotePyVarObject : public RemotePyObject
 {
 
 public: // Construction/Destruction.
-	RemotePyVarObject(Offset objectAddress, const std::string& typeName = "PyVarObject");
+	explicit RemotePyVarObject(Offset objectAddress, const std::string& typeName = "PyVarObject");
 
 public: // Members.
 	SSize getSize() const;

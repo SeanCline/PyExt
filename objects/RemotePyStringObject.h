@@ -8,7 +8,7 @@ class RemotePyStringObject : public RemotePyVarObject
 {
 
 public: // Construction/Destruction.
-	RemotePyStringObject(Offset objectAddress);
+	explicit RemotePyStringObject(Offset objectAddress);
 
 public: // Members.
 	std::string stringValue() const;

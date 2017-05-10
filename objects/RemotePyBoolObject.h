@@ -4,15 +4,15 @@
 #include <string>
 #include <cstdint>
 
-// Represents a PyIntObject in the debuggee's address space.
-class RemotePyIntObject : public RemotePyObject
+// Represents a RemotePyBoolObject in the debuggee's address space.
+class RemotePyBoolObject : public RemotePyObject
 {
 
 public: // Construction/Destruction.
-	explicit RemotePyIntObject(Offset objectAddress);
+	explicit RemotePyBoolObject(Offset objectAddress);
 
 public: // Members.
-	int32_t intValue() const;
+	bool boolValue() const;
 	std::string repr(bool pretty = true) const override;
 
 };

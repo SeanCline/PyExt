@@ -11,7 +11,7 @@ class RemotePyDictObject : public RemotePyObject
 {
 
 public: // Construction/Destruction.
-	RemotePyDictObject(Offset objectAddress);
+	explicit RemotePyDictObject(Offset objectAddress);
 
 public: // Members.
 	SSize numUsed() const;

@@ -15,7 +15,7 @@ public: // Typdefs.
 	using SSize = std::int64_t;
 
 public: // Construction/Destruction.
-	RemotePyObject(Offset objectAddress, const std::string& typeName = "PyObject");
+	explicit RemotePyObject(Offset objectAddress, const std::string& typeName = "PyObject");
 	virtual ~RemotePyObject();
 
 public: // Members.
