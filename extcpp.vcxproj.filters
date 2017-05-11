@@ -2,9 +2,7 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="extension.cpp" />
-    <ClCompile Include="ummods.cpp" />
     <ClCompile Include="globals.cpp" />
-    <ClCompile Include="umstack.cpp" />
     <ClCompile Include="$(WindowsSdkDir)\Debuggers\inc\engextcpp.cpp" />
     <ClCompile Include="objects\objects.cpp">
       <Filter>objects</Filter>
@@ -51,6 +49,11 @@
     <ClCompile Include="objects\RemotePyComplexObject.cpp">
       <Filter>objects</Filter>
     </ClCompile>
+    <ClCompile Include="objects\RemotePyFrameObject.cpp">
+      <Filter>objects</Filter>
+    </ClCompile>
+    <ClCompile Include="objects\RemotePyCodeObject.cpp" />
+    <ClCompile Include="pystack.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="extension.h" />
@@ -99,6 +102,10 @@
     <ClInclude Include="objects\RemotePyComplexObject.h">
       <Filter>objects</Filter>
     </ClInclude>
+    <ClInclude Include="objects\RemotePyFrameObject.h">
+      <Filter>objects</Filter>
+    </ClInclude>
+    <ClInclude Include="objects\RemotePyCodeObject.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="extcpp.rc" />

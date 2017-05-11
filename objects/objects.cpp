@@ -10,6 +10,8 @@
 #include "RemotePyFloatObject.h"
 #include "RemotePyBoolObject.h"
 #include "RemotePyComplexObject.h"
+#include "RemotePyFrameObject.h"
+#include "RemotePyCodeObject.h"
 #include "RemotePyNoneObject.h"
 #include "RemotePyNotImplementedObject.h"
 
@@ -42,6 +44,10 @@ unique_ptr<RemotePyObject> makeRemotePyObject(RemotePyObject::Offset remoteAddre
 		return make_unique<RemotePyBoolObject>(remoteAddress);
 	} else if (typeName == "complex") {
 		return make_unique<RemotePyComplexObject>(remoteAddress);
+	} else if (typeName == "frame") {
+		return make_unique<RemotePyFrameObject>(remoteAddress);
+	} else if (typeName == "code") {
+		return make_unique<RemotePyCodeObject>(remoteAddress);
 	} else if (typeName == "NoneType") {
 		return make_unique<RemotePyNoneObject>(remoteAddress);
 	} else if (typeName == "NotImplementedType") {

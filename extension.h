@@ -21,8 +21,7 @@ public:
 
 public: // Commands.
 	EXT_COMMAND_METHOD(pyobj);
-	EXT_COMMAND_METHOD(ummods);
-	EXT_COMMAND_METHOD(umstack);
+	EXT_COMMAND_METHOD(pystack);
 
 public: // Known structs.
 	void KnownStructObjectHandler(_In_ PCSTR TypeName, _In_ ULONG Flags, _In_ ULONG64 Offset);

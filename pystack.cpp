@@ -1,5 +1,9 @@
 #include "extension.h"
 
+#include "objects/RemotePyFrameObject.h"
+#include "objects/RemotePyDictObject.h"
+#include "objects/RemotePyCodeObject.h"
+
 #include <engextcpp.hpp>
 
 #include <vector>
@@ -43,10 +47,14 @@ namespace {
 		}
 		return -1;
 	}
+
+	ULONG64 DereferenceRemotePointer(ULONG64 ptr) {
+		return ExtRemoteData(ptr, g_Ext->m_PtrSize).GetPtr();
+	}
 }
 
 
-EXT_COMMAND(umstack, "Output the user-mode callstack stack", "")
+EXT_COMMAND(pystack, "Output the Python stack for the current thread.", "")
 {
 	IDebugSymbolGroup2* group = nullptr;
 	HRESULT hr = m_Symbols3->GetScopeSymbolGroup2(DEBUG_SCOPE_GROUP_LOCALS, nullptr, &group);
@@ -55,15 +63,6 @@ EXT_COMMAND(umstack, "Output the user-mode callstack stack", "")
 
 	auto frames = getStackFrames();
 	for (auto& frame : frames) {
-		// Print some stack information.
-		Out("%lu %y\n", frame.FrameNumber, frame.InstructionOffset);
-
-
-		// Print the function name.
-		ExtBuffer<char> functionName;
-		if (GetOffsetSymbol(frame.InstructionOffset, &functionName))
-			Out("Name: %s\n", functionName.GetBuffer());
-
 		// Set the symbol scope to the current frame.
 		hr = m_Symbols->SetScope(frame.InstructionOffset, &frame, nullptr, 0);
 		if (FAILED(hr))
@@ -77,36 +76,30 @@ EXT_COMMAND(umstack, "Output the user-mode callstack stack", "")
 		// Look for a python _frame pointer.
 		auto pyFrameSymbol = getPyFrameSymbolIndex(group);
 		if (pyFrameSymbol >= 0) {
-			// Print the symbol name.
-			std::vector<char> name(1024, '\0'); //< TODO: Make the size more dynamic.
-			ULONG nameSize = 0;
-			hr = group->GetSymbolName(pyFrameSymbol, name.data(), name.size(), &nameSize);
+			RemotePyFrameObject::Offset offset = 0;
+			hr = group->GetSymbolOffset(pyFrameSymbol, &offset);
 			if (FAILED(hr)) {
-				Warn("Failed to retreive symbol name.");
+				Warn("Failed to retreive frame offset.");
 				continue;
 			}
-			name.resize(nameSize);
 
-			// Print the symbol value.
-			std::vector<char> value(1024, '\0'); //< TODO: Make the size more dynamic.
-			ULONG valueSize = 0;
-			hr = group->GetSymbolValueText(pyFrameSymbol, value.data(), value.size(), &valueSize);
-			if (hr != S_OK) {
-				Warn("Failed to retreive symbol value.");
-				continue;
+			auto frameObject = RemotePyFrameObject(DereferenceRemotePointer(offset));
+			//Out("Frame object: %s\n", frameObject.repr().c_str());
+
+			auto codeObject = frameObject.code();
+			if (codeObject != nullptr) {
+				Out("Code object: %s\n", codeObject->repr().c_str());
+				Out("Function name: %s\n", codeObject->name().c_str());
 			}
-			value.resize(valueSize);
 
+			auto localsObject = frameObject.locals();
+			if (localsObject != nullptr)
+				Out("Locals: %s\n", localsObject->repr().c_str());
 
-			Out("Local: %s = %s\n", name.data(), value.data());
+			Out("\n");
 		}
-
-		Out("\n");
 	}
 
 	if (group != nullptr) //< TODO: RAII
 		group->Release();
 }
-
-
-

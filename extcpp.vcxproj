@@ -161,9 +161,11 @@
     <ClCompile Include="extension.cpp" />
     <ClCompile Include="objects\objects.cpp" />
     <ClCompile Include="objects\RemotePyBoolObject.cpp" />
+    <ClCompile Include="objects\RemotePyCodeObject.cpp" />
     <ClCompile Include="objects\RemotePyComplexObject.cpp" />
     <ClCompile Include="objects\RemotePyDictObject.cpp" />
     <ClCompile Include="objects\RemotePyFloatObject.cpp" />
+    <ClCompile Include="objects\RemotePyFrameObject.cpp" />
     <ClCompile Include="objects\RemotePyIntObject.cpp" />
     <ClCompile Include="objects\RemotePyListObject.cpp" />
     <ClCompile Include="objects\RemotePyLongObject.cpp" />
@@ -173,9 +175,8 @@
     <ClCompile Include="objects\RemotePyStringObject.cpp" />
     <ClCompile Include="objects\RemotePyTupleObject.cpp" />
     <ClCompile Include="objects\RemotePyVarObject.cpp" />
-    <ClCompile Include="ummods.cpp" />
     <ClCompile Include="globals.cpp" />
-    <ClCompile Include="umstack.cpp" />
+    <ClCompile Include="pystack.cpp" />
     <ClCompile Include="util\to_string.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -191,9 +192,11 @@
     <ClInclude Include="extension.h" />
     <ClInclude Include="objects\objects.h" />
     <ClInclude Include="objects\RemotePyBoolObject.h" />
+    <ClInclude Include="objects\RemotePyCodeObject.h" />
     <ClInclude Include="objects\RemotePyComplexObject.h" />
     <ClInclude Include="objects\RemotePyDictObject.h" />
     <ClInclude Include="objects\RemotePyFloatObject.h" />
+    <ClInclude Include="objects\RemotePyFrameObject.h" />
     <ClInclude Include="objects\RemotePyIntObject.h" />
     <ClInclude Include="objects\RemotePyListObject.h" />
     <ClInclude Include="objects\RemotePyLongObject.h" />
