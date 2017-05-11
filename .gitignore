@@ -1,4 +1,4 @@
-# User files
+# User files.
 *.*proj.user
 .vs/
 
@@ -7,3 +7,7 @@
 [Rr]elease/
 x64/
 x86/
+*.aps
+
+# Python artifacts.
+*.pyc
