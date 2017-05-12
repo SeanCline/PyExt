@@ -90,6 +90,7 @@ EXT_COMMAND(pystack, "Output the Python stack for the current thread.", "")
 			if (codeObject != nullptr) {
 				Out("Code object: %s\n", codeObject->repr().c_str());
 				Out("Function name: %s\n", codeObject->name().c_str());
+				Out("File %s @ %d\n", codeObject->filename().c_str(), frameObject.currentLineNumber());
 			}
 
 			auto localsObject = frameObject.locals();

@@ -9,5 +9,9 @@ x64/
 x86/
 *.aps
 
+# Debug artifacts.
+/*.pdb/
+/pingme.txt
+
 # Python artifacts.
 *.pyc

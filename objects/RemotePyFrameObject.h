@@ -20,6 +20,9 @@ public: // Members.
 	std::unique_ptr<RemotePyDictObject> builtins() const;
 	std::unique_ptr<RemotePyCodeObject> code() const;
 	std::unique_ptr<RemotePyFrameObject> back() const;
+	std::unique_ptr<RemotePyObject> trace() const; //< TODO: Change to RemotePyFunctionObject.
+	int lastInstruction() const;
+	int currentLineNumber() const;
 	std::string repr(bool pretty = true) const override;
 
 };
