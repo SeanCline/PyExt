@@ -6,6 +6,7 @@
 #include <string>
 #include <memory>
 
+class RemotePyTypeObject;
 
 // Represents a PyObject in the debuggee's address space. Base class for all types of PyObject.
 class RemotePyObject
@@ -21,6 +22,7 @@ public: // Construction/Destruction.
 
 public: // Members.
 	SSize refCount() const;
+	RemotePyTypeObject type() const;
 	std::string typeName() const;
 	virtual std::string repr(bool pretty = true) const;
 

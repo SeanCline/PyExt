@@ -1,5 +1,5 @@
 import win32debug
-
+import inspect
 
 stringObj = "asd123qwe"
 intObj = int(1)
@@ -11,6 +11,9 @@ boolFalseObj = False
 noneObj = None
 typeObj = dict
 notImplementedObj = NotImplemented
+funcObj = lambda x: x*x
+frameObj = inspect.currentframe()
+codeObj = frameObj.f_code
 
 listObj = [stringObj, intObj, longObj]
 

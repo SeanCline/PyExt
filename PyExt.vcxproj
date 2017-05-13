@@ -97,6 +97,7 @@
     <ClCompile Include="objects\RemotePyDictObject.cpp" />
     <ClCompile Include="objects\RemotePyFloatObject.cpp" />
     <ClCompile Include="objects\RemotePyFrameObject.cpp" />
+    <ClCompile Include="objects\RemotePyFunctionObject.cpp" />
     <ClCompile Include="objects\RemotePyIntObject.cpp" />
     <ClCompile Include="objects\RemotePyListObject.cpp" />
     <ClCompile Include="objects\RemotePyLongObject.cpp" />
@@ -105,6 +106,7 @@
     <ClCompile Include="objects\RemotePyObject.cpp" />
     <ClCompile Include="objects\RemotePyStringObject.cpp" />
     <ClCompile Include="objects\RemotePyTupleObject.cpp" />
+    <ClCompile Include="objects\RemotePyTypeObject.cpp" />
     <ClCompile Include="objects\RemotePyVarObject.cpp" />
     <ClCompile Include="globals.cpp" />
     <ClCompile Include="pch.cpp">
@@ -132,6 +134,7 @@
     <ClInclude Include="objects\RemotePyDictObject.h" />
     <ClInclude Include="objects\RemotePyFloatObject.h" />
     <ClInclude Include="objects\RemotePyFrameObject.h" />
+    <ClInclude Include="objects\RemotePyFunctionObject.h" />
     <ClInclude Include="objects\RemotePyIntObject.h" />
     <ClInclude Include="objects\RemotePyListObject.h" />
     <ClInclude Include="objects\RemotePyLongObject.h" />
@@ -140,6 +143,7 @@
     <ClInclude Include="objects\RemotePyObject.h" />
     <ClInclude Include="objects\RemotePyStringObject.h" />
     <ClInclude Include="objects\RemotePyTupleObject.h" />
+    <ClInclude Include="objects\RemotePyTypeObject.h" />
     <ClInclude Include="objects\RemotePyVarObject.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>

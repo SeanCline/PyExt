@@ -1,4 +1,5 @@
 #include "RemotePyObject.h"
+#include "RemotePyTypeObject.h"
 
 #include <engextcpp.hpp>
 #include <string>
@@ -22,12 +23,15 @@ RemotePyObject::SSize RemotePyObject::refCount() const
 }
 
 
+RemotePyTypeObject RemotePyObject::type() const
+{
+	return RemotePyTypeObject(remoteObj().Field("ob_type").GetPtr());
+}
+
+
 string RemotePyObject::typeName() const
 {
-	// TODO: Construct a type object here instead of digging into the type's name member.
-	ExtBuffer<char> buff;
-	remoteObj().Field("ob_type").Field("tp_name").Dereference().GetString(&buff);
-	return buff.GetBuffer();
+	return type().name();
 }
 
 

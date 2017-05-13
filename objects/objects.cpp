@@ -1,6 +1,7 @@
 #include "objects.h"
 #include "RemotePyObject.h"
 #include "RemotePyVarObject.h"
+#include "RemotePyTypeObject.h"
 #include "RemotePyStringObject.h"
 #include "RemotePyListObject.h"
 #include "RemotePyTupleObject.h"
@@ -12,6 +13,7 @@
 #include "RemotePyComplexObject.h"
 #include "RemotePyFrameObject.h"
 #include "RemotePyCodeObject.h"
+#include "RemotePyFunctionObject.h"
 #include "RemotePyNoneObject.h"
 #include "RemotePyNotImplementedObject.h"
 
@@ -26,7 +28,9 @@ unique_ptr<RemotePyObject> makeRemotePyObject(RemotePyObject::Offset remoteAddre
 	const auto typeName = obj.typeName();
 
 	// TODO: Turn this into a map to factory functions.
-	if (typeName == "str") {
+	if (typeName == "type") {
+		return make_unique<RemotePyTypeObject>(remoteAddress);
+	} else if (typeName == "str") {
 		return make_unique<RemotePyStringObject>(remoteAddress);
 	} else if (typeName == "list") {
 		return make_unique<RemotePyListObject>(remoteAddress);
@@ -48,6 +52,8 @@ unique_ptr<RemotePyObject> makeRemotePyObject(RemotePyObject::Offset remoteAddre
 		return make_unique<RemotePyFrameObject>(remoteAddress);
 	} else if (typeName == "code") {
 		return make_unique<RemotePyCodeObject>(remoteAddress);
+	} else if (typeName == "function") {
+		return make_unique<RemotePyFunctionObject>(remoteAddress);
 	} else if (typeName == "NoneType") {
 		return make_unique<RemotePyNoneObject>(remoteAddress);
 	} else if (typeName == "NotImplementedType") {
