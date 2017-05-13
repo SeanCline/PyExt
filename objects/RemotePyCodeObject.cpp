@@ -22,7 +22,7 @@ int RemotePyCodeObject::firstLineNumber() const
 }
 
 
-int RemotePyCodeObject::lineNumberFromInstructionOffset(int instruction) const
+auto RemotePyCodeObject::lineNumberFromInstructionOffset(int instruction) const -> int
 {
 	// TODO: Consider caching this table in an ordered container.
 	auto lnotab = lineNumberTable();
@@ -55,7 +55,7 @@ int RemotePyCodeObject::lineNumberFromInstructionOffset(int instruction) const
 }
 
 
-string RemotePyCodeObject::filename() const
+auto RemotePyCodeObject::filename() const -> string
 {
 	auto objPtr = remoteObj().Field("co_filename").GetPtr();
 	if (objPtr == 0)
@@ -66,7 +66,7 @@ string RemotePyCodeObject::filename() const
 }
 
 
-string RemotePyCodeObject::name() const
+auto RemotePyCodeObject::name() const -> string
 {
 	auto objPtr = remoteObj().Field("co_name").GetPtr();
 	if (objPtr == 0)
@@ -77,18 +77,18 @@ string RemotePyCodeObject::name() const
 }
 
 
-std::vector<uint8_t> RemotePyCodeObject::lineNumberTable() const
+auto RemotePyCodeObject::lineNumberTable() const -> vector<uint8_t>
 {
 	auto objPtr = remoteObj().Field("co_lnotab").GetPtr();
 	if (objPtr == 0)
 		return {};
 
 	auto tableString = RemotePyStringObject(objPtr).stringValue();
-	return std::vector<uint8_t>(begin(tableString), end(tableString));
+	return vector<uint8_t>(begin(tableString), end(tableString));
 }
 
 
-string RemotePyCodeObject::repr(bool /*pretty*/) const
+auto RemotePyCodeObject::repr(bool /*pretty*/) const -> string
 {
 	return "<code object, file \"" + filename() + "\", line " + to_string(firstLineNumber()) + ">";
 }

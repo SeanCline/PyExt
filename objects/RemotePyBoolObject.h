@@ -12,7 +12,7 @@ public: // Construction/Destruction.
 	explicit RemotePyBoolObject(Offset objectAddress);
 
 public: // Members.
-	bool boolValue() const;
-	std::string repr(bool pretty = true) const override;
+	auto boolValue() const -> bool;
+	auto repr(bool pretty = true) const -> std::string override;
 
 };

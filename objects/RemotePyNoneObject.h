@@ -11,6 +11,6 @@ public: // Construction/Destruction.
 	explicit RemotePyNoneObject(Offset objectAddress);
 
 public: // Members.
-	std::string repr(bool pretty = true) const override;
+	auto repr(bool pretty = true) const -> std::string override;
 
 };

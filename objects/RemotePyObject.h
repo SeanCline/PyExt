@@ -21,14 +21,14 @@ public: // Construction/Destruction.
 	virtual ~RemotePyObject();
 
 public: // Members.
-	SSize refCount() const;
-	RemotePyTypeObject type() const;
-	std::string typeName() const;
-	virtual std::string repr(bool pretty = true) const;
+	auto refCount() const -> SSize;
+	auto type() const -> RemotePyTypeObject;
+	auto typeName() const -> std::string;
+	virtual auto repr(bool pretty = true) const -> std::string;
 
 protected: // Helpers for more derived classes.
 	// Access to the PyObject's memory in the debuggee.
-	ExtRemoteTyped& remoteObj() const;
+	auto remoteObj() const -> ExtRemoteTyped&;
 
 private: // Data.
 	std::shared_ptr<ExtRemoteTyped> remoteObj_;

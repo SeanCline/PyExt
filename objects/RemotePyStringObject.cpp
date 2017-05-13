@@ -14,14 +14,14 @@ RemotePyStringObject::RemotePyStringObject(Offset objectAddress)
 }
 
 
-RemotePyObject::SSize RemotePyStringObject::stringLength() const
+auto RemotePyStringObject::stringLength() const -> SSize
 {
 	auto len = size();
 	return (len < 0) ? 0 : len; //< Don't let the length go negative. Python enforces this.
 }
 
 
-std::string RemotePyStringObject::stringValue() const
+auto RemotePyStringObject::stringValue() const -> string
 {
 	auto len = stringLength();
 	if (len <= 0)
@@ -37,7 +37,7 @@ std::string RemotePyStringObject::stringValue() const
 }
 
 
-string RemotePyStringObject::repr(bool /*pretty*/) const
+auto RemotePyStringObject::repr(bool /*pretty*/) const -> string
 {
 	ostringstream oss;
 	oss << quoted(stringValue()); //< Escape the string.

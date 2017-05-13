@@ -4,16 +4,8 @@
 
 #include <vector>
 
-//----------------------------------------------------------------------------
-//
-// Base extension class.
-// Extensions derive from the provided ExtExtension class.
-//
-// The standard class name is "Extension".  It can be
-// overridden by providing an alternate definition of
-// EXT_CLASS before including engextcpp.hpp.
-//
-//----------------------------------------------------------------------------
+// engextcpp uses this class as the basis for the entire extension.
+// It's instantiated once in globals.cpp and a global pointer to it is held by engextcpp.
 class EXT_CLASS : public ExtExtension
 {
 public:
@@ -27,5 +19,5 @@ public: // Known structs.
 	void KnownStructObjectHandler(_In_ PCSTR TypeName, _In_ ULONG Flags, _In_ ULONG64 Offset);
 
 private:
-	std::vector<DEBUG_STACK_FRAME> getStackFrames(size_t numFrames = 1024);
+	auto getStackFrames(std::size_t numFrames = 1024) -> std::vector<DEBUG_STACK_FRAME>;
 };

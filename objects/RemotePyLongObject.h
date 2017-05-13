@@ -12,7 +12,7 @@ public: // Construction/Destruction.
 	explicit RemotePyLongObject(Offset objectAddress);
 
 public: // Members.
-	bool isNegative() const;
-	std::string repr(bool pretty = true) const override;
+	auto isNegative() const -> bool;
+	auto repr(bool pretty = true) const -> std::string override;
 
 };

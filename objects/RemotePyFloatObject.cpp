@@ -10,14 +10,14 @@ RemotePyFloatObject::RemotePyFloatObject(Offset objectAddress)
 }
 
 
-double RemotePyFloatObject::floatValue() const
+auto RemotePyFloatObject::floatValue() const -> double
 {
 	auto fval = remoteObj().Field("ob_fval");
 	return fval.GetDouble();
 }
 
 
-string RemotePyFloatObject::repr(bool /*pretty*/) const
+auto RemotePyFloatObject::repr(bool /*pretty*/) const -> string
 {
 	return to_string(floatValue());
 }

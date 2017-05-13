@@ -13,7 +13,7 @@ public: // Construction/Destruction.
 	explicit RemotePyComplexObject(Offset objectAddress);
 
 public: // Members.
-	std::complex<double> complexValue() const;
-	std::string repr(bool pretty = true) const override;
+	auto complexValue() const -> std::complex<double>;
+	auto repr(bool pretty = true) const -> std::string override;
 
 };

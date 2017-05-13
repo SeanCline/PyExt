@@ -10,7 +10,7 @@ RemotePyTypeObject::RemotePyTypeObject(Offset objectAddress)
 }
 
 
-std::string RemotePyTypeObject::name() const
+auto RemotePyTypeObject::name() const -> string
 {
 	ExtBuffer<char> buff;
 	remoteObj().Field("tp_name").Dereference().GetString(&buff);
@@ -18,7 +18,7 @@ std::string RemotePyTypeObject::name() const
 }
 
 
-std::string RemotePyTypeObject::documentation() const
+auto RemotePyTypeObject::documentation() const -> string
 {
 	ExtBuffer<char> buff;
 	auto doc = remoteObj().Field("ob_type").Field("tp_doc");
@@ -30,7 +30,7 @@ std::string RemotePyTypeObject::documentation() const
 }
 
 
-string RemotePyTypeObject::repr(bool /*pretty*/) const
+auto RemotePyTypeObject::repr(bool /*pretty*/) const -> string
 {
 	return "<class '" + name() + "'>";
 }

@@ -12,7 +12,7 @@ public: // Construction/Destruction.
 	explicit RemotePyFloatObject(Offset objectAddress);
 
 public: // Members.
-	double floatValue() const;
-	std::string repr(bool pretty = true) const override;
+	auto floatValue() const -> double;
+	auto repr(bool pretty = true) const -> std::string override;
 
 };

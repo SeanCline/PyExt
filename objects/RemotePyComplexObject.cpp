@@ -12,14 +12,14 @@ RemotePyComplexObject::RemotePyComplexObject(Offset objectAddress)
 }
 
 
-complex<double> RemotePyComplexObject::complexValue() const
+auto RemotePyComplexObject::complexValue() const -> complex<double>
 {
 	auto cval = remoteObj().Field("cval");
 	return { cval.Field("real").GetDouble(), cval.Field("imag").GetDouble() };
 }
 
 
-string RemotePyComplexObject::repr(bool /*pretty*/) const
+auto RemotePyComplexObject::repr(bool /*pretty*/) const -> string
 {
 	auto c = complexValue();
 	string operation = (c.imag() < 0) ? "-" : "+";

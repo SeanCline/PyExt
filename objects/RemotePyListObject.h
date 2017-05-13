@@ -14,8 +14,8 @@ public: // Construction/Destruction.
 	explicit RemotePyListObject(Offset objectAddress);
 
 public: // Members.
-	SSize numItems() const;
-	std::unique_ptr<RemotePyObject> at(SSize index) const;
-	std::string repr(bool pretty = true) const override;
+	auto numItems() const -> SSize;
+	auto at(SSize index) const -> std::unique_ptr<RemotePyObject>;
+	auto repr(bool pretty = true) const -> std::string override;
 
 };

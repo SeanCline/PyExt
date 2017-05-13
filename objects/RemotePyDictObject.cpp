@@ -17,19 +17,19 @@ RemotePyDictObject::RemotePyDictObject(Offset objectAddress)
 }
 
 
-RemotePyObject::SSize RemotePyDictObject::numUsed() const
+auto RemotePyDictObject::numUsed() const -> SSize
 {
 	return remoteObj().Field("ma_used").GetLong64();
 }
 
 
-RemotePyObject::SSize RemotePyDictObject::numMask() const
+auto RemotePyDictObject::numMask() const -> SSize
 {
 	return remoteObj().Field("ma_mask").GetLong64();
 }
 
 
-string RemotePyDictObject::repr(bool pretty) const
+auto RemotePyDictObject::repr(bool pretty) const -> string
 {
 	const auto elementSeparator = (pretty) ? "\n" : " "; //< Use a newline when pretty-print is on.
 	const auto indentation = (pretty) ? "\t" : ""; //< Indent only when pretty is on.

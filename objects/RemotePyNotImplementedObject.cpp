@@ -10,7 +10,7 @@ RemotePyNotImplementedObject::RemotePyNotImplementedObject(Offset objectAddress)
 }
 
 
-string RemotePyNotImplementedObject::repr(bool /*pretty*/) const
+auto RemotePyNotImplementedObject::repr(bool /*pretty*/) const -> string
 {
 	return "NotImplemented";
 }

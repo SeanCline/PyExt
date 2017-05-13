@@ -10,14 +10,14 @@ RemotePyBoolObject::RemotePyBoolObject(Offset objectAddress)
 }
 
 
-bool RemotePyBoolObject::boolValue() const
+auto RemotePyBoolObject::boolValue() const -> bool
 {
 	auto ival = remoteObj().Field("ob_ival");
 	return static_cast<bool>(ival.GetLong());
 }
 
 
-string RemotePyBoolObject::repr(bool /*pretty*/) const
+auto RemotePyBoolObject::repr(bool /*pretty*/) const -> string
 {
 	return boolValue() ? "True" : "False";
 }

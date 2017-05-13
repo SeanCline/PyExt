@@ -19,6 +19,9 @@
     <Filter Include="Source Files\objects">
       <UniqueIdentifier>{5da2ca2a-ccb3-4b5c-acbe-3fc465e14af6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\utils">
+      <UniqueIdentifier>{59f4fa16-82cf-46e3-8162-863e9d05d686}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="extension.cpp">
@@ -151,6 +154,9 @@
     </ClInclude>
     <ClInclude Include="objects\RemotePyFunctionObject.h">
       <Filter>Header Files\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\fieldAsPyObject.h">
+      <Filter>Header Files\utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

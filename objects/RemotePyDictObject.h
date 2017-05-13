@@ -14,9 +14,9 @@ public: // Construction/Destruction.
 	explicit RemotePyDictObject(Offset objectAddress);
 
 public: // Members.
-	SSize numUsed() const;
-	SSize numMask() const;
-	std::unique_ptr<RemotePyObject> at(SSize index) const;
-	std::string repr(bool pretty = true) const override;
+	auto numUsed() const -> SSize;
+	auto numMask() const -> SSize;
+	auto at(SSize index) const -> std::unique_ptr<RemotePyObject>;
+	auto repr(bool pretty = true) const -> std::string override;
 
 };

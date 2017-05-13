@@ -10,7 +10,7 @@ RemotePyNoneObject::RemotePyNoneObject(Offset objectAddress)
 }
 
 
-string RemotePyNoneObject::repr(bool /*pretty*/) const
+auto RemotePyNoneObject::repr(bool /*pretty*/) const -> string
 {
 	return "None";
 }

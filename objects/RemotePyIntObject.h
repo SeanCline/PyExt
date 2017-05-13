@@ -12,7 +12,7 @@ public: // Construction/Destruction.
 	explicit RemotePyIntObject(Offset objectAddress);
 
 public: // Members.
-	int32_t intValue() const;
-	std::string repr(bool pretty = true) const override;
+	auto intValue() const -> std::int32_t;
+	auto repr(bool pretty = true) const -> std::string override;
 
 };

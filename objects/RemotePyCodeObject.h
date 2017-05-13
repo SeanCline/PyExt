@@ -13,12 +13,11 @@ public: // Construction/Destruction.
 	explicit RemotePyCodeObject(Offset objectAddress);
 
 public: // Members.
-	int firstLineNumber() const;
-	int lineNumberFromInstructionOffset(int instruction) const;
-	std::string filename() const;
-	std::string name() const;
-	std::vector<std::uint8_t> lineNumberTable() const;
-	
-	std::string repr(bool pretty = true) const override;
+	auto firstLineNumber() const -> int;
+	auto lineNumberFromInstructionOffset(int instruction) const -> int;
+	auto filename() const -> std::string;
+	auto name() const -> std::string;
+	auto lineNumberTable() const -> std::vector<std::uint8_t>;
+	auto repr(bool pretty = true) const -> std::string override;
 
 };

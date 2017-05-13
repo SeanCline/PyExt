@@ -10,14 +10,14 @@ RemotePyIntObject::RemotePyIntObject(Offset objectAddress)
 }
 
 
-int32_t RemotePyIntObject::intValue() const
+auto RemotePyIntObject::intValue() const -> int32_t
 {
 	auto ival = remoteObj().Field("ob_ival");
 	return ival.GetLong();
 }
 
 
-string RemotePyIntObject::repr(bool /*pretty*/) const
+auto RemotePyIntObject::repr(bool /*pretty*/) const -> string
 {
 	return to_string(intValue());
 }

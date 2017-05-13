@@ -13,9 +13,9 @@
 using namespace std;
 
 
-vector<DEBUG_STACK_FRAME> EXT_CLASS::getStackFrames(std::size_t numFrames)
+auto EXT_CLASS::getStackFrames(size_t numFrames) -> vector<DEBUG_STACK_FRAME>
 {
-	std::vector<DEBUG_STACK_FRAME> frames(numFrames);
+	vector<DEBUG_STACK_FRAME> frames(numFrames);
 	ULONG framesFilled = 0;
 	HRESULT hr = m_Control->GetStackTrace(0, 0, 0, frames.data(), static_cast<ULONG>(frames.size()), &framesFilled);
 
@@ -28,7 +28,7 @@ vector<DEBUG_STACK_FRAME> EXT_CLASS::getStackFrames(std::size_t numFrames)
 }
 
 namespace {
-	LONG getPyFrameSymbolIndex(IDebugSymbolGroup2* group)
+	auto getPyFrameSymbolIndex(IDebugSymbolGroup2* group) -> LONG
 	{
 		ULONG numSymbols = 0;
 		HRESULT hr = group->GetNumberSymbols(&numSymbols);

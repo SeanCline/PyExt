@@ -31,6 +31,6 @@ public: // Members.
 	auto module() const-> std::unique_ptr<RemotePyObject>;
 	auto annotations() const-> std::unique_ptr<RemotePyDictObject>;
 	auto qualname() const-> std::unique_ptr<RemotePyStringObject>;
-	std::string repr(bool pretty = true) const override;
+	auto repr(bool pretty = true) const -> std::string override;
 
 };

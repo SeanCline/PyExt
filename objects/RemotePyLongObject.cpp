@@ -13,13 +13,13 @@ RemotePyLongObject::RemotePyLongObject(Offset objectAddress)
 }
 
 
-bool RemotePyLongObject::isNegative() const
+auto RemotePyLongObject::isNegative() const -> bool
 {
 	return size() < 0;
 }
 
 
-string RemotePyLongObject::repr(bool /*pretty*/) const
+auto RemotePyLongObject::repr(bool /*pretty*/) const -> string
 {
 	auto digits = remoteObj().Field("ob_digit");
 	const auto bytesPerDigit = digits.ArrayElement(0).GetTypeSize();

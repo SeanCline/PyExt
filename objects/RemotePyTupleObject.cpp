@@ -17,13 +17,13 @@ RemotePyTupleObject::RemotePyTupleObject(Offset objectAddress)
 }
 
 
-RemotePyTupleObject::SSize RemotePyTupleObject::numItems() const
+auto RemotePyTupleObject::numItems() const -> SSize
 {
 	return RemotePyVarObject::size();
 }
 
 
-unique_ptr<RemotePyObject> RemotePyTupleObject::at(SSize index) const
+auto RemotePyTupleObject::at(SSize index) const -> unique_ptr<RemotePyObject>
 {
 	if (index < 0 || index >= numItems())
 		throw out_of_range("RemotePyListObject::at index out of range.");
@@ -34,7 +34,7 @@ unique_ptr<RemotePyObject> RemotePyTupleObject::at(SSize index) const
 }
 
 
-string RemotePyTupleObject::repr(bool /*pretty*/) const
+auto RemotePyTupleObject::repr(bool /*pretty*/) const -> string
 {
 	ostringstream oss;
 	oss << "(";

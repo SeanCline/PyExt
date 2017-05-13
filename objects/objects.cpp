@@ -21,7 +21,7 @@
 using namespace std;
 
 
-unique_ptr<RemotePyObject> makeRemotePyObject(RemotePyObject::Offset remoteAddress)
+auto makeRemotePyObject(RemotePyObject::Offset remoteAddress) -> unique_ptr<RemotePyObject>
 {
 	// Get the type name.
 	const auto obj = RemotePyObject(remoteAddress);

@@ -1,7 +1,9 @@
 #include "RemotePyFrameObject.h"
 
+#include "utils/fieldAsPyObject.h"
 #include "RemotePyCodeObject.h"
 #include "RemotePyDictObject.h"
+#include "RemotePyFunctionObject.h"
 
 #include <engextcpp.hpp>
 #include <string>
@@ -14,74 +16,50 @@ RemotePyFrameObject::RemotePyFrameObject(Offset objectAddress)
 }
 
 
-unique_ptr<RemotePyDictObject> RemotePyFrameObject::locals() const
+auto RemotePyFrameObject::locals() const -> unique_ptr<RemotePyDictObject>
 {
 	// Note: The CPython code comments indicate that this isn't always a dict object. In practice, it seems to be.
-	auto ptr = remoteObj().Field("f_locals").GetPtr();
-	if (ptr == 0)
-		return {};
-
-	return make_unique<RemotePyDictObject>(ptr);
+	return fieldAsPyObject<RemotePyDictObject>(remoteObj(), "f_locals");
 }
 
 
-unique_ptr<RemotePyDictObject> RemotePyFrameObject::globals() const
+auto RemotePyFrameObject::globals() const -> unique_ptr<RemotePyDictObject>
 {
-	auto ptr = remoteObj().Field("f_globals").GetPtr();
-	if (ptr == 0)
-		return {};
-
-	return make_unique<RemotePyDictObject>(ptr);
+	return fieldAsPyObject<RemotePyDictObject>(remoteObj(), "f_globals");
 }
 
 
-unique_ptr<RemotePyDictObject> RemotePyFrameObject::builtins() const
+auto RemotePyFrameObject::builtins() const -> unique_ptr<RemotePyDictObject>
 {
-	auto ptr = remoteObj().Field("f_builtins").GetPtr();
-	if (ptr == 0)
-		return {};
-
-	return make_unique<RemotePyDictObject>(ptr);
+	return fieldAsPyObject<RemotePyDictObject>(remoteObj(), "f_builtins");
 }
 
 
-unique_ptr<RemotePyCodeObject> RemotePyFrameObject::code() const
+auto RemotePyFrameObject::code() const -> unique_ptr<RemotePyCodeObject>
 {
-	auto ptr = remoteObj().Field("f_code").GetPtr();
-	if (ptr == 0)
-		return {};
-
-	return make_unique<RemotePyCodeObject>(ptr);
+	return fieldAsPyObject<RemotePyCodeObject>(remoteObj(), "f_code");
 }
 
 
-unique_ptr<RemotePyFrameObject> RemotePyFrameObject::back() const
+auto RemotePyFrameObject::back() const -> unique_ptr<RemotePyFrameObject>
 {
-	auto ptr = remoteObj().Field("f_back").GetPtr();
-	if (ptr == 0)
-		return {};
-
-	return make_unique<RemotePyFrameObject>(ptr);
+	return fieldAsPyObject<RemotePyFrameObject>(remoteObj(), "f_back");
 }
 
 
-unique_ptr<RemotePyObject> RemotePyFrameObject::trace() const
+auto RemotePyFrameObject::trace() const -> unique_ptr<RemotePyFunctionObject>
 {
-	auto ptr = remoteObj().Field("f_trace").GetPtr();
-	if (ptr == 0)
-		return {};
-
-	return make_unique<RemotePyFrameObject>(ptr);
+	return fieldAsPyObject<RemotePyFunctionObject>(remoteObj(), "f_trace");
 }
 
 
-int RemotePyFrameObject::lastInstruction() const
+auto RemotePyFrameObject::lastInstruction() const -> int
 {
 	return remoteObj().Field("f_lasti").GetLong();
 }
 
 
-int RemotePyFrameObject::currentLineNumber() const
+auto RemotePyFrameObject::currentLineNumber() const -> int
 {
 	// When tracing is enabled, we can use the acccurately updated f_lineno field.
 	auto traceFunction = trace();
@@ -94,7 +72,7 @@ int RemotePyFrameObject::currentLineNumber() const
 }
 
 
-string RemotePyFrameObject::repr(bool /*pretty*/) const
+auto RemotePyFrameObject::repr(bool /*pretty*/) const -> string
 {
 	return "<frame object>";
 }

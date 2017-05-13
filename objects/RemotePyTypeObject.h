@@ -11,8 +11,8 @@ public: // Construction/Destruction.
 	explicit RemotePyTypeObject(Offset objectAddress);
 
 public: // Members.
-	std::string name() const;
-	std::string documentation() const;
-	std::string repr(bool pretty = true) const override;
+	auto name() const -> std::string;
+	auto documentation() const -> std::string;
+	auto repr(bool pretty = true) const -> std::string override;
 
 };

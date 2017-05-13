@@ -11,8 +11,8 @@ public: // Construction/Destruction.
 	explicit RemotePyStringObject(Offset objectAddress);
 
 public: // Members.
-	SSize stringLength() const;
-	std::string stringValue() const;
-	std::string repr(bool pretty = true) const override;
+	auto stringLength() const -> SSize;
+	auto stringValue() const -> std::string;
+	auto repr(bool pretty = true) const -> std::string override;
 
 };

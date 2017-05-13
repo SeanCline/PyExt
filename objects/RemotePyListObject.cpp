@@ -17,13 +17,13 @@ RemotePyListObject::RemotePyListObject(Offset objectAddress)
 }
 
 
-RemotePyVarObject::SSize RemotePyListObject::numItems() const
+auto RemotePyListObject::numItems() const -> SSize
 {
 	return RemotePyVarObject::size();
 }
 
 
-unique_ptr<RemotePyObject> RemotePyListObject::at(SSize index) const
+auto RemotePyListObject::at(SSize index) const -> unique_ptr<RemotePyObject>
 {
 	if (index < 0 || index >= numItems())
 		throw out_of_range("RemotePyListObject::at index out of range.");
@@ -34,7 +34,7 @@ unique_ptr<RemotePyObject> RemotePyListObject::at(SSize index) const
 }
 
 
-string RemotePyListObject::repr(bool /*pretty*/) const
+auto RemotePyListObject::repr(bool /*pretty*/) const -> string
 {
 	ostringstream oss;
 	oss << "[ ";
