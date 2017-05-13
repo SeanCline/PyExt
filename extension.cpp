@@ -17,13 +17,19 @@ EXT_CLASS::EXT_CLASS()
 	// Windbg uses these to know how to pretty-print types.
 	auto handler = static_cast<ExtKnownStructMethod>(&EXT_CLASS::KnownStructObjectHandler);
 	static ExtKnownStruct knownstructs[] = {
+		{ "PyVarObject",   handler, true },
 		{ "PyObject",      handler, true },
 		{ "_object",       handler, true },
-		{ "_frame",        handler, true },
-		{ "PyFrameObject", handler, true },
-		{ "PyCodeObject",  handler, true },
+		{ "PyTypeObject",  handler, true },
 		{ "_typeobject",   handler, true },
-		{ nullptr, nullptr, false }
+		{ "PyFrameObject", handler, true },
+		{ "_frame",        handler, true },
+		{ "_dictobject",   handler, true },
+		{ "PyDictObject",  handler, true },
+		{ "_setobject",    handler, true },
+		{ "PySetObject",   handler, true },
+		{ "PyCodeObject",  handler, true },
+		{ nullptr,         nullptr, false }
 	};
 
 	m_KnownStructs = knownstructs;
