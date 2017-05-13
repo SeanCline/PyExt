@@ -30,9 +30,6 @@
     <ClCompile Include="pystack.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="util\to_string.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="objects\RemotePyBoolObject.cpp">
       <Filter>Source Files\objects</Filter>
     </ClCompile>
@@ -87,9 +84,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="extension.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="util\to_string.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="objects\RemotePyBoolObject.h">

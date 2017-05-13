@@ -15,7 +15,7 @@ RemotePyLongObject::RemotePyLongObject(Offset objectAddress)
 
 bool RemotePyLongObject::isNegative() const
 {
-	return getSize() < 0;
+	return size() < 0;
 }
 
 
@@ -49,8 +49,8 @@ string RemotePyLongObject::repr(bool pretty) const
 
 	// Convert from BASE to DECIMAL_BASE and store the result in `buff`.
 	vector<uint64_t> buff;
-	const auto size = static_cast<size_t>(abs(getSize()));
-	for (int64_t i = size - 1; i >= 0; --i) {
+	const auto numDigits = static_cast<size_t>(abs(size()));
+	for (int64_t i = numDigits - 1; i >= 0; --i) {
 		auto hi = getDigit(i);
 		for (auto& buffDigit : buff) {
 			uint64_t z = buffDigit << SHIFT | hi;

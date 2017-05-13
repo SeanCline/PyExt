@@ -12,6 +12,6 @@ public: // Construction/Destruction.
 	explicit RemotePyVarObject(Offset objectAddress, const std::string& typeName = "PyVarObject");
 
 public: // Members.
-	SSize getSize() const;
+	SSize size() const;
 
 };

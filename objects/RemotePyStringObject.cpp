@@ -1,8 +1,9 @@
 #include "RemotePyStringObject.h"
 
-#include "util/to_string.h"
 #include <engextcpp.hpp>
 #include <string>
+#include <vector>
+#include <iterator>
 #include <sstream>
 #include <iomanip>
 using namespace std;
@@ -13,12 +14,26 @@ RemotePyStringObject::RemotePyStringObject(Offset objectAddress)
 }
 
 
+RemotePyObject::SSize RemotePyStringObject::stringLength() const
+{
+	auto len = size();
+	return (len < 0) ? 0 : len; //< Don't let the length go negative. Python enforces this.
+}
+
+
 std::string RemotePyStringObject::stringValue() const
 {
+	auto len = stringLength();
+	if (len <= 0)
+		return { };
+
+	vector<char> buff(len, '\0');
+
+	// String objects in Python can embed \0's, especially in Python2, when used to store bytes.
+	// GetString() stops at the first \0 so ReadBuffer() is a better choice.
 	auto sval = remoteObj().Field("ob_sval");
-	ExtBuffer<char> buff;
-	sval.Dereference().GetString(&buff);
-	return to_string(buff);
+	sval.Dereference().ReadBuffer(buff.data(), buff.size());
+	return { begin(buff), end(buff) };
 }
 
 

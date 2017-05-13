@@ -19,7 +19,7 @@ RemotePyListObject::RemotePyListObject(Offset objectAddress)
 
 RemotePyVarObject::SSize RemotePyListObject::numItems() const
 {
-	return RemotePyVarObject::getSize();
+	return RemotePyVarObject::size();
 }
 
 

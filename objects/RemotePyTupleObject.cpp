@@ -19,7 +19,7 @@ RemotePyTupleObject::RemotePyTupleObject(Offset objectAddress)
 
 RemotePyTupleObject::SSize RemotePyTupleObject::numItems() const
 {
-	return RemotePyVarObject::getSize();
+	return RemotePyVarObject::size();
 }
 
 

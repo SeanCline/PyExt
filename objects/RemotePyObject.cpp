@@ -1,6 +1,5 @@
 #include "RemotePyObject.h"
 
-#include "util/to_string.h"
 #include <engextcpp.hpp>
 #include <string>
 using namespace std;
@@ -17,24 +16,24 @@ RemotePyObject::~RemotePyObject()
 }
 
 
-long long RemotePyObject::getRefCount() const
+RemotePyObject::SSize RemotePyObject::refCount() const
 {
-	return remoteObj_.Field("ob_refcnt").GetLong64();
+	return remoteObj().Field("ob_refcnt").GetLong64();
 }
 
 
-string RemotePyObject::getTypeName() const
+string RemotePyObject::typeName() const
 {
+	// TODO: Construct a type object here instead of digging into the type's name member.
 	ExtBuffer<char> buff;
-	auto remoteTypeObj = remoteObj_.Field("ob_type");
-	remoteTypeObj.Field("tp_name").Dereference().GetString(&buff);
-	return to_string(buff);
+	remoteObj().Field("ob_type").Field("tp_name").Dereference().GetString(&buff);
+	return buff.GetBuffer();
 }
 
 
 string RemotePyObject::repr(bool pretty) const
 {
-	return "<" + getTypeName() + " object>";
+	return "<" + typeName() + " object>";
 }
 
 

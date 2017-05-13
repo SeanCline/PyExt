@@ -19,14 +19,17 @@ public: // Construction/Destruction.
 	virtual ~RemotePyObject();
 
 public: // Members.
-	long long getRefCount() const;
-	std::string getTypeName() const;
+	SSize refCount() const;
+	std::string typeName() const;
 	virtual std::string repr(bool pretty = true) const;
 
 protected: // Helpers for more derived classes.
+	// Access the underlying remote object.
 	ExtRemoteTyped remoteObj() const;
+	// NOTE: ExtRemoteTyped isn't const-correct.
+	// remoteObj() makes a copy so it can be used in const methods.
 
 private: // Data.
-	mutable ExtRemoteTyped remoteObj_;
+	ExtRemoteTyped remoteObj_;
 
 };

@@ -9,7 +9,7 @@ RemotePyVarObject::RemotePyVarObject(Offset objectAddress, const std::string& ty
 }
 
 
-RemotePyVarObject::SSize RemotePyVarObject::getSize() const
+RemotePyVarObject::SSize RemotePyVarObject::size() const
 {
 	return remoteObj().Field("ob_size").GetLong64();
 }

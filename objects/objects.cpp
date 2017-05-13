@@ -23,7 +23,7 @@ unique_ptr<RemotePyObject> makeRemotePyObject(RemotePyObject::Offset remoteAddre
 {
 	// Get the type name.
 	const auto obj = RemotePyObject(remoteAddress);
-	const auto typeName = obj.getTypeName();
+	const auto typeName = obj.typeName();
 
 	// TODO: Turn this into a map to factory functions.
 	if (typeName == "str") {
