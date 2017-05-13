@@ -81,6 +81,9 @@
     <ClCompile Include="\Debuggers\inc\engextcpp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="extension.h">
@@ -133,6 +136,9 @@
     </ClInclude>
     <ClInclude Include="objects\objects.h">
       <Filter>Header Files\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

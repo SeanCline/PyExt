@@ -27,5 +27,5 @@ public: // Known structs.
 	void KnownStructObjectHandler(_In_ PCSTR TypeName, _In_ ULONG Flags, _In_ ULONG64 Offset);
 
 private:
-	std::vector<DEBUG_STACK_FRAME> getStackFrames(int numFrames = 1024);
+	std::vector<DEBUG_STACK_FRAME> getStackFrames(size_t numFrames = 1024);
 };

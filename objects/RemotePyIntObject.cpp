@@ -17,7 +17,7 @@ int32_t RemotePyIntObject::intValue() const
 }
 
 
-string RemotePyIntObject::repr(bool pretty) const
+string RemotePyIntObject::repr(bool /*pretty*/) const
 {
 	return to_string(intValue());
 }

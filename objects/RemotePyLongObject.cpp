@@ -19,7 +19,7 @@ bool RemotePyLongObject::isNegative() const
 }
 
 
-string RemotePyLongObject::repr(bool pretty) const
+string RemotePyLongObject::repr(bool /*pretty*/) const
 {
 	auto digits = remoteObj().Field("ob_digit");
 	const auto bytesPerDigit = digits.ArrayElement(0).GetTypeSize();

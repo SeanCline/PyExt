@@ -34,7 +34,7 @@ unique_ptr<RemotePyObject> RemotePyListObject::at(SSize index) const
 }
 
 
-string RemotePyListObject::repr(bool pretty) const
+string RemotePyListObject::repr(bool /*pretty*/) const
 {
 	ostringstream oss;
 	oss << "[ ";

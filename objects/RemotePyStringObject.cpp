@@ -32,12 +32,12 @@ std::string RemotePyStringObject::stringValue() const
 	// String objects in Python can embed \0's, especially in Python2, when used to store bytes.
 	// GetString() stops at the first \0 so ReadBuffer() is a better choice.
 	auto sval = remoteObj().Field("ob_sval");
-	sval.Dereference().ReadBuffer(buff.data(), buff.size());
+	sval.Dereference().ReadBuffer(buff.data(), static_cast<ULONG>(buff.size()));
 	return { begin(buff), end(buff) };
 }
 
 
-string RemotePyStringObject::repr(bool pretty) const
+string RemotePyStringObject::repr(bool /*pretty*/) const
 {
 	ostringstream oss;
 	oss << quoted(stringValue()); //< Escape the string.

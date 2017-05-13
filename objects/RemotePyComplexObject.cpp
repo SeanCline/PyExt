@@ -19,7 +19,7 @@ complex<double> RemotePyComplexObject::complexValue() const
 }
 
 
-string RemotePyComplexObject::repr(bool pretty) const
+string RemotePyComplexObject::repr(bool /*pretty*/) const
 {
 	auto c = complexValue();
 	string operation = (c.imag() < 0) ? "-" : "+";

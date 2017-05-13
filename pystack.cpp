@@ -13,11 +13,11 @@
 using namespace std;
 
 
-vector<DEBUG_STACK_FRAME> EXT_CLASS::getStackFrames(int numFrames)
+vector<DEBUG_STACK_FRAME> EXT_CLASS::getStackFrames(std::size_t numFrames)
 {
 	std::vector<DEBUG_STACK_FRAME> frames(numFrames);
 	ULONG framesFilled = 0;
-	HRESULT hr = m_Control->GetStackTrace(0, 0, 0, frames.data(), frames.size(), &framesFilled);
+	HRESULT hr = m_Control->GetStackTrace(0, 0, 0, frames.data(), static_cast<ULONG>(frames.size()), &framesFilled);
 
 	if (FAILED(hr))
 		ThrowStatus(hr, "GetStackTrace failed.");
@@ -36,13 +36,14 @@ namespace {
 			return -1;
 
 		for (ULONG i = 0; i < numSymbols; ++i) {
-			std::vector<char> typeName(1024, '\0'); //< TODO: Make the size more dynamic.
+			const auto bufferSize = 1024u; //< I don't imagine the _frame's typename will ever be this long.
+			vector<char> typeName(bufferSize, '\0');
 			ULONG nameSize = 0;
-			hr = group->GetSymbolTypeName(i, typeName.data(), typeName.size(), &nameSize);
+			hr = group->GetSymbolTypeName(i, typeName.data(), bufferSize, &nameSize);
 			if (FAILED(hr))
 				continue;
 
-			if (typeName.data() == "struct _frame *"s)
+			if ("struct _frame *"s == typeName.data())
 				return i;
 		}
 		return -1;

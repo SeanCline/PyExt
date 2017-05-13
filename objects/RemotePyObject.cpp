@@ -6,7 +6,7 @@ using namespace std;
 
 
 RemotePyObject::RemotePyObject(Offset objectAddress, const std::string& typeName /*= "PyObject"*/)
-	: remoteObj_(typeName.c_str(), objectAddress, true)
+	: remoteObj_(make_shared<ExtRemoteTyped>(typeName.c_str(), objectAddress, true))
 {
 }
 
@@ -31,14 +31,14 @@ string RemotePyObject::typeName() const
 }
 
 
-string RemotePyObject::repr(bool pretty) const
+string RemotePyObject::repr(bool /*pretty*/) const
 {
 	return "<" + typeName() + " object>";
 }
 
 
-ExtRemoteTyped RemotePyObject::remoteObj() const
+ExtRemoteTyped& RemotePyObject::remoteObj() const
 {
-	return remoteObj_;
+	return *remoteObj_;
 }
 

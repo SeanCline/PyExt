@@ -17,7 +17,7 @@ double RemotePyFloatObject::floatValue() const
 }
 
 
-string RemotePyFloatObject::repr(bool pretty) const
+string RemotePyFloatObject::repr(bool /*pretty*/) const
 {
 	return to_string(floatValue());
 }

@@ -17,7 +17,7 @@ bool RemotePyBoolObject::boolValue() const
 }
 
 
-string RemotePyBoolObject::repr(bool pretty) const
+string RemotePyBoolObject::repr(bool /*pretty*/) const
 {
 	return boolValue() ? "True" : "False";
 }

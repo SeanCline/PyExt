@@ -94,7 +94,7 @@ int RemotePyFrameObject::currentLineNumber() const
 }
 
 
-string RemotePyFrameObject::repr(bool pretty) const
+string RemotePyFrameObject::repr(bool /*pretty*/) const
 {
 	return "<frame object>";
 }

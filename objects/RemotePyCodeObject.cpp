@@ -46,7 +46,7 @@ int RemotePyCodeObject::lineNumberFromInstructionOffset(int instruction) const
 			break;
 
 		if (line_incr >= 0x80)
-			line_incr -= 0x100;
+			lineno -= 0x100;
 
 		lineno += line_incr;
 	}
@@ -88,7 +88,7 @@ std::vector<uint8_t> RemotePyCodeObject::lineNumberTable() const
 }
 
 
-string RemotePyCodeObject::repr(bool pretty) const
+string RemotePyCodeObject::repr(bool /*pretty*/) const
 {
 	return "<code object, file \"" + filename() + "\", line " + to_string(firstLineNumber()) + ">";
 }

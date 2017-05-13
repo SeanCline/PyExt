@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <string>
+#include <memory>
 
 
 // Represents a PyObject in the debuggee's address space. Base class for all types of PyObject.
@@ -24,12 +25,10 @@ public: // Members.
 	virtual std::string repr(bool pretty = true) const;
 
 protected: // Helpers for more derived classes.
-	// Access the underlying remote object.
-	ExtRemoteTyped remoteObj() const;
-	// NOTE: ExtRemoteTyped isn't const-correct.
-	// remoteObj() makes a copy so it can be used in const methods.
+	// Access to the PyObject's memory in the debuggee.
+	ExtRemoteTyped& remoteObj() const;
 
 private: // Data.
-	ExtRemoteTyped remoteObj_;
+	std::shared_ptr<ExtRemoteTyped> remoteObj_;
 
 };

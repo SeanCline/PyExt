@@ -34,7 +34,7 @@ unique_ptr<RemotePyObject> RemotePyTupleObject::at(SSize index) const
 }
 
 
-string RemotePyTupleObject::repr(bool pretty) const
+string RemotePyTupleObject::repr(bool /*pretty*/) const
 {
 	ostringstream oss;
 	oss << "(";

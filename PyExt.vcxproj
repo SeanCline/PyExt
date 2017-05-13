@@ -59,6 +59,9 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir);$(WindowsSdkDir)\Debuggers\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DiagnosticsFormat>Caret</DiagnosticsFormat>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <ForcedIncludeFiles>pch.h</ForcedIncludeFiles>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -104,10 +107,15 @@
     <ClCompile Include="objects\RemotePyTupleObject.cpp" />
     <ClCompile Include="objects\RemotePyVarObject.cpp" />
     <ClCompile Include="globals.cpp" />
+    <ClCompile Include="pch.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="pystack.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="$(WindowsSdkDir)\Debuggers\inc\engextcpp.cpp" />
+    <ClCompile Include="$(WindowsSdkDir)\Debuggers\inc\engextcpp.cpp">
+      <DisableSpecificWarnings>4838;4267;4245</DisableSpecificWarnings>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="$(ProjectName).def" />
@@ -133,6 +141,7 @@
     <ClInclude Include="objects\RemotePyStringObject.h" />
     <ClInclude Include="objects\RemotePyTupleObject.h" />
     <ClInclude Include="objects\RemotePyVarObject.h" />
+    <ClInclude Include="pch.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
