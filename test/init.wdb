@@ -1,11 +1,12 @@
-.sympath "c:\pythonsymbols\2.7.13-x86\;c:\pythonsymbols\2.7.13-x64\;symsrv*c:\symbols*https://msdl.microsoft.com/download/symbols"
-.reload
+.sympath "C:\Python36;c:\pythonsymbols\2.7.13-x86\;c:\pythonsymbols\2.7.13-x64\;symsrv*c:\symbols*https://msdl.microsoft.com/download/symbols";
+.reload;
 
 ~0s;
-~*e!pystack
+kv;
+.frame 0n22;
+dv /t /v;
+??f;
+!pyobj f->f_globals;
+!pyobj f->f_locals;
 
-$$ kv
-$$ .frame 0n22
-$$ dv /t /v
-$$ ??f
-$$ !pyobj f->f_globals
+~*e!pystack;

@@ -63,6 +63,7 @@ EXT_COMMAND(pyobj, "Prints information about a Python object", "{;s;PyObject add
 	ExtRemoteTyped parsedObj(objExpression.c_str());
 	auto pyObj = makeRemotePyObject(parsedObj.GetPtr());
 
+	Out("PyObject at address: %y\n", pyObj->offset());
 	Out("RefCount: %s\n", to_string(pyObj->refCount()).c_str());
 	Out("Type: %s\n", pyObj->typeName().c_str());
 

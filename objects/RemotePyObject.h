@@ -31,6 +31,9 @@ protected: // Helpers for more derived classes.
 	// Access to the PyObject's memory in the debuggee.
 	auto remoteObj() const -> ExtRemoteTyped&;
 
+	// Returns a field by name in the `ob_base` member.
+	auto baseField(const std::string& fieldName) const -> ExtRemoteTyped;
+
 private: // Data.
 	std::shared_ptr<ExtRemoteTyped> remoteObj_;
 

@@ -82,8 +82,12 @@ namespace {
 			int bufferSize = 1024;
 			vector<char> functionNameBuffer(1024, '\0');
 			hr = pSymbols->GetNameByOffset(nativeFrame.InstructionOffset, functionNameBuffer.data(), bufferSize, nullptr, nullptr);
-			if (FAILED(hr) || string(functionNameBuffer.data()).find("EvalFrameEx") == string::npos) {
-				continue;
+			if (FAILED(hr)) {
+				if (string(functionNameBuffer.data()).find("EvalFrameEx") != string::npos //< Python 2.
+					|| string(functionNameBuffer.data()).find("EvalFrameDefault") != string::npos) //< Python 3 with inlining.)
+				{
+					continue;
+				}
 			}
 
 			// Set the symbol scope to the current frame.

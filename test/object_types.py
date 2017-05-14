@@ -2,10 +2,11 @@ import win32debug
 import inspect
 
 stringObj = "asd123qwe"
+bigStringObj = stringObj * 100
 intObj = int(1)
-longObj = long(123456789012345678901234567890)
+longObj = 123456789012345678901234567890123456789012345678901234567890
 floatObj = 3.1415
-complexObj = complex(1, -1)
+complexObj = complex(1.5, -2.25)
 boolTrueObj = True
 boolFalseObj = False
 noneObj = None
