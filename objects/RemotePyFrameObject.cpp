@@ -1,10 +1,11 @@
 #include "RemotePyFrameObject.h"
 
-#include "utils/fieldAsPyObject.h"
-#include "utils/ExtHelpers.h"
+
 #include "RemotePyCodeObject.h"
 #include "RemotePyDictObject.h"
 #include "RemotePyFunctionObject.h"
+#include "utils/fieldAsPyObject.h"
+#include "utils/ExtHelpers.h"
 
 #include <engextcpp.hpp>
 #include <string>
@@ -20,44 +21,44 @@ RemotePyFrameObject::RemotePyFrameObject(Offset objectAddress)
 auto RemotePyFrameObject::locals() const -> unique_ptr<RemotePyDictObject>
 {
 	// Note: The CPython code comments indicate that this isn't always a dict object. In practice, it seems to be.
-	return fieldAsPyObject<RemotePyDictObject>(remoteObj(), "f_locals");
+	return utils::fieldAsPyObject<RemotePyDictObject>(remoteObj(), "f_locals");
 }
 
 
 auto RemotePyFrameObject::globals() const -> unique_ptr<RemotePyDictObject>
 {
-	return fieldAsPyObject<RemotePyDictObject>(remoteObj(), "f_globals");
+	return utils::fieldAsPyObject<RemotePyDictObject>(remoteObj(), "f_globals");
 }
 
 
 auto RemotePyFrameObject::builtins() const -> unique_ptr<RemotePyDictObject>
 {
-	return fieldAsPyObject<RemotePyDictObject>(remoteObj(), "f_builtins");
+	return utils::fieldAsPyObject<RemotePyDictObject>(remoteObj(), "f_builtins");
 }
 
 
 auto RemotePyFrameObject::code() const -> unique_ptr<RemotePyCodeObject>
 {
-	return fieldAsPyObject<RemotePyCodeObject>(remoteObj(), "f_code");
+	return utils::fieldAsPyObject<RemotePyCodeObject>(remoteObj(), "f_code");
 }
 
 
 auto RemotePyFrameObject::back() const -> unique_ptr<RemotePyFrameObject>
 {
-	return fieldAsPyObject<RemotePyFrameObject>(remoteObj(), "f_back");
+	return utils::fieldAsPyObject<RemotePyFrameObject>(remoteObj(), "f_back");
 }
 
 
 auto RemotePyFrameObject::trace() const -> unique_ptr<RemotePyFunctionObject>
 {
-	return fieldAsPyObject<RemotePyFunctionObject>(remoteObj(), "f_trace");
+	return utils::fieldAsPyObject<RemotePyFunctionObject>(remoteObj(), "f_trace");
 }
 
 
 auto RemotePyFrameObject::lastInstruction() const -> int
 {
 	auto lasti = remoteObj().Field("f_lasti");
-	return readIntegral<int>(lasti);
+	return utils::readIntegral<int>(lasti);
 }
 
 
@@ -68,7 +69,7 @@ auto RemotePyFrameObject::currentLineNumber() const -> int
 	auto codeObject = code();
 	if (traceFunction != nullptr || codeObject == nullptr) {
 		auto lineno = remoteObj().Field("f_lineno");
-		return readIntegral<int>(lineno);
+		return utils::readIntegral<int>(lineno);
 	}
 
 	// Otherwise, we need to do a lookup into the code object's line number table (co_lnotab).

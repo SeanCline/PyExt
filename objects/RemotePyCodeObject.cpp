@@ -21,7 +21,7 @@ RemotePyCodeObject::RemotePyCodeObject(Offset objectAddress)
 auto RemotePyCodeObject::firstLineNumber() const -> int
 {
 	auto firstlineno = remoteObj().Field("co_firstlineno");
-	return readIntegral<int>(firstlineno);
+	return utils::readIntegral<int>(firstlineno);
 }
 
 

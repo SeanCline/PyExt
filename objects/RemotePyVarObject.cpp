@@ -16,5 +16,5 @@ RemotePyVarObject::RemotePyVarObject(Offset objectAddress, const string& typeNam
 auto RemotePyVarObject::size() const -> SSize
 {
 	auto sizeField = remoteObj().Field("ob_size");
-	return readIntegral<SSize>(sizeField);
+	return utils::readIntegral<SSize>(sizeField);
 }

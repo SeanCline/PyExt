@@ -1,16 +1,16 @@
 #include "RemotePyFunctionObject.h"
 
-#include "objects/objects.h"
-#include "utils/fieldAsPyObject.h"
-
 #include "RemotePyCodeObject.h"
 #include "RemotePyDictObject.h"
 #include "RemotePyTupleObject.h"
 #include "RemotePyDictObject.h"
 #include "RemotePyListObject.h"
 #include "RemotePyStringObject.h"
+#include "objects/objects.h"
+#include "utils/fieldAsPyObject.h"
 
 #include <engextcpp.hpp>
+
 #include <string>
 #include <memory>
 using namespace std;
@@ -24,73 +24,73 @@ RemotePyFunctionObject::RemotePyFunctionObject(Offset objectAddress)
 
 auto RemotePyFunctionObject::code() const -> unique_ptr<RemotePyCodeObject>
 {
-	return fieldAsPyObject<RemotePyCodeObject>(remoteObj(), "func_code");
+	return utils::fieldAsPyObject<RemotePyCodeObject>(remoteObj(), "func_code");
 }
 
 
 auto RemotePyFunctionObject::globals() const -> unique_ptr<RemotePyDictObject>
 {
-	return fieldAsPyObject<RemotePyDictObject>(remoteObj(), "func_globals");
+	return utils::fieldAsPyObject<RemotePyDictObject>(remoteObj(), "func_globals");
 }
 
 
 auto RemotePyFunctionObject::defaults() const -> unique_ptr<RemotePyTupleObject>
 {
-	return fieldAsPyObject<RemotePyTupleObject>(remoteObj(), "func_defaults");
+	return utils::fieldAsPyObject<RemotePyTupleObject>(remoteObj(), "func_defaults");
 }
 
 
 auto RemotePyFunctionObject::kwdefaults() const -> unique_ptr<RemotePyDictObject>
 {
-	return fieldAsPyObject<RemotePyDictObject>(remoteObj(), "func_kwdefaults");
+	return utils::fieldAsPyObject<RemotePyDictObject>(remoteObj(), "func_kwdefaults");
 }
 
 
 auto RemotePyFunctionObject::closure() const -> unique_ptr<RemotePyTupleObject>
 {
-	return fieldAsPyObject<RemotePyTupleObject>(remoteObj(), "func_closure");
+	return utils::fieldAsPyObject<RemotePyTupleObject>(remoteObj(), "func_closure");
 }
 
 
 auto RemotePyFunctionObject::doc() const -> unique_ptr<RemotePyObject>
 {
-	return fieldAsPyObject<RemotePyObject>(remoteObj(), "func_doc");
+	return utils::fieldAsPyObject<RemotePyObject>(remoteObj(), "func_doc");
 }
 
 
 auto RemotePyFunctionObject::name() const -> unique_ptr<RemotePyStringObject>
 {
-	return fieldAsPyObject<RemotePyStringObject>(remoteObj(), "func_name");
+	return utils::fieldAsPyObject<RemotePyStringObject>(remoteObj(), "func_name");
 }
 
 
 auto RemotePyFunctionObject::dict() const -> unique_ptr<RemotePyDictObject>
 {
-	return fieldAsPyObject<RemotePyDictObject>(remoteObj(), "func_dict");
+	return utils::fieldAsPyObject<RemotePyDictObject>(remoteObj(), "func_dict");
 }
 
 
 auto RemotePyFunctionObject::weakreflist() const -> unique_ptr<RemotePyListObject>
 {
-	return fieldAsPyObject<RemotePyListObject>(remoteObj(), "func_weakreflist");
+	return utils::fieldAsPyObject<RemotePyListObject>(remoteObj(), "func_weakreflist");
 }
 
 
 auto RemotePyFunctionObject::module() const -> unique_ptr<RemotePyObject>
 {
-	return fieldAsPyObject<RemotePyObject>(remoteObj(), "func_module");
+	return utils::fieldAsPyObject<RemotePyObject>(remoteObj(), "func_module");
 }
 
 
 auto RemotePyFunctionObject::annotations() const -> unique_ptr<RemotePyDictObject>
 {
-	return fieldAsPyObject<RemotePyDictObject>(remoteObj(), "func_annotations");
+	return utils::fieldAsPyObject<RemotePyDictObject>(remoteObj(), "func_annotations");
 }
 
 
 auto RemotePyFunctionObject::qualname() const -> unique_ptr<RemotePyStringObject>
 {
-	return fieldAsPyObject<RemotePyStringObject>(remoteObj(), "func_qualname");
+	return utils::fieldAsPyObject<RemotePyStringObject>(remoteObj(), "func_qualname");
 }
 
 

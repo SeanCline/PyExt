@@ -149,6 +149,7 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="utils\ExtHelpers.h" />
     <ClInclude Include="utils\fieldAsPyObject.h" />
+    <ClInclude Include="utils\lossless_cast.h" />
     <ClInclude Include="utils\ScopeExit.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

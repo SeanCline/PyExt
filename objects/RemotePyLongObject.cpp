@@ -3,6 +3,7 @@
 #include "utils/ExtHelpers.h"
 
 #include <engextcpp.hpp>
+
 #include <string>
 #include <stdexcept>
 #include <vector>
@@ -48,7 +49,7 @@ auto RemotePyLongObject::repr(bool /*pretty*/) const -> string
 	const auto numDigits = static_cast<size_t>(abs(size()));
 	for (int64_t i = numDigits - 1; i >= 0; --i) {
 		auto hiElement = digits.ArrayElement(i);
-		auto hi = readIntegral<uint64_t>(hiElement);
+		auto hi = utils::readIntegral<uint64_t>(hiElement);
 		for (auto& buffDigit : buff) {
 			uint64_t z = buffDigit << SHIFT | hi;
 			hi = z / DECIMAL_BASE;

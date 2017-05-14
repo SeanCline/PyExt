@@ -67,7 +67,7 @@ namespace {
 		IDebugSymbolGroup2* group = nullptr;
 		HRESULT hr = pSymbols->GetScopeSymbolGroup2(DEBUG_SCOPE_GROUP_LOCALS, nullptr, &group);
 
-		auto releaseGroup = makeScopeExit([&group] {
+		auto releaseGroup = utils::makeScopeExit([&group] {
 			if (group != nullptr) {
 				group->Release();
 				group = nullptr;

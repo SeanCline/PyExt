@@ -15,7 +15,7 @@ RemotePyBoolObject::RemotePyBoolObject(Offset objectAddress)
 auto RemotePyBoolObject::boolValue() const -> bool
 {
 	auto ival = remoteObj().Field("ob_ival");
-	return readIntegral<bool>(ival);
+	return utils::readIntegral<bool>(ival);
 }
 
 

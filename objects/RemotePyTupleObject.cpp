@@ -1,6 +1,7 @@
 #include "RemotePyTupleObject.h"
 
 #include "objects.h"
+#include "utils/lossless_cast.h"
 
 #include <engextcpp.hpp>
 
@@ -37,10 +38,10 @@ auto RemotePyTupleObject::at(SSize index) const -> unique_ptr<RemotePyObject>
 
 auto RemotePyTupleObject::listValue() const -> vector<unique_ptr<RemotePyObject>>
 {
-	auto count = numItems();
+	auto count = utils::lossless_cast<size_t>(numItems());
 	vector<unique_ptr<RemotePyObject>> values(count);
 
-	for (SSize i = 0; i < count; ++i) {
+	for (size_t i = 0; i < count; ++i) {
 		values[i] = at(i);
 	}
 

@@ -15,7 +15,7 @@ RemotePyIntObject::RemotePyIntObject(Offset objectAddress)
 auto RemotePyIntObject::intValue() const -> int32_t
 {
 	auto ival = remoteObj().Field("ob_ival");
-	return readIntegral<int32_t>(ival);
+	return utils::readIntegral<int32_t>(ival);
 }
 
 

@@ -1,6 +1,9 @@
 #include "RemotePyStringObject.h"
 
+#include "utils/lossless_cast.h"
+
 #include <engextcpp.hpp>
+
 #include <string>
 #include <vector>
 #include <iterator>
@@ -27,7 +30,7 @@ auto RemotePyStringObject::stringValue() const -> string
 	if (len <= 0)
 		return { };
 
-	vector<char> buff(len, '\0');
+	vector<char> buff(utils::lossless_cast<size_t>(len), '\0');
 
 	// String objects in Python can embed \0's, especially in Python2, when used to store bytes.
 	// GetString() stops at the first \0 so ReadBuffer() is a better choice.

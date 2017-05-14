@@ -1,9 +1,10 @@
 #include "RemotePyObject.h"
-#include "RemotePyTypeObject.h"
 
+#include "RemotePyTypeObject.h"
 #include "utils/ExtHelpers.h"
 
 #include <engextcpp.hpp>
+
 #include <string>
 using namespace std;
 
@@ -28,7 +29,7 @@ auto RemotePyObject::offset() -> Offset
 auto RemotePyObject::refCount() const -> SSize
 {
 	auto refcnt = remoteObj().Field("ob_refcnt");
-	return readIntegral<SSize>(refcnt);
+	return utils::readIntegral<SSize>(refcnt);
 }
 
 

@@ -22,14 +22,14 @@ RemotePyDictObject::RemotePyDictObject(Offset objectAddress)
 auto RemotePyDictObject::numUsed() const -> SSize
 {
 	auto used = remoteObj().Field("ma_used");
-	return readIntegral<SSize>(used);
+	return utils::readIntegral<SSize>(used);
 }
 
 
 auto RemotePyDictObject::numMask() const -> SSize
 {
 	auto mask = remoteObj().Field("ma_mask");
-	return readIntegral<SSize>(mask);
+	return utils::readIntegral<SSize>(mask);
 }
 
 
