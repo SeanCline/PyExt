@@ -2,7 +2,7 @@
 .reload
 
 ~0s;
-!pystack
+~*e!pystack
 
 $$ kv
 $$ .frame 0n22

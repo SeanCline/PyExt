@@ -4,34 +4,25 @@
 #include "objects/RemotePyDictObject.h"
 #include "objects/RemotePyCodeObject.h"
 
+#include "utils/ScopeExit.h"
+
 #include <engextcpp.hpp>
 
 #include <vector>
 #include <string>
+#include <sstream>
 #include <stdexcept>
 #include <iostream>
+#include <iomanip>
 using namespace std;
 
 
-auto EXT_CLASS::getStackFrames(size_t numFrames) -> vector<DEBUG_STACK_FRAME>
-{
-	vector<DEBUG_STACK_FRAME> frames(numFrames);
-	ULONG framesFilled = 0;
-	HRESULT hr = m_Control->GetStackTrace(0, 0, 0, frames.data(), static_cast<ULONG>(frames.size()), &framesFilled);
-
-	if (FAILED(hr))
-		ThrowStatus(hr, "GetStackTrace failed.");
-
-	frames.resize(framesFilled);
-
-	return frames;
-}
-
 namespace {
-	auto getPyFrameSymbolIndex(IDebugSymbolGroup2* group) -> LONG
+
+	auto getPyFrameSymbolIndex(IDebugSymbolGroup2* pGroup) -> LONG
 	{
 		ULONG numSymbols = 0;
-		HRESULT hr = group->GetNumberSymbols(&numSymbols);
+		HRESULT hr = pGroup->GetNumberSymbols(&numSymbols);
 		if (FAILED(hr))
 			return -1;
 
@@ -39,7 +30,7 @@ namespace {
 			const auto bufferSize = 1024u; //< I don't imagine the _frame's typename will ever be this long.
 			vector<char> typeName(bufferSize, '\0');
 			ULONG nameSize = 0;
-			hr = group->GetSymbolTypeName(i, typeName.data(), bufferSize, &nameSize);
+			hr = pGroup->GetSymbolTypeName(i, typeName.data(), bufferSize, &nameSize);
 			if (FAILED(hr))
 				continue;
 
@@ -49,59 +40,137 @@ namespace {
 		return -1;
 	}
 
+
+	auto getNativeStackFrames(IDebugControl* pControl, size_t numFrames = 1024) -> vector<DEBUG_STACK_FRAME>
+	{
+		vector<DEBUG_STACK_FRAME> frames(numFrames);
+		ULONG framesFilled = 0;
+		HRESULT hr = pControl->GetStackTrace(0, 0, 0, frames.data(), static_cast<ULONG>(frames.size()), &framesFilled);
+
+		if (FAILED(hr))
+			runtime_error("GetStackTrace failed with hr="s + to_string(hr));
+
+		frames.resize(framesFilled);
+
+		return frames;
+	}
+
+
 	ULONG64 DereferenceRemotePointer(ULONG64 ptr) {
 		return ExtRemoteData(ptr, g_Ext->m_PtrSize).GetPtr();
 	}
+
+
+	vector<RemotePyFrameObject> getPythonFrames(IDebugSymbols3* pSymbols, const vector<DEBUG_STACK_FRAME>& nativeFrames)
+	{
+		vector<RemotePyFrameObject> frameObjects;
+		IDebugSymbolGroup2* group = nullptr;
+		HRESULT hr = pSymbols->GetScopeSymbolGroup2(DEBUG_SCOPE_GROUP_LOCALS, nullptr, &group);
+
+		auto releaseGroup = makeScopeExit([&group] {
+			if (group != nullptr) {
+				group->Release();
+				group = nullptr;
+			}
+		});
+
+		if (FAILED(hr))
+			throw runtime_error("Initial GetScopeSymbolGroup2 failed.");
+
+		for (auto& nativeFrame : nativeFrames) {
+			// Set the symbol scope to the current frame.
+			hr = pSymbols->SetScope(nativeFrame.InstructionOffset, const_cast<DEBUG_STACK_FRAME*>(&nativeFrame), nullptr, 0);
+			if (FAILED(hr))
+				throw runtime_error("SetScope failed with hr=");
+
+			// Only look at locals.
+			hr = pSymbols->GetScopeSymbolGroup2(DEBUG_SCOPE_GROUP_LOCALS, group, &group);
+			if (FAILED(hr))
+				throw runtime_error("GetScopeSymbolGroup2 failed with hr=");
+
+			// Look for a python _frame pointer.
+			auto pyFrameSymbol = getPyFrameSymbolIndex(group);
+			if (pyFrameSymbol >= 0) {
+				RemotePyFrameObject::Offset offset = 0;
+				hr = group->GetSymbolOffset(pyFrameSymbol, &offset);
+				if (FAILED(hr)) {
+					::OutputDebugStringA("Failed to retreive frame offset.");
+					continue;
+				}
+
+				// Put it on the list.
+				frameObjects.emplace_back(DereferenceRemotePointer(offset));
+			}
+		}
+
+		return frameObjects;
+	}
+
+
+	string frameToString(const RemotePyFrameObject& frameObject)
+	{
+		ostringstream oss;
+
+		auto codeObject = frameObject.code();
+		if (codeObject != nullptr) {
+			oss << "File \"" << codeObject->filename() << "\"";
+			oss << ", line " << frameObject.currentLineNumber();
+			oss << ", in " << codeObject->name();
+		} else {
+			// This shouldn't ever happen.
+			throw runtime_error("Warning: PyFrameObject is missing PyCodeObject.");
+		}
+
+		return oss.str();
+	}
+
+	/*
+	string frameToCommandString(const RemotePyFrameObject& frameObject)
+	{
+		ostringstream oss;
+		auto locals = frameObject.locals();
+		if (locals != nullptr && locals->offset() != 0)
+			oss << "<link cmd=\"!pyobj 0x" << hex << locals->offset() << "\">[Locals]</link>";
+
+		auto code = frameObject.code();
+		if (code != nullptr && code->offset() != 0)
+			oss << "<link cmd=\"!pyobj 0x" << hex << code->offset() << "\">[code]</link>";
+
+		return oss.str();
+	}
+	*/
 }
 
 
 EXT_COMMAND(pystack, "Output the Python stack for the current thread.", "")
 {
-	IDebugSymbolGroup2* group = nullptr;
-	HRESULT hr = m_Symbols3->GetScopeSymbolGroup2(DEBUG_SCOPE_GROUP_LOCALS, nullptr, &group);
-	if (FAILED(hr))
-		Err("Initial GetScopeSymbolGroup2 failed.");
+	auto nativeFrames = getNativeStackFrames(m_Control);
+	auto frameObjects = getPythonFrames(m_Symbols3, nativeFrames);
 
-	auto frames = getStackFrames();
-	for (auto& frame : frames) {
-		// Set the symbol scope to the current frame.
-		hr = m_Symbols->SetScope(frame.InstructionOffset, &frame, nullptr, 0);
-		if (FAILED(hr))
-			ThrowStatus(hr, "SetScope failed.");
+	// Print the thread header.
+	ULONG threadId = 0xFFFF;
+	m_System->GetCurrentThreadId(&threadId);
+	auto threadHeader = "Thread " + to_string(threadId) + ":";
+	Out("%s\n", threadHeader.c_str());
 
-		// Only look at locals.
-		hr = m_Symbols3->GetScopeSymbolGroup2(DEBUG_SCOPE_GROUP_LOCALS, group, &group);
-		if (FAILED(hr))
-			ThrowStatus(hr, "GetScopeSymbolGroup2 failed.");
+	// Make sure there are frames.
+	if (frameObjects.empty()) {
+		Warn("\tThread does not contain any Python frames.\n\n", threadHeader.c_str());
+		return;
+	}
 
-		// Look for a python _frame pointer.
-		auto pyFrameSymbol = getPyFrameSymbolIndex(group);
-		if (pyFrameSymbol >= 0) {
-			RemotePyFrameObject::Offset offset = 0;
-			hr = group->GetSymbolOffset(pyFrameSymbol, &offset);
-			if (FAILED(hr)) {
-				Warn("Failed to retreive frame offset.");
-				continue;
-			}
+	// Print each frame.
+	for (auto& frameObject : frameObjects) {
+		try {
+			auto frameStr = frameToString(frameObject);
+			Out("\t%s\n", frameStr.c_str());
 
-			auto frameObject = RemotePyFrameObject(DereferenceRemotePointer(offset));
-			//Out("Frame object: %s\n", frameObject.repr().c_str());
-
-			auto codeObject = frameObject.code();
-			if (codeObject != nullptr) {
-				Out("Code object: %s\n", codeObject->repr().c_str());
-				Out("Function name: %s\n", codeObject->name().c_str());
-				Out("File %s @ %d\n", codeObject->filename().c_str(), frameObject.currentLineNumber());
-			}
-
-			auto localsObject = frameObject.locals();
-			if (localsObject != nullptr)
-				Out("Locals: %s\n", localsObject->repr().c_str());
-
-			Out("\n");
+			//auto frameCommandStr = frameToCommandString(frameObject);
+			//Dml("\t%s\n", frameCommandStr.c_str());
+		} catch (exception& ex) {
+			Warn("%s\n", ex.what());
 		}
 	}
 
-	if (group != nullptr) //< TODO: RAII
-		group->Release();
+	Out("\n");
 }
