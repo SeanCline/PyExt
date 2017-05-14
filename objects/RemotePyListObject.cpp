@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 #include <sstream>
 #include <iomanip>
 #include <stdexcept>
@@ -34,6 +35,19 @@ auto RemotePyListObject::at(SSize index) const -> unique_ptr<RemotePyObject>
 }
 
 
+auto RemotePyListObject::listValue() const -> vector<unique_ptr<RemotePyObject>>
+{
+	auto count = numItems();
+	vector<unique_ptr<RemotePyObject>> values(count);
+	
+	for (SSize i = 0; i < count; ++i) {
+		values[i] = at(i);
+	}
+
+	return values;
+}
+
+
 auto RemotePyListObject::repr(bool /*pretty*/) const -> string
 {
 	ostringstream oss;
@@ -41,7 +55,10 @@ auto RemotePyListObject::repr(bool /*pretty*/) const -> string
 
 	auto count = numItems();
 	for (SSize i = 0; i < count; ++i) {
-		oss << at(i)->repr();
+		auto elem = at(i);
+		if (elem != nullptr)
+			oss << elem->repr();
+
 		if (i+1 < count)
 			oss << ", ";
 	}

@@ -4,7 +4,8 @@
 
 #include <memory>
 #include <string>
-
+#include <vector>
+#include <utility>
 
 // Represents a PyDictObject in the debuggee's address space.
 class RemotePyDictObject : public RemotePyObject
@@ -17,6 +18,7 @@ public: // Members.
 	auto numUsed() const -> SSize;
 	auto numMask() const -> SSize;
 	auto at(SSize index) const -> std::unique_ptr<RemotePyObject>;
+	auto pairValues() const -> std::vector<std::pair<std::unique_ptr<RemotePyObject>, std::unique_ptr<RemotePyObject>>>;
 	auto repr(bool pretty = true) const -> std::string override;
 
 };

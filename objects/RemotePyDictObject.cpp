@@ -9,6 +9,7 @@
 #include <sstream>
 #include <iomanip>
 #include <stdexcept>
+#include <utility>
 using namespace std;
 
 RemotePyDictObject::RemotePyDictObject(Offset objectAddress)
@@ -29,13 +30,9 @@ auto RemotePyDictObject::numMask() const -> SSize
 }
 
 
-auto RemotePyDictObject::repr(bool pretty) const -> string
+auto RemotePyDictObject::pairValues() const -> vector<pair<unique_ptr<RemotePyObject>, unique_ptr<RemotePyObject>>>
 {
-	const auto elementSeparator = (pretty) ? "\n" : " "; //< Use a newline when pretty-print is on.
-	const auto indentation = (pretty) ? "\t" : ""; //< Indent only when pretty is on.
-
-	ostringstream oss;
-	oss << '{' << elementSeparator;
+	vector<pair<unique_ptr<RemotePyObject>, unique_ptr<RemotePyObject>>> pairs;
 
 	auto tableSize = numMask();
 	auto table = remoteObj().Field("ma_table");
@@ -50,7 +47,24 @@ auto RemotePyDictObject::repr(bool pretty) const -> string
 
 		auto key = makeRemotePyObject(keyPtr);
 		auto value = makeRemotePyObject(valuePtr);
+		pairs.push_back(make_pair(move(key), move(value)));
+	}
 
+	return pairs;
+}
+
+
+auto RemotePyDictObject::repr(bool pretty) const -> string
+{
+	const auto elementSeparator = (pretty) ? "\n" : " "; //< Use a newline when pretty-print is on.
+	const auto indentation = (pretty) ? "\t" : ""; //< Indent only when pretty is on.
+
+	ostringstream oss;
+	oss << '{' << elementSeparator;
+
+	for (auto& pairValue : pairValues()) { //< TODO: Structured bindings. for (auto&& [key, value] : pairValues) {
+		auto& key = pairValue.first;
+		auto& value = pairValue.second;
 		oss << indentation << key->repr(pretty) << ": " << value->repr(pretty) << ',' << elementSeparator;
 	}
 

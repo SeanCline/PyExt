@@ -21,6 +21,7 @@ public: // Construction/Destruction.
 	virtual ~RemotePyObject();
 
 public: // Members.
+	auto offset() -> Offset;
 	auto refCount() const -> SSize;
 	auto type() const -> RemotePyTypeObject;
 	auto typeName() const -> std::string;

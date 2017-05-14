@@ -17,6 +17,12 @@ RemotePyObject::~RemotePyObject()
 }
 
 
+auto RemotePyObject::offset() -> Offset
+{
+	return remoteObj().GetPtr();
+}
+
+
 auto RemotePyObject::refCount() const -> SSize
 {
 	return remoteObj().Field("ob_refcnt").GetLong64();
