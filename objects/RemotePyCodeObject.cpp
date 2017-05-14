@@ -1,5 +1,7 @@
 #include "RemotePyCodeObject.h"
+
 #include "RemotePyStringObject.h"
+#include "utils/ExtHelpers.h"
 
 #include <engextcpp.hpp>
 #include <string>
@@ -16,9 +18,10 @@ RemotePyCodeObject::RemotePyCodeObject(Offset objectAddress)
 }
 
 
-int RemotePyCodeObject::firstLineNumber() const
+auto RemotePyCodeObject::firstLineNumber() const -> int
 {
-	return remoteObj().Field("co_firstlineno").GetLong();
+	auto firstlineno = remoteObj().Field("co_firstlineno");
+	return readIntegral<int>(firstlineno);
 }
 
 

@@ -1,5 +1,7 @@
 #include "RemotePyIntObject.h"
 
+#include "utils/ExtHelpers.h"
+
 #include <engextcpp.hpp>
 #include <string>
 using namespace std;
@@ -13,7 +15,7 @@ RemotePyIntObject::RemotePyIntObject(Offset objectAddress)
 auto RemotePyIntObject::intValue() const -> int32_t
 {
 	auto ival = remoteObj().Field("ob_ival");
-	return ival.GetLong();
+	return readIntegral<int32_t>(ival);
 }
 
 

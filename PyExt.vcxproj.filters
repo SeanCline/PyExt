@@ -84,14 +84,14 @@
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="\Debuggers\inc\engextcpp.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="objects\RemotePyTypeObject.cpp">
       <Filter>Source Files\objects</Filter>
     </ClCompile>
     <ClCompile Include="objects\RemotePyFunctionObject.cpp">
       <Filter>Source Files\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="\Debuggers\inc\engextcpp.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -159,6 +159,9 @@
       <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="utils\ScopeExit.h">
+      <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\ExtHelpers.h">
       <Filter>Header Files\utils</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,5 +1,7 @@
 #include "RemotePyLongObject.h"
 
+#include "utils/ExtHelpers.h"
+
 #include <engextcpp.hpp>
 #include <string>
 #include <stdexcept>
@@ -41,17 +43,12 @@ auto RemotePyLongObject::repr(bool /*pretty*/) const -> string
 	const auto BASE = static_cast<int64_t>(1) << SHIFT;
 	const auto MASK = BASE - 1;
 
-	// Returns a "digit" element by its index, taking into account its size.
-	auto getDigit = [&](uint64_t index) -> uint64_t {
-		auto digit = digits.ArrayElement(index);
-		return (bytesPerDigit == 4) ? digit.GetLong() : digit.GetShort();
-	};
-
 	// Convert from BASE to DECIMAL_BASE and store the result in `buff`.
 	vector<uint64_t> buff;
 	const auto numDigits = static_cast<size_t>(abs(size()));
 	for (int64_t i = numDigits - 1; i >= 0; --i) {
-		auto hi = getDigit(i);
+		auto hiElement = digits.ArrayElement(i);
+		auto hi = readIntegral<uint64_t>(hiElement);
 		for (auto& buffDigit : buff) {
 			uint64_t z = buffDigit << SHIFT | hi;
 			hi = z / DECIMAL_BASE;

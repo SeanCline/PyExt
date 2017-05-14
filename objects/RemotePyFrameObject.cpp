@@ -1,6 +1,7 @@
 #include "RemotePyFrameObject.h"
 
 #include "utils/fieldAsPyObject.h"
+#include "utils/ExtHelpers.h"
 #include "RemotePyCodeObject.h"
 #include "RemotePyDictObject.h"
 #include "RemotePyFunctionObject.h"
@@ -55,7 +56,8 @@ auto RemotePyFrameObject::trace() const -> unique_ptr<RemotePyFunctionObject>
 
 auto RemotePyFrameObject::lastInstruction() const -> int
 {
-	return remoteObj().Field("f_lasti").GetLong();
+	auto lasti = remoteObj().Field("f_lasti");
+	return readIntegral<int>(lasti);
 }
 
 
@@ -64,8 +66,10 @@ auto RemotePyFrameObject::currentLineNumber() const -> int
 	// When tracing is enabled, we can use the acccurately updated f_lineno field.
 	auto traceFunction = trace();
 	auto codeObject = code();
-	if (traceFunction != nullptr || codeObject == nullptr)
-		return remoteObj().Field("f_lineno").GetLong();
+	if (traceFunction != nullptr || codeObject == nullptr) {
+		auto lineno = remoteObj().Field("f_lineno");
+		return readIntegral<int>(lineno);
+	}
 
 	// Otherwise, we need to do a lookup into the code object's line number table (co_lnotab).
 	return codeObject->lineNumberFromInstructionOffset(lastInstruction());

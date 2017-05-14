@@ -147,6 +147,7 @@
     <ClInclude Include="objects\RemotePyTypeObject.h" />
     <ClInclude Include="objects\RemotePyVarObject.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="utils\ExtHelpers.h" />
     <ClInclude Include="utils\fieldAsPyObject.h" />
     <ClInclude Include="utils\ScopeExit.h" />
   </ItemGroup>

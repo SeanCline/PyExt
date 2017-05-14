@@ -78,6 +78,14 @@ namespace {
 			throw runtime_error("Initial GetScopeSymbolGroup2 failed.");
 
 		for (auto& nativeFrame : nativeFrames) {
+			// Make sure this is an EvalFrameEx call.
+			int bufferSize = 1024;
+			vector<char> functionNameBuffer(1024, '\0');
+			hr = pSymbols->GetNameByOffset(nativeFrame.InstructionOffset, functionNameBuffer.data(), bufferSize, nullptr, nullptr);
+			if (FAILED(hr) || string(functionNameBuffer.data()).find("EvalFrameEx") == string::npos) {
+				continue;
+			}
+
 			// Set the symbol scope to the current frame.
 			hr = pSymbols->SetScope(nativeFrame.InstructionOffset, const_cast<DEBUG_STACK_FRAME*>(&nativeFrame), nullptr, 0);
 			if (FAILED(hr))

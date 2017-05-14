@@ -1,6 +1,7 @@
 #include "RemotePyDictObject.h"
 
 #include "objects.h"
+#include "utils/ExtHelpers.h"
 
 #include <engextcpp.hpp>
 
@@ -20,13 +21,15 @@ RemotePyDictObject::RemotePyDictObject(Offset objectAddress)
 
 auto RemotePyDictObject::numUsed() const -> SSize
 {
-	return remoteObj().Field("ma_used").GetLong64();
+	auto used = remoteObj().Field("ma_used");
+	return readIntegral<SSize>(used);
 }
 
 
 auto RemotePyDictObject::numMask() const -> SSize
 {
-	return remoteObj().Field("ma_mask").GetLong64();
+	auto mask = remoteObj().Field("ma_mask");
+	return readIntegral<SSize>(mask);
 }
 
 

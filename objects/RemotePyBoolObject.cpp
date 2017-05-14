@@ -1,5 +1,7 @@
 #include "RemotePyBoolObject.h"
 
+#include "utils/ExtHelpers.h"
+
 #include <engextcpp.hpp>
 #include <string>
 using namespace std;
@@ -13,7 +15,7 @@ RemotePyBoolObject::RemotePyBoolObject(Offset objectAddress)
 auto RemotePyBoolObject::boolValue() const -> bool
 {
 	auto ival = remoteObj().Field("ob_ival");
-	return static_cast<bool>(ival.GetLong());
+	return readIntegral<bool>(ival);
 }
 
 

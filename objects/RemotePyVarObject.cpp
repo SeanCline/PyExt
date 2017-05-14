@@ -1,5 +1,7 @@
 #include "RemotePyVarObject.h"
 
+#include "utils/ExtHelpers.h"
+
 #include <engextcpp.hpp>
 
 #include <string>
@@ -13,5 +15,6 @@ RemotePyVarObject::RemotePyVarObject(Offset objectAddress, const string& typeNam
 
 auto RemotePyVarObject::size() const -> SSize
 {
-	return remoteObj().Field("ob_size").GetLong64();
+	auto sizeField = remoteObj().Field("ob_size");
+	return readIntegral<SSize>(sizeField);
 }
