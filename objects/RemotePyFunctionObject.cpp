@@ -96,5 +96,9 @@ auto RemotePyFunctionObject::qualname() const -> unique_ptr<RemotePyStringObject
 
 auto RemotePyFunctionObject::repr(bool /*pretty*/) const -> string
 {
-	return "<function " + name()->stringValue() + ">";
+	auto nameObject = name();
+	if (nameObject == nullptr)
+		return "<function>";
+
+	return "<function " + nameObject->stringValue() + ">";
 }

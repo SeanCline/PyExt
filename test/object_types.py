@@ -1,5 +1,4 @@
-import win32debug
-import inspect
+import win32debug, sys, os
 
 stringObj = "asd123qwe"
 bigStringObj = stringObj * 100
@@ -13,8 +12,6 @@ noneObj = None
 typeObj = dict
 notImplementedObj = NotImplemented
 funcObj = lambda x: x*x
-frameObj = inspect.currentframe()
-codeObj = frameObj.f_code
 
 listObj = [stringObj, intObj, longObj]
 
@@ -26,4 +23,7 @@ dictObj = {
 	"longObj": longObj,
 }
 
-win32debug.dump_process(__file__ + ".dmp")
+pythonVersionStr = ".".join(str(x) for x in sys.version_info[:3])
+fileNameStr = os.path.splitext(os.path.basename(__file__))[0]
+bittessStr = 'x64' if sys.maxsize > 2**32 else 'x86'
+win32debug.dump_process('.'.join([fileNameStr, pythonVersionStr, bittessStr, "dmp"]))
