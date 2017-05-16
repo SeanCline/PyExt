@@ -1,4 +1,5 @@
 #include "RemotePyStringObject.h"
+#include "RemotePyTypeObject.h"
 
 #include "utils/lossless_cast.h"
 
@@ -11,20 +12,21 @@
 #include <iomanip>
 using namespace std;
 
-RemotePyStringObject::RemotePyStringObject(Offset objectAddress)
-	: RemotePyVarObject(objectAddress, "PyStringObject")
+
+RemotePyBaseStringObject::RemotePyBaseStringObject(Offset objectAddress, const std::string& typeName)
+	: RemotePyVarObject(objectAddress, typeName)
 {
 }
 
 
-auto RemotePyStringObject::stringLength() const -> SSize
+auto RemotePyBaseStringObject::stringLength() const -> SSize
 {
 	auto len = size();
 	return (len < 0) ? 0 : len; //< Don't let the length go negative. Python enforces this.
 }
 
 
-auto RemotePyStringObject::stringValue() const -> string
+auto RemotePyBaseStringObject::stringValue() const -> string
 {
 	auto len = stringLength();
 	if (len <= 0)
@@ -40,9 +42,23 @@ auto RemotePyStringObject::stringValue() const -> string
 }
 
 
-auto RemotePyStringObject::repr(bool /*pretty*/) const -> string
+auto RemotePyBaseStringObject::repr(bool /*pretty*/) const -> string
 {
 	ostringstream oss;
 	oss << quoted(stringValue()); //< Escape the string.
+	// TODO: Also escape nonprintables.
 	return oss.str();
+}
+
+
+
+RemotePyBytesObject::RemotePyBytesObject(Offset objectAddress)
+	: RemotePyBaseStringObject(objectAddress, "PyBytesObject")
+{
+}
+
+
+RemotePyStringObject::RemotePyStringObject(Offset objectAddress)
+	: RemotePyBaseStringObject(objectAddress, "PyStringObject")
+{
 }

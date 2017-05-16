@@ -3,10 +3,10 @@
 
 ~0s;
 kv;
-.frame 0n22;
-dv /t /v;
-??f;
-!pyobj f->f_globals;
-!pyobj f->f_locals;
+$$ .frame 0n22;
+$$ dv /t /v;
+$$ ??f;
+$$ !pyobj f->f_globals;
+$$ !pyobj f->f_locals;
 
 ~*e!pystack;

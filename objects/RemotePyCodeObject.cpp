@@ -1,6 +1,8 @@
 #include "RemotePyCodeObject.h"
 
-#include "RemotePyStringObject.h"
+#include "PyStringValue.h"
+
+#include "utils/fieldAsPyObject.h"
 #include "utils/ExtHelpers.h"
 
 #include <engextcpp.hpp>
@@ -60,33 +62,31 @@ auto RemotePyCodeObject::lineNumberFromInstructionOffset(int instruction) const 
 
 auto RemotePyCodeObject::filename() const -> string
 {
-	auto objPtr = remoteObj().Field("co_filename").GetPtr();
-	if (objPtr == 0)
-		return {};
-	
-	auto filename = RemotePyStringObject(objPtr);
-	return filename.stringValue();
+	auto filenameStr = utils::fieldAsPyObject<PyStringValue>(remoteObj(), "co_filename");
+	if (filenameStr == nullptr)
+		return { };
+
+	return filenameStr->stringValue();
 }
 
 
 auto RemotePyCodeObject::name() const -> string
 {
-	auto objPtr = remoteObj().Field("co_name").GetPtr();
-	if (objPtr == 0)
-		return {};
-	
-	auto nameObject = RemotePyStringObject(objPtr);
-	return nameObject.stringValue();
+	auto nameStr = utils::fieldAsPyObject<PyStringValue>(remoteObj(), "co_name");
+	if (nameStr == nullptr)
+		return { };
+
+	return nameStr->stringValue();
 }
 
 
 auto RemotePyCodeObject::lineNumberTable() const -> vector<uint8_t>
 {
-	auto objPtr = remoteObj().Field("co_lnotab").GetPtr();
-	if (objPtr == 0)
-		return {};
+	auto codeStr = utils::fieldAsPyObject<PyStringValue>(remoteObj(), "co_lnotab");
+	if (codeStr == nullptr)
+		return { };
 
-	auto tableString = RemotePyStringObject(objPtr).stringValue();
+	auto tableString = codeStr->stringValue();
 	return vector<uint8_t>(begin(tableString), end(tableString));
 }
 

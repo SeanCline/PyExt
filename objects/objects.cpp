@@ -3,6 +3,7 @@
 #include "RemotePyVarObject.h"
 #include "RemotePyTypeObject.h"
 #include "RemotePyStringObject.h"
+#include "RemotePyUnicodeObject.h"
 #include "RemotePyListObject.h"
 #include "RemotePyTupleObject.h"
 #include "RemotePyDictObject.h"
@@ -23,15 +24,21 @@ using namespace std;
 
 auto makeRemotePyObject(RemotePyObject::Offset remoteAddress) -> unique_ptr<RemotePyObject>
 {
-	// Get the type name.
-	const auto obj = RemotePyObject(remoteAddress);
-	const auto typeName = obj.typeName();
+	// Get the type of this object.
+	const auto typeObj = RemotePyObject(remoteAddress).type();
+	const auto typeName = typeObj.name();
 
 	// TODO: Turn this into a map to factory functions.
 	if (typeName == "type") {
 		return make_unique<RemotePyTypeObject>(remoteAddress);
 	} else if (typeName == "str") {
-		return make_unique<RemotePyStringObject>(remoteAddress);
+		if (typeObj.isPython2()) {
+			return make_unique<RemotePyStringObject>(remoteAddress);
+		} else {
+			return make_unique<RemotePyUnicodeObject>(remoteAddress);
+		}
+	} else if (typeName == "bytes") {
+		return make_unique<RemotePyBytesObject>(remoteAddress);
 	} else if (typeName == "list") {
 		return make_unique<RemotePyListObject>(remoteAddress);
 	} else if (typeName == "tuple") {

@@ -20,7 +20,7 @@ RemotePyObject::~RemotePyObject()
 }
 
 
-auto RemotePyObject::offset() -> Offset
+auto RemotePyObject::offset() const -> Offset
 {
 	return remoteObj().GetPtr();
 }
@@ -39,15 +39,9 @@ auto RemotePyObject::type() const -> RemotePyTypeObject
 }
 
 
-auto RemotePyObject::typeName() const -> string
-{
-	return type().name();
-}
-
-
 auto RemotePyObject::repr(bool /*pretty*/) const -> string
 {
-	return "<" + typeName() + " object>";
+	return "<" + type().name() + " object>";
 }
 
 

@@ -3,6 +3,7 @@
 #include "objects/objects.h"
 #include "objects/RemotePyObject.h"
 #include "objects/RemotePyVarObject.h"
+#include "objects/RemotePyTypeObject.h"
 
 #include <engextcpp.hpp>
 
@@ -42,7 +43,7 @@ void EXT_CLASS::KnownStructObjectHandler(_In_ PCSTR /*TypeName*/, _In_ ULONG Fla
 	{
 		auto pyObj = makeRemotePyObject(Offset);
 
-		AppendString("Type: %s ", pyObj->typeName().c_str());
+		AppendString("Type: %s ", pyObj->type().name().c_str());
 
 		auto repr = pyObj->repr(false);
 		if (!repr.empty()) {
@@ -65,7 +66,7 @@ EXT_COMMAND(pyobj, "Prints information about a Python object", "{;s;PyObject add
 
 	Out("PyObject at address: %y\n", pyObj->offset());
 	Out("RefCount: %s\n", to_string(pyObj->refCount()).c_str());
-	Out("Type: %s\n", pyObj->typeName().c_str());
+	Out("Type: %s\n", pyObj->type().name().c_str());
 
 	// Print the size if its a PyVarObject.
 	auto pyVarObj = dynamic_cast<RemotePyVarObject*>(pyObj.get());

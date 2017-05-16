@@ -12,7 +12,7 @@ class RemotePyTypeObject;
 class RemotePyObject
 {
 
-public: // Typdefs.
+public: // Typedefs.
 	using Offset = std::uint64_t;
 	using SSize = std::int64_t;
 
@@ -21,10 +21,9 @@ public: // Construction/Destruction.
 	virtual ~RemotePyObject();
 
 public: // Members.
-	auto offset() -> Offset;
+	auto offset() const -> Offset;
 	auto refCount() const -> SSize;
 	auto type() const -> RemotePyTypeObject;
-	auto typeName() const -> std::string;
 	virtual auto repr(bool pretty = true) const -> std::string;
 
 protected: // Helpers for more derived classes.

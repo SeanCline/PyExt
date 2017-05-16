@@ -108,6 +108,7 @@
     <ClCompile Include="objects\RemotePyStringObject.cpp" />
     <ClCompile Include="objects\RemotePyTupleObject.cpp" />
     <ClCompile Include="objects\RemotePyTypeObject.cpp" />
+    <ClCompile Include="objects\RemotePyUnicodeObject.cpp" />
     <ClCompile Include="objects\RemotePyVarObject.cpp" />
     <ClCompile Include="globals.cpp" />
     <ClCompile Include="pch.cpp">
@@ -129,6 +130,7 @@
   <ItemGroup>
     <ClInclude Include="extension.h" />
     <ClInclude Include="objects\objects.h" />
+    <ClInclude Include="objects\PyStringValue.h" />
     <ClInclude Include="objects\RemotePyBoolObject.h" />
     <ClInclude Include="objects\RemotePyCodeObject.h" />
     <ClInclude Include="objects\RemotePyComplexObject.h" />
@@ -145,6 +147,7 @@
     <ClInclude Include="objects\RemotePyStringObject.h" />
     <ClInclude Include="objects\RemotePyTupleObject.h" />
     <ClInclude Include="objects\RemotePyTypeObject.h" />
+    <ClInclude Include="objects\RemotePyUnicodeObject.h" />
     <ClInclude Include="objects\RemotePyVarObject.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="utils\ExtHelpers.h" />

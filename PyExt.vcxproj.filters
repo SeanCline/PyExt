@@ -93,6 +93,9 @@
     <ClCompile Include="\Debuggers\inc\engextcpp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="objects\RemotePyUnicodeObject.cpp">
+      <Filter>Source Files\objects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="extension.h">
@@ -166,6 +169,12 @@
     </ClInclude>
     <ClInclude Include="utils\lossless_cast.h">
       <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="objects\RemotePyUnicodeObject.h">
+      <Filter>Header Files\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="objects\PyStringValue.h">
+      <Filter>Header Files\objects</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

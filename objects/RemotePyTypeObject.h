@@ -13,6 +13,7 @@ public: // Construction/Destruction.
 public: // Members.
 	auto name() const -> std::string;
 	auto documentation() const -> std::string;
+	auto isPython2() const -> bool;
 	auto repr(bool pretty = true) const -> std::string override;
 
 };

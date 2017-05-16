@@ -30,6 +30,14 @@ auto RemotePyTypeObject::documentation() const -> string
 }
 
 
+// This isn't really the best place for this method, but it's useful for factories to know
+// which type to construct when a Python3 type differs from a Python 2 type of the same name.
+auto RemotePyTypeObject::isPython2() const -> bool
+{
+	return !remoteObj().HasField("ob_base");
+}
+
+
 auto RemotePyTypeObject::repr(bool /*pretty*/) const -> string
 {
 	return "<class '" + name() + "'>";

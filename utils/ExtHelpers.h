@@ -2,6 +2,7 @@
 
 #include <engextcpp.hpp>
 #include <type_traits>
+#include <vector>
 
 namespace utils {
 
@@ -23,7 +24,22 @@ namespace utils {
 		}
 
 		g_Ext->ThrowInterrupt();
-		g_Ext->ThrowRemote(E_INVALIDARG, "Invalid ExtRemoteData size for integral read.");
+		g_Ext->ThrowRemote(E_INVALIDARG, "Invalid ExtRemoteTyped size for integral read.");
 	}
 
+
+	// Reads an array of elements pointed to by an ExtRemoteData.
+	template <typename ElemType>
+	auto readArray(/*const*/ ExtRemoteTyped& remoteArray, unsigned long numElements) -> std::vector<ElemType>
+	{
+		auto remoteData = remoteArray.Dereference();
+		const auto remoteSize = remoteData.GetTypeSize();
+		if (remoteSize != sizeof(ElemType)) {
+			g_Ext->ThrowRemote(E_INVALIDARG, "sizeof(ElemType) does not match size type size for ExtRemoteTyped array read.");
+		}
+
+		std::vector<ElemType> buffer(numElements);
+		remoteData.ReadBuffer(buffer.data(), numElements*remoteSize);
+		return buffer;
+	}
 }
