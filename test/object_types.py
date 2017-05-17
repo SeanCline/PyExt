@@ -1,7 +1,9 @@
 import win32debug, sys, os
 
-stringObj = "asd123qwe"
+stringObj = "TestString123"
 bigStringObj = stringObj * 100
+bytesObj = b"TestBytes123"
+byteArrayObject = bytearray(b'TestBytearray123')
 intObj = int(1)
 longObj = 123456789012345678901234567890123456789012345678901234567890
 floatObj = 3.1415

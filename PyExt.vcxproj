@@ -92,7 +92,9 @@
   <ItemGroup>
     <ClCompile Include="extension.cpp" />
     <ClCompile Include="objects\objects.cpp" />
+    <ClCompile Include="objects\PyStringValue.cpp" />
     <ClCompile Include="objects\RemotePyBoolObject.cpp" />
+    <ClCompile Include="objects\RemotePyByteArrayObject.cpp" />
     <ClCompile Include="objects\RemotePyCodeObject.cpp" />
     <ClCompile Include="objects\RemotePyComplexObject.cpp" />
     <ClCompile Include="objects\RemotePyDictObject.cpp" />
@@ -132,6 +134,7 @@
     <ClInclude Include="objects\objects.h" />
     <ClInclude Include="objects\PyStringValue.h" />
     <ClInclude Include="objects\RemotePyBoolObject.h" />
+    <ClInclude Include="objects\RemotePyByteArrayObject.h" />
     <ClInclude Include="objects\RemotePyCodeObject.h" />
     <ClInclude Include="objects\RemotePyComplexObject.h" />
     <ClInclude Include="objects\RemotePyDictObject.h" />

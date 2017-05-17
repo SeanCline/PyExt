@@ -1,5 +1,4 @@
 #include "RemotePyStringObject.h"
-#include "RemotePyTypeObject.h"
 
 #include "utils/lossless_cast.h"
 
@@ -8,8 +7,6 @@
 #include <string>
 #include <vector>
 #include <iterator>
-#include <sstream>
-#include <iomanip>
 using namespace std;
 
 
@@ -44,10 +41,7 @@ auto RemotePyBaseStringObject::stringValue() const -> string
 
 auto RemotePyBaseStringObject::repr(bool /*pretty*/) const -> string
 {
-	ostringstream oss;
-	oss << quoted(stringValue()); //< Escape the string.
-	// TODO: Also escape nonprintables.
-	return oss.str();
+	return "b" + escapeAndQuoteString(stringValue());
 }
 
 

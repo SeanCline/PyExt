@@ -20,7 +20,7 @@ namespace {
 	//     PyUnicodeObject -> PyCompactUnicodeObject -> PyASCIIObject.
 	//
 	// This function returns a field regardless of which `_base` it's held in.
-	ExtRemoteTyped getField(ExtRemoteTyped obj, const string& fieldName)
+	auto getField(ExtRemoteTyped obj, const string& fieldName) -> ExtRemoteTyped
 	{
 		// Follow the _base until we find a field or there are no more bases.
 		while (!obj.HasField(fieldName.c_str()) && obj.HasField("_base")) {
@@ -180,7 +180,5 @@ auto RemotePyUnicodeObject::repr(bool /*pretty*/) const -> string
 	if (!isReady())
 		return "<str object not ready>";
 
-	ostringstream oss;
-	oss << quoted(stringValue()); //< Escape the string.
-	return oss.str();
+	return escapeAndQuoteString(stringValue());
 }

@@ -4,6 +4,7 @@
 #include "RemotePyTypeObject.h"
 #include "RemotePyStringObject.h"
 #include "RemotePyUnicodeObject.h"
+#include "RemotePyByteArrayObject.h"
 #include "RemotePyListObject.h"
 #include "RemotePyTupleObject.h"
 #include "RemotePyDictObject.h"
@@ -39,6 +40,8 @@ auto makeRemotePyObject(RemotePyObject::Offset remoteAddress) -> unique_ptr<Remo
 		}
 	} else if (typeName == "bytes") {
 		return make_unique<RemotePyBytesObject>(remoteAddress);
+	} else if (typeName == "bytearray") {
+		return make_unique<RemotePyByteArrayObject>(remoteAddress);
 	} else if (typeName == "list") {
 		return make_unique<RemotePyListObject>(remoteAddress);
 	} else if (typeName == "tuple") {
@@ -46,13 +49,21 @@ auto makeRemotePyObject(RemotePyObject::Offset remoteAddress) -> unique_ptr<Remo
 	} else if (typeName == "dict") {
 		return make_unique<RemotePyDictObject>(remoteAddress);
 	} else if (typeName == "int") {
-		return make_unique<RemotePyIntObject>(remoteAddress);
+		if (typeObj.isPython2()) {
+			return make_unique<RemotePyIntObject>(remoteAddress);
+		} else {
+			return make_unique<RemotePyLongObject>(remoteAddress);
+		}
 	} else if (typeName == "long") {
 		return make_unique<RemotePyLongObject>(remoteAddress);
 	} else if (typeName == "float") {
 		return make_unique<RemotePyFloatObject>(remoteAddress);
 	} else if (typeName == "bool") {
-		return make_unique<RemotePyBoolObject>(remoteAddress);
+		if (typeObj.isPython2()) {
+			return make_unique<RemotePyBoolObject>(remoteAddress);
+		} else {
+			return make_unique<RemotePyLongObject>(remoteAddress);
+		}
 	} else if (typeName == "complex") {
 		return make_unique<RemotePyComplexObject>(remoteAddress);
 	} else if (typeName == "frame") {

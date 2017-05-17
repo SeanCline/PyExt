@@ -90,10 +90,16 @@
     <ClCompile Include="objects\RemotePyFunctionObject.cpp">
       <Filter>Source Files\objects</Filter>
     </ClCompile>
+    <ClCompile Include="objects\RemotePyUnicodeObject.cpp">
+      <Filter>Source Files\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="objects\PyStringValue.cpp">
+      <Filter>Source Files\objects</Filter>
+    </ClCompile>
     <ClCompile Include="\Debuggers\inc\engextcpp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="objects\RemotePyUnicodeObject.cpp">
+    <ClCompile Include="objects\RemotePyByteArrayObject.cpp">
       <Filter>Source Files\objects</Filter>
     </ClCompile>
   </ItemGroup>
@@ -174,6 +180,9 @@
       <Filter>Header Files\objects</Filter>
     </ClInclude>
     <ClInclude Include="objects\PyStringValue.h">
+      <Filter>Header Files\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="objects\RemotePyByteArrayObject.h">
       <Filter>Header Files\objects</Filter>
     </ClInclude>
   </ItemGroup>
