@@ -19,17 +19,74 @@ RemotePyDictObject::RemotePyDictObject(Offset objectAddress)
 }
 
 
-auto RemotePyDictObject::numUsed() const -> SSize
-{
-	auto used = remoteObj().Field("ma_used");
-	return utils::readIntegral<SSize>(used);
-}
+namespace {
+
+	auto getEntriesTable(ExtRemoteTyped dictObj) -> ExtRemoteTyped
+	{
+		// Python 2 stores a pointer to the entries table right in `ma_table`.
+		if (dictObj.HasField("ma_table"))
+			return dictObj.Field("ma_table");
+
+		// Python <= 3.5 stores a pointer to the entries table in `ma_keys->dk_entries`.
+		auto keys = dictObj.Field("ma_keys");
+		if (keys.HasField("dk_entries"))
+			return keys.Field("dk_entries");
+
+		// Python 3.6 uses a "compact" layout where the entries appear after the `ma_keys->dk_indices` table.
+		auto sizeField = keys.Field("dk_size");
+		auto size = utils::readIntegral<RemotePyObject::SSize>(sizeField);
+		auto pointerSize = static_cast<int>(keys.GetPointerTo().GetTypeSize());
+
+		int indexSize = 0;
+		if (size <= 0xff) {
+			indexSize = 1;
+		} else if (size <= 0xffff) {
+			indexSize = 2;
+		} else if (size <= 0xffffffff) {
+			indexSize = 4;
+		} else {
+			indexSize = pointerSize;
+		}
+
+		auto entriesPtr = keys.Field("dk_indices").Field("as_1").GetPtr() + (size * indexSize);
+		return ExtRemoteTyped("PyDictKeyEntry", entriesPtr, true);
+	}
 
 
-auto RemotePyDictObject::numMask() const -> SSize
-{
-	auto mask = remoteObj().Field("ma_mask");
-	return utils::readIntegral<SSize>(mask);
+	auto getEntriesTableSize(ExtRemoteTyped dictObj) -> RemotePyObject::SSize
+	{
+		// Python 2.
+		if (dictObj.HasField("ma_mask")) {
+			auto mask = dictObj.Field("ma_mask");
+			return utils::readIntegral<RemotePyObject::SSize>(mask);
+		}
+
+		// Python 3.
+		auto keys = dictObj.Field("ma_keys");
+		auto values = dictObj.Field("ma_values");
+		bool isCombined = (values.GetPtr() == 0);
+		if (isCombined) {
+			auto used = dictObj.Field("ma_used");
+			return utils::readIntegral<RemotePyObject::SSize>(used);
+		} else {
+			auto numEntriesField = keys.Field("dk_nentries");
+			return utils::readIntegral<RemotePyObject::SSize>(numEntriesField);
+		}
+	}
+
+
+	auto getIsCombined(ExtRemoteTyped dictObj) -> bool
+	{
+		// Python 2 tables always act like Python 3 "combined" tables.
+		if (dictObj.HasField("ma_mask")) {
+			return true;
+		}
+
+		// Python 3.
+		auto valuesPtr = dictObj.Field("ma_values").GetPtr();
+		return (valuesPtr == 0);
+	}
+
 }
 
 
@@ -37,13 +94,14 @@ auto RemotePyDictObject::pairValues() const -> vector<pair<unique_ptr<RemotePyOb
 {
 	vector<pair<unique_ptr<RemotePyObject>, unique_ptr<RemotePyObject>>> pairs;
 
-	auto tableSize = numMask();
-	auto table = remoteObj().Field("ma_table");
+	auto table = getEntriesTable(remoteObj());
+	const auto tableSize = getEntriesTableSize(remoteObj());
+	const bool isCombined = getIsCombined(remoteObj());
 	for (SSize i = 0; i <= tableSize; ++i) {
 		auto dictEntry = table.ArrayElement(i);
 
 		auto keyPtr = dictEntry.Field("me_key").GetPtr();
-		auto valuePtr = dictEntry.Field("me_value").GetPtr();
+		auto valuePtr = (isCombined) ? dictEntry.Field("me_value").GetPtr() : remoteObj().Field("ma_values").ArrayElement(i).GetPtr();
 
 		if (keyPtr == 0 || valuePtr == 0) //< The hash bucket might be empty.
 			continue;
