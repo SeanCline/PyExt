@@ -57,21 +57,14 @@ namespace {
 	{
 		// Python 2.
 		if (dictObj.HasField("ma_mask")) {
+			// Mask is table size (a power of 2) minus 1.
 			auto mask = dictObj.Field("ma_mask");
-			return utils::readIntegral<RemotePyObject::SSize>(mask);
+			return utils::readIntegral<RemotePyObject::SSize>(mask) + 1;
 		}
 
 		// Python 3.
-		auto keys = dictObj.Field("ma_keys");
-		auto values = dictObj.Field("ma_values");
-		bool isCombined = (values.GetPtr() == 0);
-		if (isCombined) {
-			auto used = dictObj.Field("ma_used");
-			return utils::readIntegral<RemotePyObject::SSize>(used);
-		} else {
-			auto numEntriesField = keys.Field("dk_nentries");
-			return utils::readIntegral<RemotePyObject::SSize>(numEntriesField);
-		}
+		auto numEntriesField = dictObj.Field("ma_keys").Field("dk_nentries");
+		return utils::readIntegral<RemotePyObject::SSize>(numEntriesField);
 	}
 
 
@@ -97,7 +90,7 @@ auto RemotePyDictObject::pairValues() const -> vector<pair<unique_ptr<RemotePyOb
 	auto table = getEntriesTable(remoteObj());
 	const auto tableSize = getEntriesTableSize(remoteObj());
 	const bool isCombined = getIsCombined(remoteObj());
-	for (SSize i = 0; i <= tableSize; ++i) {
+	for (SSize i = 0; i < tableSize; ++i) {
 		auto dictEntry = table.ArrayElement(i);
 
 		auto keyPtr = dictEntry.Field("me_key").GetPtr();
