@@ -9,8 +9,9 @@
 using namespace std;
 
 
-RemotePyObject::RemotePyObject(Offset objectAddress, const string& typeName /*= "PyObject"*/)
-	: remoteObj_(make_shared<ExtRemoteTyped>(typeName.c_str(), objectAddress, true))
+RemotePyObject::RemotePyObject(Offset objectAddress, const string& symbolName /*= "PyObject"*/)
+	: remoteObj_(make_shared<ExtRemoteTyped>(symbolName.c_str(), objectAddress, true)),
+	  symbolName_(symbolName)
 {
 }
 
@@ -23,6 +24,12 @@ RemotePyObject::~RemotePyObject()
 auto RemotePyObject::offset() const -> Offset
 {
 	return remoteObj().GetPtr();
+}
+
+
+auto RemotePyObject::symbolName() const -> std::string
+{
+	return symbolName_;
 }
 
 

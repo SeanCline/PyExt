@@ -46,5 +46,5 @@ auto RemotePyByteArrayObject::arrayValue() const -> std::vector<uint8_t>
 
 auto RemotePyByteArrayObject::repr(bool /*pretty*/) const -> string
 {
-	return "b" + escapeAndQuoteString(stringValue());
+	return "bytearray(b"s + escapeAndQuoteString(stringValue()) + ")"s;
 }

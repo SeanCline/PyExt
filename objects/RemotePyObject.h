@@ -17,11 +17,12 @@ public: // Typedefs.
 	using SSize = std::int64_t;
 
 public: // Construction/Destruction.
-	explicit RemotePyObject(Offset objectAddress, const std::string& typeName = "PyObject");
+	explicit RemotePyObject(Offset objectAddress, const std::string& symbolName = "PyObject");
 	virtual ~RemotePyObject();
 
 public: // Members.
 	auto offset() const -> Offset;
+	auto symbolName() const -> std::string;
 	auto refCount() const -> SSize;
 	auto type() const -> RemotePyTypeObject;
 	virtual auto repr(bool pretty = true) const -> std::string;
@@ -35,5 +36,6 @@ protected: // Helpers for more derived classes.
 
 private: // Data.
 	std::shared_ptr<ExtRemoteTyped> remoteObj_;
+	std::string symbolName_;
 
 };

@@ -15,7 +15,7 @@ using namespace std;
 
 
 namespace {
-	unique_ptr<RemotePyFrameObject> getPythonFrameForThread(uint64_t threadId)
+	auto getPythonFrameForThread(uint64_t threadId) -> unique_ptr<RemotePyFrameObject>
 	{
 		auto threadState = ExtRemoteTyped("autoInterpreterState").Field("tstate_head");
 
@@ -31,7 +31,7 @@ namespace {
 	}
 
 
-	uint64_t getCurrentThreadId(IDebugSystemObjects* pSystem)
+	auto getCurrentThreadId(IDebugSystemObjects* pSystem) -> uint64_t
 	{
 		ULONG currentThreadSystemId = 0;
 		HRESULT hr = pSystem->GetCurrentThreadId(&currentThreadSystemId);
@@ -41,7 +41,7 @@ namespace {
 	}
 
 
-	uint64_t getCurrentThreadSystemId(IDebugSystemObjects* pSystem)
+	auto getCurrentThreadSystemId(IDebugSystemObjects* pSystem) -> uint64_t
 	{
 		ULONG currentThreadSystemId = 0;
 		HRESULT hr = pSystem->GetCurrentThreadSystemId(&currentThreadSystemId);
@@ -51,38 +51,65 @@ namespace {
 	}
 
 
-	string frameToString(const RemotePyFrameObject& frameObject)
+	auto escapeDml(const string& str) -> string
+	{
+		std::string buffer;
+		buffer.reserve(str.size());
+		for (auto ch : str) {
+			switch (ch) {
+				case '&':  buffer += "&amp;";  break;
+				case '\"': buffer += "&quot;"; break;
+				case '\'': buffer += "&apos;"; break;
+				case '<':  buffer += "&lt;";   break;
+				case '>':  buffer += "&gt;";   break;
+				default:   buffer += ch;       break;
+			}
+		}
+		return buffer;
+	}
+
+	auto link(const string& text, const string& cmd, const string& alt = ""s) -> string
+	{
+		ostringstream oss;
+		oss << "<link cmd=\"" << escapeDml(cmd) << "\"";
+		if (!alt.empty())
+			oss << " alt=\"" << escapeDml(alt) << "\"";
+		oss << ">" << escapeDml(text) << "</link>";
+		return oss.str();
+	}
+
+	auto frameToString(const RemotePyFrameObject& frameObject) -> string
 	{
 		ostringstream oss;
 
 		auto codeObject = frameObject.code();
-		if (codeObject != nullptr) {
-			oss << "File \"" << codeObject->filename() << "\"";
-			oss << ", line " << frameObject.currentLineNumber();
-			oss << ", in " << codeObject->name();
-		} else {
-			// This shouldn't ever happen.
+		if (codeObject == nullptr)
 			throw runtime_error("Warning: PyFrameObject is missing PyCodeObject.");
-		}
+
+		auto filename = codeObject->filename();
+		oss << "File \"" << link(filename, ".open " + filename, "Open source code.")
+			<< "\", line " << frameObject.currentLineNumber()
+			<< ", in " << link(codeObject->name(), "!pyobj 0n" + to_string(codeObject->offset()), "Inspect PyCodeObject.");
 
 		return oss.str();
 	}
 
-	/*
-	string frameToCommandString(const RemotePyFrameObject& frameObject)
+
+	auto frameToCommandString(const RemotePyFrameObject& frameObject) -> string
 	{
 		ostringstream oss;
+
 		auto locals = frameObject.locals();
 		if (locals != nullptr && locals->offset() != 0)
-			oss << "<link cmd=\"!pyobj 0x" << hex << locals->offset() << "\">[Locals]</link>";
+			oss << link("[Locals] ", "!pyobj 0n"s + to_string(locals->offset()), "Inspect this frame's locals.");
 
-		auto code = frameObject.code();
-		if (code != nullptr && code->offset() != 0)
-			oss << "<link cmd=\"!pyobj 0x" << hex << code->offset() << "\">[code]</link>";
+		auto globals = frameObject.globals();
+		if (globals != nullptr && globals->offset() != 0)
+			oss << link("[Globals] ", "!pyobj 0n"s + to_string(globals->offset()), "Inspect this frame's captured globals.");
 
 		return oss.str();
 	}
-	*/
+
 }
 
 
@@ -102,10 +129,10 @@ EXT_COMMAND(pystack, "Output the Python stack for the current thread.", "")
 		// Print each frame.
 		for (; frameObject != nullptr; frameObject = frameObject->back()) {
 			auto frameStr = frameToString(*frameObject);
-			Out("\t%s\n", frameStr.c_str());
+			Dml("\t%s\n", frameStr.c_str());
 
-			//auto frameCommandStr = frameToCommandString(frameObject);
-			//Dml("\t%s\n", frameCommandStr.c_str());
+			auto frameCommandStr = frameToCommandString(*frameObject);
+			Dml("\t\t%s\n", frameCommandStr.c_str());
 		}
 
 	} catch (exception& ex) {

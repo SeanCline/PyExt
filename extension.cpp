@@ -49,7 +49,8 @@ void EXT_CLASS::KnownStructObjectHandler(_In_ PCSTR /*TypeName*/, _In_ ULONG Fla
 		if (!repr.empty()) {
 			if (repr.size() > m_AppendBufferChars
 			  || (ULONG_PTR)(m_AppendAt - m_AppendBuffer) > m_AppendBufferChars - repr.size()) {
-				AppendBufferString("<Too long to print. Use !pyobj>");
+				auto message = "<Too long to print. Use !pyobj 0x>"s + to_string(pyObj->offset());
+				AppendBufferString(message.c_str());
 			} else {
 				AppendBufferString(repr.c_str());
 			}
@@ -60,21 +61,30 @@ void EXT_CLASS::KnownStructObjectHandler(_In_ PCSTR /*TypeName*/, _In_ ULONG Fla
 
 EXT_COMMAND(pyobj, "Prints information about a Python object", "{;s;PyObject address}")
 {
-	string objExpression = "(_object*)(" + string(GetUnnamedArgStr(0)) + ")";
-	ExtRemoteTyped parsedObj(objExpression.c_str());
-	auto pyObj = makeRemotePyObject(parsedObj.GetPtr());
+	auto arg0 = GetUnnamedArgStr(0);
+	ExtRemoteTyped remoteObj;
+	try {
+		// First, see if the provided address can be evaluated as-is.
+		string objExpression = "(_object*)("s + arg0 + ")"s;
+		remoteObj.Set(objExpression.c_str());
+	} catch (...) {
+		// Otherwise, see if it can be parsed as a number.
+		auto offset = EvalExprU64(arg0);
+		remoteObj.Set("_object", offset, true);
+	}
+	
+	auto pyObj = makeRemotePyObject(remoteObj.GetPtr());
 
-	Out("PyObject at address: %y\n", pyObj->offset());
-	Out("RefCount: %s\n", to_string(pyObj->refCount()).c_str());
-	Out("Type: %s\n", pyObj->type().name().c_str());
+	Out("%s at address: %y\n", pyObj->symbolName().c_str(), pyObj->offset());
+	Out("\tRefCount: %s\n", to_string(pyObj->refCount()).c_str());
+	Out("\tType: %s\n", pyObj->type().name().c_str());
 
 	// Print the size if its a PyVarObject.
 	auto pyVarObj = dynamic_cast<RemotePyVarObject*>(pyObj.get());
 	if (pyVarObj != nullptr)
-		Out("Size: %d\n", pyVarObj->size());
+		Out("\tSize: %d\n", pyVarObj->size());
 
 	auto repr = pyObj->repr(true);
-	if (!repr.empty()) {
-		Out("Repr: %s\n", repr.c_str());
-	}
+	if (!repr.empty())
+		Out("\tRepr: %s\n", repr.c_str());
 }
