@@ -164,6 +164,6 @@
   <PropertyGroup>
     <LocalDebuggerCommand>$(FrameworkSdkDir)Debuggers/$(PlatformTarget)/windbg.exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerCommandArguments>-c ".load $(TargetPath); $$&gt;&lt; ./test/init.wdb" -z "./test/object_types.py.dmp"</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>-c ".load $(TargetPath); $$&gt;&lt; $(SolutionDir)/test/init.wdb" -z "$(SolutionDir)/test/object_types.py.dmp"</LocalDebuggerCommandArguments>
   </PropertyGroup>
 </Project>
