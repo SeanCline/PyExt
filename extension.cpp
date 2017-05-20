@@ -90,7 +90,7 @@ auto EXT_CLASS::ensureSymbolsLoaded() -> void
 		return;
 
 	// See if triggering a reload and retrying helps matters.
-	m_Symbols->Reload("python*");
+	m_Symbols->Reload("/f python*");
 
 	hr = m_Symbols->GetSymbolTypeId("autoInterpreterState", &typeId, nullptr);
 	if (SUCCEEDED(hr))

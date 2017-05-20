@@ -113,20 +113,31 @@ namespace {
 }
 
 
-EXT_COMMAND(pystack, "Output the Python stack for the current thread.", "")
+EXT_COMMAND(pystack, "Prints the Python stack for the current thread, or starting at a provided PyFrameObject", "{;s,o;PyFrameObject address}")
 {
 	ensureSymbolsLoaded();
 
 	try {
-		// Print the thread header.
-		auto threadId = getCurrentThreadId(m_System);
-		auto threadHeader = "Thread " + to_string(threadId) + ":";
-		Out("%s\n", threadHeader.c_str());
+		unique_ptr<RemotePyFrameObject> frameObject;
 
-		auto threadSystemId = getCurrentThreadSystemId(m_System);
-		auto frameObject = getPythonFrameForThread(threadSystemId);
-		if (frameObject == nullptr)
-			throw runtime_error("Thread does not contain any Python frames.");
+		// Either start at the user-provided PyFrameObject, or find the top frame of the current thread, if one exists.
+		if (m_NumUnnamedArgs < 1) {
+			// Print the thread header.
+			auto threadId = getCurrentThreadId(m_System);
+			auto threadHeader = "Thread " + to_string(threadId) + ":";
+			Out("%s\n", threadHeader.c_str());
+
+			auto threadSystemId = getCurrentThreadSystemId(m_System);
+			frameObject = getPythonFrameForThread(threadSystemId);
+			if (frameObject == nullptr)
+				throw runtime_error("Thread does not contain any Python frames.");
+		} else {
+			// Print info about the user-provided PyFrameObject as a header.
+			auto frameOffset = evalOffset(GetUnnamedArgStr(0));
+			Out("Stack trace starting at (PyFrameObject*)(%y):\n", frameOffset);
+
+			frameObject = make_unique<RemotePyFrameObject>(frameOffset);
+		}
 
 		// Print each frame.
 		for (; frameObject != nullptr; frameObject = frameObject->back()) {
@@ -138,7 +149,7 @@ EXT_COMMAND(pystack, "Output the Python stack for the current thread.", "")
 		}
 
 	} catch (exception& ex) {
-		Warn("\t%s\n\n", ex.what());
+		Warn("\t%s\n", ex.what());
 	}
 
 	Out("\n");
