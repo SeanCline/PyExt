@@ -46,7 +46,7 @@ auto RemotePyLongObject::repr(bool /*pretty*/) const -> string
 
 	// Convert from BASE to DECIMAL_BASE and store the result in `buff`.
 	vector<uint64_t> buff;
-	const auto numDigits = static_cast<size_t>(abs(size()));
+	const auto numDigits = abs(size());
 	for (int64_t i = numDigits - 1; i >= 0; --i) {
 		auto hiElement = digits.ArrayElement(i);
 		auto hi = utils::readIntegral<uint64_t>(hiElement);
