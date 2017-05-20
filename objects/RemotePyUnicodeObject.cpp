@@ -37,12 +37,14 @@ RemotePyUnicodeObject::RemotePyUnicodeObject(Offset objectAddress)
 {
 	// We stared off with the base type of PyASCIIObject.
 	// Up-cast ourselved to the most derived type possible.
-	if (!isAscii()) {
-		if (isCompact()) {
-			remoteObj().Set("PyCompactUnicodeObject", objectAddress);
+	if (isCompact()) {
+		if (isAscii()) {
+			remoteObj().Set("PyASCIIObject", objectAddress, true);
 		} else {
-			remoteObj().Set("PyUnicodeObject", objectAddress);
+			remoteObj().Set("PyCompactUnicodeObject", objectAddress, true);
 		}
+	} else {
+		remoteObj().Set("PyUnicodeObject", objectAddress, true);
 	}
 }
 
