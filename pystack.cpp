@@ -101,11 +101,11 @@ namespace {
 
 		auto locals = frameObject.locals();
 		if (locals != nullptr && locals->offset() != 0)
-			oss << link("[Locals] ", "!pyobj 0n"s + to_string(locals->offset()), "Inspect this frame's locals.");
+			oss << link("[Locals]", "!pyobj 0n"s + to_string(locals->offset()), "Inspect this frame's locals.") << " ";
 
 		auto globals = frameObject.globals();
 		if (globals != nullptr && globals->offset() != 0)
-			oss << link("[Globals] ", "!pyobj 0n"s + to_string(globals->offset()), "Inspect this frame's captured globals.");
+			oss << link("[Globals]", "!pyobj 0n"s + to_string(globals->offset()), "Inspect this frame's captured globals.") << " ";
 
 		return oss.str();
 	}
@@ -115,6 +115,8 @@ namespace {
 
 EXT_COMMAND(pystack, "Output the Python stack for the current thread.", "")
 {
+	ensureSymbolsLoaded();
+
 	try {
 		// Print the thread header.
 		auto threadId = getCurrentThreadId(m_System);

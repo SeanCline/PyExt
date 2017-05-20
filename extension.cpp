@@ -49,7 +49,7 @@ void EXT_CLASS::KnownStructObjectHandler(_In_ PCSTR /*TypeName*/, _In_ ULONG Fla
 		if (!repr.empty()) {
 			if (repr.size() > m_AppendBufferChars
 			  || (ULONG_PTR)(m_AppendAt - m_AppendBuffer) > m_AppendBufferChars - repr.size()) {
-				auto message = "<Too long to print. Use !pyobj 0x>"s + to_string(pyObj->offset());
+				auto message = "<Too long to print. Use !pyobj 0n"s + to_string(pyObj->offset());
 				AppendBufferString(message.c_str());
 			} else {
 				AppendBufferString(repr.c_str());
@@ -61,19 +61,10 @@ void EXT_CLASS::KnownStructObjectHandler(_In_ PCSTR /*TypeName*/, _In_ ULONG Fla
 
 EXT_COMMAND(pyobj, "Prints information about a Python object", "{;s;PyObject address}")
 {
-	auto arg0 = GetUnnamedArgStr(0);
-	ExtRemoteTyped remoteObj;
-	try {
-		// First, see if the provided address can be evaluated as-is.
-		string objExpression = "(_object*)("s + arg0 + ")"s;
-		remoteObj.Set(objExpression.c_str());
-	} catch (...) {
-		// Otherwise, see if it can be parsed as a number.
-		auto offset = EvalExprU64(arg0);
-		remoteObj.Set("_object", offset, true);
-	}
-	
-	auto pyObj = makeRemotePyObject(remoteObj.GetPtr());
+	ensureSymbolsLoaded();
+
+	auto offset = evalOffset(GetUnnamedArgStr(0));
+	auto pyObj = makeRemotePyObject(offset);
 
 	Out("%s at address: %y\n", pyObj->symbolName().c_str(), pyObj->offset());
 	Out("\tRefCount: %s\n", to_string(pyObj->refCount()).c_str());
@@ -87,4 +78,43 @@ EXT_COMMAND(pyobj, "Prints information about a Python object", "{;s;PyObject add
 	auto repr = pyObj->repr(true);
 	if (!repr.empty())
 		Out("\tRepr: %s\n", repr.c_str());
+}
+
+
+auto EXT_CLASS::ensureSymbolsLoaded() -> void
+{
+	// See if the symbol can be found.
+	ULONG typeId = 0;
+	HRESULT hr = m_Symbols->GetSymbolTypeId("autoInterpreterState", &typeId, nullptr);
+	if (SUCCEEDED(hr))
+		return;
+
+	// See if triggering a reload and retrying helps matters.
+	m_Symbols->Reload("python*");
+
+	hr = m_Symbols->GetSymbolTypeId("autoInterpreterState", &typeId, nullptr);
+	if (SUCCEEDED(hr))
+		return;
+
+	Err("\n\n");
+	Err("*************************************************************************\n");
+	Err("***            ERROR: Python symbols could not be loaded.             ***\n");
+	Err("***   Install the debugging symbols for your version of Python##.dll  ***\n");
+	Err("***                 and add them to the symbol path.                  ***\n");
+	Err("*************************************************************************\n");
+	// Don't bother throwing. If there really is a symbol issue, it will be caught later on.
+}
+
+
+auto EXT_CLASS::evalOffset(const string& arg) -> UINT64
+{
+	// First, see if the arg can be parsed as an expression.
+	try {
+		string objExpression = "(void*)("s + arg + ")"s;
+		ExtRemoteTyped remoteObj(objExpression.c_str());
+		return remoteObj.GetPtr();
+	} catch (ExtException&) {
+		// Fall back on evaluating it as a number.
+		return g_Ext->EvalExprU64(arg.c_str());
+	}
 }
