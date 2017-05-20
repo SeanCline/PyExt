@@ -62,7 +62,14 @@ namespace {
 			return utils::readIntegral<RemotePyObject::SSize>(mask) + 1;
 		}
 
-		// Python 3.
+
+		// Python 3.5
+		if (!dictObj.Field("ma_keys").HasField("dk_nentries")) {
+			auto sizeField = dictObj.Field("ma_keys").Field("dk_size");
+			return utils::readIntegral<RemotePyObject::SSize>(sizeField);
+		}
+
+		// Python 3.6
 		auto numEntriesField = dictObj.Field("ma_keys").Field("dk_nentries");
 		return utils::readIntegral<RemotePyObject::SSize>(numEntriesField);
 	}
@@ -93,8 +100,13 @@ auto RemotePyDictObject::pairValues() const -> vector<pair<unique_ptr<RemotePyOb
 	for (SSize i = 0; i < tableSize; ++i) {
 		auto dictEntry = table.ArrayElement(i);
 
-		auto keyPtr = dictEntry.Field("me_key").GetPtr();
-		auto valuePtr = (isCombined) ? dictEntry.Field("me_value").GetPtr() : remoteObj().Field("ma_values").ArrayElement(i).GetPtr();
+		Offset keyPtr = dictEntry.Field("me_key").GetPtr();
+		Offset valuePtr = 0;
+		if (isCombined) {
+			valuePtr = dictEntry.Field("me_value").GetPtr();
+		} else {
+			valuePtr = remoteObj().Field("ma_values").ArrayElement(i).GetPtr();
+		}
 
 		if (keyPtr == 0 || valuePtr == 0) //< The hash bucket might be empty.
 			continue;
