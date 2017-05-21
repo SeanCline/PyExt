@@ -42,23 +42,26 @@ namespace {
 
 }
 
+namespace PyExt::Remote {
 
-auto PyStringValue::escapeAndQuoteString(const string& in, QuoteType quoteType) -> string
-{
-	string out;
-	out.reserve(in.length() + 2);
+	auto PyStringValue::escapeAndQuoteString(const string& in, QuoteType quoteType) -> string
+	{
+		string out;
+		out.reserve(in.length() + 2);
 
-	out += (quoteType == QuoteType::Double) ? '"' : '\'';
-	for (auto c : in) {
-		if ((quoteType == QuoteType::Single && c == '"')
-			|| (quoteType == QuoteType::Double && c == '\''))
-		{
-			out += c; //< Don't escape the other kind of quote.
-		} else {
-			out += escapeCharacter(c);
+		out += (quoteType == QuoteType::Double) ? '"' : '\'';
+		for (auto c : in) {
+			if ((quoteType == QuoteType::Single && c == '"')
+				|| (quoteType == QuoteType::Double && c == '\''))
+			{
+				out += c; //< Don't escape the other kind of quote.
+			} else {
+				out += escapeCharacter(c);
+			}
 		}
-	}
-	out += (quoteType == QuoteType::Double) ? '"' : '\'';
+		out += (quoteType == QuoteType::Double) ? '"' : '\'';
 
-	return out;
+		return out;
+	}
+
 }

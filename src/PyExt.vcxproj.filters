@@ -33,156 +33,159 @@
     <ClCompile Include="pystack.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="objects\RemotePyBoolObject.cpp">
+    <ClCompile Include="objects\PyBoolObject.cpp">
       <Filter>Source Files\objects</Filter>
     </ClCompile>
-    <ClCompile Include="objects\RemotePyCodeObject.cpp">
+    <ClCompile Include="objects\PyCodeObject.cpp">
       <Filter>Source Files\objects</Filter>
     </ClCompile>
-    <ClCompile Include="objects\RemotePyComplexObject.cpp">
+    <ClCompile Include="objects\PyComplexObject.cpp">
       <Filter>Source Files\objects</Filter>
     </ClCompile>
-    <ClCompile Include="objects\RemotePyDictObject.cpp">
+    <ClCompile Include="objects\PyDictObject.cpp">
       <Filter>Source Files\objects</Filter>
     </ClCompile>
-    <ClCompile Include="objects\RemotePyFloatObject.cpp">
+    <ClCompile Include="objects\PyFloatObject.cpp">
       <Filter>Source Files\objects</Filter>
     </ClCompile>
-    <ClCompile Include="objects\RemotePyFrameObject.cpp">
+    <ClCompile Include="objects\PyFrameObject.cpp">
       <Filter>Source Files\objects</Filter>
     </ClCompile>
-    <ClCompile Include="objects\RemotePyIntObject.cpp">
+    <ClCompile Include="objects\PyIntObject.cpp">
       <Filter>Source Files\objects</Filter>
     </ClCompile>
-    <ClCompile Include="objects\RemotePyListObject.cpp">
+    <ClCompile Include="objects\PyListObject.cpp">
       <Filter>Source Files\objects</Filter>
     </ClCompile>
-    <ClCompile Include="objects\RemotePyLongObject.cpp">
+    <ClCompile Include="objects\PyLongObject.cpp">
       <Filter>Source Files\objects</Filter>
     </ClCompile>
-    <ClCompile Include="objects\RemotePyNoneObject.cpp">
+    <ClCompile Include="objects\PyNoneObject.cpp">
       <Filter>Source Files\objects</Filter>
     </ClCompile>
-    <ClCompile Include="objects\RemotePyNotImplementedObject.cpp">
+    <ClCompile Include="objects\PyNotImplementedObject.cpp">
       <Filter>Source Files\objects</Filter>
     </ClCompile>
-    <ClCompile Include="objects\RemotePyObject.cpp">
+    <ClCompile Include="objects\PyObject.cpp">
       <Filter>Source Files\objects</Filter>
     </ClCompile>
-    <ClCompile Include="objects\RemotePyStringObject.cpp">
+    <ClCompile Include="objects\PyStringObject.cpp">
       <Filter>Source Files\objects</Filter>
     </ClCompile>
-    <ClCompile Include="objects\RemotePyTupleObject.cpp">
+    <ClCompile Include="objects\PyTupleObject.cpp">
       <Filter>Source Files\objects</Filter>
     </ClCompile>
-    <ClCompile Include="objects\RemotePyVarObject.cpp">
-      <Filter>Source Files\objects</Filter>
-    </ClCompile>
-    <ClCompile Include="objects\objects.cpp">
+    <ClCompile Include="objects\PyVarObject.cpp">
       <Filter>Source Files\objects</Filter>
     </ClCompile>
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="objects\RemotePyTypeObject.cpp">
+    <ClCompile Include="objects\PyTypeObject.cpp">
       <Filter>Source Files\objects</Filter>
     </ClCompile>
-    <ClCompile Include="objects\RemotePyFunctionObject.cpp">
+    <ClCompile Include="objects\PyFunctionObject.cpp">
       <Filter>Source Files\objects</Filter>
     </ClCompile>
-    <ClCompile Include="objects\RemotePyUnicodeObject.cpp">
+    <ClCompile Include="objects\PyUnicodeObject.cpp">
       <Filter>Source Files\objects</Filter>
     </ClCompile>
     <ClCompile Include="objects\PyStringValue.cpp">
       <Filter>Source Files\objects</Filter>
     </ClCompile>
+    <ClCompile Include="objects\PyByteArrayObject.cpp">
+      <Filter>Source Files\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="objects\PyObjectMake.cpp">
+      <Filter>Source Files\objects</Filter>
+    </ClCompile>
     <ClCompile Include="\Debuggers\inc\engextcpp.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="objects\RemotePyByteArrayObject.cpp">
-      <Filter>Source Files\objects</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="extension.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="objects\RemotePyBoolObject.h">
+    <ClInclude Include="..\include\PyBoolObject.h">
       <Filter>Header Files\objects</Filter>
     </ClInclude>
-    <ClInclude Include="objects\RemotePyCodeObject.h">
+    <ClInclude Include="..\include\PyCodeObject.h">
       <Filter>Header Files\objects</Filter>
     </ClInclude>
-    <ClInclude Include="objects\RemotePyComplexObject.h">
+    <ClInclude Include="..\include\PyComplexObject.h">
       <Filter>Header Files\objects</Filter>
     </ClInclude>
-    <ClInclude Include="objects\RemotePyDictObject.h">
+    <ClInclude Include="..\include\PyDictObject.h">
       <Filter>Header Files\objects</Filter>
     </ClInclude>
-    <ClInclude Include="objects\RemotePyFloatObject.h">
+    <ClInclude Include="..\include\PyFloatObject.h">
       <Filter>Header Files\objects</Filter>
     </ClInclude>
-    <ClInclude Include="objects\RemotePyFrameObject.h">
+    <ClInclude Include="..\include\PyFrameObject.h">
       <Filter>Header Files\objects</Filter>
     </ClInclude>
-    <ClInclude Include="objects\RemotePyIntObject.h">
+    <ClInclude Include="..\include\PyIntObject.h">
       <Filter>Header Files\objects</Filter>
     </ClInclude>
-    <ClInclude Include="objects\RemotePyListObject.h">
+    <ClInclude Include="..\include\PyListObject.h">
       <Filter>Header Files\objects</Filter>
     </ClInclude>
-    <ClInclude Include="objects\RemotePyLongObject.h">
+    <ClInclude Include="..\include\PyLongObject.h">
       <Filter>Header Files\objects</Filter>
     </ClInclude>
-    <ClInclude Include="objects\RemotePyNoneObject.h">
+    <ClInclude Include="..\include\PyNoneObject.h">
       <Filter>Header Files\objects</Filter>
     </ClInclude>
-    <ClInclude Include="objects\RemotePyNotImplementedObject.h">
+    <ClInclude Include="..\include\PyNotImplementedObject.h">
       <Filter>Header Files\objects</Filter>
     </ClInclude>
-    <ClInclude Include="objects\RemotePyObject.h">
+    <ClInclude Include="..\include\PyObject.h">
       <Filter>Header Files\objects</Filter>
     </ClInclude>
-    <ClInclude Include="objects\RemotePyStringObject.h">
+    <ClInclude Include="..\include\PyStringObject.h">
       <Filter>Header Files\objects</Filter>
     </ClInclude>
-    <ClInclude Include="objects\RemotePyTupleObject.h">
+    <ClInclude Include="..\include\PyTupleObject.h">
       <Filter>Header Files\objects</Filter>
     </ClInclude>
-    <ClInclude Include="objects\RemotePyVarObject.h">
-      <Filter>Header Files\objects</Filter>
-    </ClInclude>
-    <ClInclude Include="objects\objects.h">
+    <ClInclude Include="..\include\PyVarObject.h">
       <Filter>Header Files\objects</Filter>
     </ClInclude>
     <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="objects\RemotePyTypeObject.h">
+    <ClInclude Include="..\include\PyFunctionObject.h">
       <Filter>Header Files\objects</Filter>
     </ClInclude>
-    <ClInclude Include="objects\RemotePyFunctionObject.h">
+    <ClInclude Include="fieldAsPyObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\utils\ScopeExit.h">
+      <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="ExtHelpers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\utils\lossless_cast.h">
+      <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\PyUnicodeObject.h">
       <Filter>Header Files\objects</Filter>
     </ClInclude>
-    <ClInclude Include="utils\fieldAsPyObject.h">
-      <Filter>Header Files\utils</Filter>
-    </ClInclude>
-    <ClInclude Include="utils\ScopeExit.h">
-      <Filter>Header Files\utils</Filter>
-    </ClInclude>
-    <ClInclude Include="utils\ExtHelpers.h">
-      <Filter>Header Files\utils</Filter>
-    </ClInclude>
-    <ClInclude Include="utils\lossless_cast.h">
-      <Filter>Header Files\utils</Filter>
-    </ClInclude>
-    <ClInclude Include="objects\RemotePyUnicodeObject.h">
+    <ClInclude Include="..\include\PyStringValue.h">
       <Filter>Header Files\objects</Filter>
     </ClInclude>
-    <ClInclude Include="objects\PyStringValue.h">
+    <ClInclude Include="..\include\PyByteArrayObject.h">
       <Filter>Header Files\objects</Filter>
     </ClInclude>
-    <ClInclude Include="objects\RemotePyByteArrayObject.h">
+    <ClInclude Include="..\include\pyextpublic.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\globals.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\PyTypeObject.h">
       <Filter>Header Files\objects</Filter>
     </ClInclude>
   </ItemGroup>
@@ -192,7 +195,7 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include=".def">
+    <None Include="PyExt.def">
       <Filter>Source Files</Filter>
     </None>
   </ItemGroup>

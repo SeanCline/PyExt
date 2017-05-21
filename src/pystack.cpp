@@ -1,9 +1,11 @@
 #include "extension.h"
 
-#include "objects/RemotePyFrameObject.h"
-#include "objects/RemotePyDictObject.h"
-#include "objects/RemotePyCodeObject.h"
-#include "utils/ExtHelpers.h"
+#include "PyFrameObject.h"
+#include "PyDictObject.h"
+#include "PyCodeObject.h"
+using namespace PyExt::Remote;
+
+#include "ExtHelpers.h"
 
 #include <engextcpp.hpp>
 
@@ -15,7 +17,7 @@ using namespace std;
 
 
 namespace {
-	auto getPythonFrameForThread(uint64_t threadId) -> unique_ptr<RemotePyFrameObject>
+	auto getPythonFrameForThread(uint64_t threadId) -> unique_ptr<PyFrameObject>
 	{
 		auto threadState = ExtRemoteTyped("autoInterpreterState").Field("tstate_head");
 
@@ -24,7 +26,7 @@ namespace {
 			auto threadIdField = threadState.Field("thread_id");
 			auto curThreadId = utils::readIntegral<uint64_t>(threadIdField);
 			if (curThreadId == threadId)
-				return make_unique<RemotePyFrameObject>(threadState.Field("frame").GetPtr()); //< Found it!
+				return make_unique<PyFrameObject>(threadState.Field("frame").GetPtr()); //< Found it!
 		}
 
 		return { };
@@ -78,7 +80,7 @@ namespace {
 		return oss.str();
 	}
 
-	auto frameToString(const RemotePyFrameObject& frameObject) -> string
+	auto frameToString(const PyFrameObject& frameObject) -> string
 	{
 		ostringstream oss;
 
@@ -95,7 +97,7 @@ namespace {
 	}
 
 
-	auto frameToCommandString(const RemotePyFrameObject& frameObject) -> string
+	auto frameToCommandString(const PyFrameObject& frameObject) -> string
 	{
 		ostringstream oss;
 
@@ -112,45 +114,48 @@ namespace {
 
 }
 
+namespace PyExt {
 
-EXT_COMMAND(pystack, "Prints the Python stack for the current thread, or starting at a provided PyFrameObject", "{;s,o;PyFrameObject address}")
-{
-	ensureSymbolsLoaded();
+	EXT_COMMAND(pystack, "Prints the Python stack for the current thread, or starting at a provided PyFrameObject", "{;s,o;PyFrameObject address}")
+	{
+		ensureSymbolsLoaded();
 
-	try {
-		unique_ptr<RemotePyFrameObject> frameObject;
+		try {
+			unique_ptr<PyFrameObject> frameObject;
 
-		// Either start at the user-provided PyFrameObject, or find the top frame of the current thread, if one exists.
-		if (m_NumUnnamedArgs < 1) {
-			// Print the thread header.
-			auto threadId = getCurrentThreadId(m_System);
-			auto threadHeader = "Thread " + to_string(threadId) + ":";
-			Out("%s\n", threadHeader.c_str());
+			// Either start at the user-provided PyFrameObject, or find the top frame of the current thread, if one exists.
+			if (m_NumUnnamedArgs < 1) {
+				// Print the thread header.
+				auto threadId = getCurrentThreadId(m_System);
+				auto threadHeader = "Thread " + to_string(threadId) + ":";
+				Out("%s\n", threadHeader.c_str());
 
-			auto threadSystemId = getCurrentThreadSystemId(m_System);
-			frameObject = getPythonFrameForThread(threadSystemId);
-			if (frameObject == nullptr)
-				throw runtime_error("Thread does not contain any Python frames.");
-		} else {
-			// Print info about the user-provided PyFrameObject as a header.
-			auto frameOffset = evalOffset(GetUnnamedArgStr(0));
-			Out("Stack trace starting at (PyFrameObject*)(%y):\n", frameOffset);
+				auto threadSystemId = getCurrentThreadSystemId(m_System);
+				frameObject = getPythonFrameForThread(threadSystemId);
+				if (frameObject == nullptr)
+					throw runtime_error("Thread does not contain any Python frames.");
+			} else {
+				// Print info about the user-provided PyFrameObject as a header.
+				auto frameOffset = evalOffset(GetUnnamedArgStr(0));
+				Out("Stack trace starting at (PyFrameObject*)(%y):\n", frameOffset);
 
-			frameObject = make_unique<RemotePyFrameObject>(frameOffset);
+				frameObject = make_unique<PyFrameObject>(frameOffset);
+			}
+
+			// Print each frame.
+			for (; frameObject != nullptr; frameObject = frameObject->back()) {
+				auto frameStr = frameToString(*frameObject);
+				Dml("\t%s\n", frameStr.c_str());
+
+				auto frameCommandStr = frameToCommandString(*frameObject);
+				Dml("\t\t%s\n", frameCommandStr.c_str());
+			}
+
+		} catch (exception& ex) {
+			Warn("\t%s\n", ex.what());
 		}
 
-		// Print each frame.
-		for (; frameObject != nullptr; frameObject = frameObject->back()) {
-			auto frameStr = frameToString(*frameObject);
-			Dml("\t%s\n", frameStr.c_str());
-
-			auto frameCommandStr = frameToCommandString(*frameObject);
-			Dml("\t\t%s\n", frameCommandStr.c_str());
-		}
-
-	} catch (exception& ex) {
-		Warn("\t%s\n", ex.what());
+		Out("\n");
 	}
 
-	Out("\n");
 }

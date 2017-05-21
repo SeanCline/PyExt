@@ -57,12 +57,13 @@
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(WindowsSdkDir)\Debuggers\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\include;$(WindowsSdkDir)\Debuggers\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DiagnosticsFormat>Caret</DiagnosticsFormat>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <ForcedIncludeFiles>pch.h</ForcedIncludeFiles>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <PreprocessorDefinitions>PYEXT_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -91,27 +92,27 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="extension.cpp" />
-    <ClCompile Include="objects\objects.cpp" />
     <ClCompile Include="objects\PyStringValue.cpp" />
-    <ClCompile Include="objects\RemotePyBoolObject.cpp" />
-    <ClCompile Include="objects\RemotePyByteArrayObject.cpp" />
-    <ClCompile Include="objects\RemotePyCodeObject.cpp" />
-    <ClCompile Include="objects\RemotePyComplexObject.cpp" />
-    <ClCompile Include="objects\RemotePyDictObject.cpp" />
-    <ClCompile Include="objects\RemotePyFloatObject.cpp" />
-    <ClCompile Include="objects\RemotePyFrameObject.cpp" />
-    <ClCompile Include="objects\RemotePyFunctionObject.cpp" />
-    <ClCompile Include="objects\RemotePyIntObject.cpp" />
-    <ClCompile Include="objects\RemotePyListObject.cpp" />
-    <ClCompile Include="objects\RemotePyLongObject.cpp" />
-    <ClCompile Include="objects\RemotePyNoneObject.cpp" />
-    <ClCompile Include="objects\RemotePyNotImplementedObject.cpp" />
-    <ClCompile Include="objects\RemotePyObject.cpp" />
-    <ClCompile Include="objects\RemotePyStringObject.cpp" />
-    <ClCompile Include="objects\RemotePyTupleObject.cpp" />
-    <ClCompile Include="objects\RemotePyTypeObject.cpp" />
-    <ClCompile Include="objects\RemotePyUnicodeObject.cpp" />
-    <ClCompile Include="objects\RemotePyVarObject.cpp" />
+    <ClCompile Include="objects\PyBoolObject.cpp" />
+    <ClCompile Include="objects\PyByteArrayObject.cpp" />
+    <ClCompile Include="objects\PyCodeObject.cpp" />
+    <ClCompile Include="objects\PyComplexObject.cpp" />
+    <ClCompile Include="objects\PyDictObject.cpp" />
+    <ClCompile Include="objects\PyFloatObject.cpp" />
+    <ClCompile Include="objects\PyFrameObject.cpp" />
+    <ClCompile Include="objects\PyFunctionObject.cpp" />
+    <ClCompile Include="objects\PyIntObject.cpp" />
+    <ClCompile Include="objects\PyListObject.cpp" />
+    <ClCompile Include="objects\PyLongObject.cpp" />
+    <ClCompile Include="objects\PyNoneObject.cpp" />
+    <ClCompile Include="objects\PyNotImplementedObject.cpp" />
+    <ClCompile Include="objects\PyObject.cpp" />
+    <ClCompile Include="objects\PyObjectMake.cpp" />
+    <ClCompile Include="objects\PyStringObject.cpp" />
+    <ClCompile Include="objects\PyTupleObject.cpp" />
+    <ClCompile Include="objects\PyTypeObject.cpp" />
+    <ClCompile Include="objects\PyUnicodeObject.cpp" />
+    <ClCompile Include="objects\PyVarObject.cpp" />
     <ClCompile Include="globals.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
@@ -124,39 +125,40 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="$(ProjectName).def" />
+    <None Include="PyExt.def" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="$(ProjectName).rc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="extension.h" />
-    <ClInclude Include="objects\objects.h" />
-    <ClInclude Include="objects\PyStringValue.h" />
-    <ClInclude Include="objects\RemotePyBoolObject.h" />
-    <ClInclude Include="objects\RemotePyByteArrayObject.h" />
-    <ClInclude Include="objects\RemotePyCodeObject.h" />
-    <ClInclude Include="objects\RemotePyComplexObject.h" />
-    <ClInclude Include="objects\RemotePyDictObject.h" />
-    <ClInclude Include="objects\RemotePyFloatObject.h" />
-    <ClInclude Include="objects\RemotePyFrameObject.h" />
-    <ClInclude Include="objects\RemotePyFunctionObject.h" />
-    <ClInclude Include="objects\RemotePyIntObject.h" />
-    <ClInclude Include="objects\RemotePyListObject.h" />
-    <ClInclude Include="objects\RemotePyLongObject.h" />
-    <ClInclude Include="objects\RemotePyNoneObject.h" />
-    <ClInclude Include="objects\RemotePyNotImplementedObject.h" />
-    <ClInclude Include="objects\RemotePyObject.h" />
-    <ClInclude Include="objects\RemotePyStringObject.h" />
-    <ClInclude Include="objects\RemotePyTupleObject.h" />
-    <ClInclude Include="objects\RemotePyTypeObject.h" />
-    <ClInclude Include="objects\RemotePyUnicodeObject.h" />
-    <ClInclude Include="objects\RemotePyVarObject.h" />
+    <ClInclude Include="..\include\globals.h" />
+    <ClInclude Include="..\include\PyStringValue.h" />
+    <ClInclude Include="..\include\PyBoolObject.h" />
+    <ClInclude Include="..\include\PyByteArrayObject.h" />
+    <ClInclude Include="..\include\PyCodeObject.h" />
+    <ClInclude Include="..\include\PyComplexObject.h" />
+    <ClInclude Include="..\include\PyDictObject.h" />
+    <ClInclude Include="..\include\PyFloatObject.h" />
+    <ClInclude Include="..\include\PyFrameObject.h" />
+    <ClInclude Include="..\include\PyFunctionObject.h" />
+    <ClInclude Include="..\include\PyIntObject.h" />
+    <ClInclude Include="..\include\PyListObject.h" />
+    <ClInclude Include="..\include\PyLongObject.h" />
+    <ClInclude Include="..\include\PyNoneObject.h" />
+    <ClInclude Include="..\include\PyNotImplementedObject.h" />
+    <ClInclude Include="..\include\PyObject.h" />
+    <ClInclude Include="..\include\PyStringObject.h" />
+    <ClInclude Include="..\include\PyTupleObject.h" />
+    <ClInclude Include="..\include\PyTypeObject.h" />
+    <ClInclude Include="..\include\PyUnicodeObject.h" />
+    <ClInclude Include="..\include\PyVarObject.h" />
     <ClInclude Include="pch.h" />
-    <ClInclude Include="utils\ExtHelpers.h" />
-    <ClInclude Include="utils\fieldAsPyObject.h" />
-    <ClInclude Include="utils\lossless_cast.h" />
-    <ClInclude Include="utils\ScopeExit.h" />
+    <ClInclude Include="..\include\pyextpublic.h" />
+    <ClInclude Include="ExtHelpers.h" />
+    <ClInclude Include="fieldAsPyObject.h" />
+    <ClInclude Include="..\include\utils\lossless_cast.h" />
+    <ClInclude Include="..\include\utils\ScopeExit.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
@@ -164,6 +166,6 @@
   <PropertyGroup>
     <LocalDebuggerCommand>$(FrameworkSdkDir)Debuggers/$(PlatformTarget)/windbg.exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerCommandArguments>-c ".load $(TargetPath); $$&gt;&lt; $(SolutionDir)/test/init.wdb" -z "$(SolutionDir)/test/object_types.py.dmp"</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>-c ".load $(TargetPath); $$&gt;&lt; $(ProjectDir)/init.wdb" -z "$(SolutionDir)/test/scripts/object_types.py.dmp"</LocalDebuggerCommandArguments>
   </PropertyGroup>
 </Project>
