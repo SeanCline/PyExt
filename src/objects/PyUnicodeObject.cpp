@@ -40,47 +40,47 @@ namespace PyExt::Remote {
 		// Up-cast ourselved to the most derived type possible.
 		if (isCompact()) {
 			if (isAscii()) {
-				remoteObj().Set("PyASCIIObject", objectAddress, true);
+				remoteType().Set("PyASCIIObject", objectAddress, true);
 			} else {
-				remoteObj().Set("PyCompactUnicodeObject", objectAddress, true);
+				remoteType().Set("PyCompactUnicodeObject", objectAddress, true);
 			}
 		} else {
-			remoteObj().Set("PyUnicodeObject", objectAddress, true);
+			remoteType().Set("PyUnicodeObject", objectAddress, true);
 		}
 	}
 
 
 	auto PyUnicodeObject::interningState() const -> InterningState
 	{
-		auto internedField = getField(remoteObj(), "state").Field("interned");
+		auto internedField = getField(remoteType(), "state").Field("interned");
 		return utils::readIntegral<InterningState>(internedField);
 	}
 
 
 	auto PyUnicodeObject::kind() const -> Kind
 	{
-		auto kindField = getField(remoteObj(), "state").Field("kind");
+		auto kindField = getField(remoteType(), "state").Field("kind");
 		return utils::readIntegral<Kind>(kindField);
 	}
 
 
 	auto PyUnicodeObject::isCompact() const -> bool
 	{
-		auto compactField = getField(remoteObj(), "state").Field("compact");
+		auto compactField = getField(remoteType(), "state").Field("compact");
 		return utils::readIntegral<bool>(compactField);
 	}
 
 
 	auto PyUnicodeObject::isAscii() const -> bool
 	{
-		auto asciiField = getField(remoteObj(), "state").Field("ascii");
+		auto asciiField = getField(remoteType(), "state").Field("ascii");
 		return utils::readIntegral<bool>(asciiField);
 	}
 
 
 	auto PyUnicodeObject::isReady() const -> bool
 	{
-		auto readyField = getField(remoteObj(), "state").Field("ready");
+		auto readyField = getField(remoteType(), "state").Field("ready");
 		return utils::readIntegral<bool>(readyField);
 	}
 
@@ -90,7 +90,7 @@ namespace PyExt::Remote {
 		if (!isReady())
 			return 0; //< TODO: Consider supporting non-ready strings.
 
-		auto lengthField = getField(remoteObj(), "length");
+		auto lengthField = getField(remoteType(), "length");
 		return utils::readIntegral<SSize>(lengthField);
 	}
 
@@ -123,7 +123,7 @@ namespace PyExt::Remote {
 
 	auto PyUnicodeObject::stringValue() const -> string
 	{
-		auto wstrField = getField(remoteObj(), "wstr");
+		auto wstrField = getField(remoteType(), "wstr");
 		const auto length = utils::lossless_cast<ULONG>(stringLength());
 		if (length == 0)
 			return { };
@@ -139,9 +139,9 @@ namespace PyExt::Remote {
 		} else {
 			Offset dataPtr = 0;
 			if (isCompact()) {
-				dataPtr = offset() + remoteObj().Dereference().GetTypeSize();
+				dataPtr = offset() + remoteType().Dereference().GetTypeSize();
 			} else {
-				dataPtr = remoteObj().Field("data").Field("any").GetPtr();
+				dataPtr = remoteType().Field("data").Field("any").GetPtr();
 			}
 
 			switch (kind()) {

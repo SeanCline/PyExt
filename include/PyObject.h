@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pyextpublic.h"
+#include "RemoteType.h"
 
 #include <cstdint>
 #include <string>
@@ -14,11 +15,11 @@ namespace PyExt::Remote {
 	class PyTypeObject; //< Forward Declaration.
 
 	/// Represents a PyObject in the debuggee's address space. Base class for all types of PyObject.
-	class PYEXT_PUBLIC PyObject
+	class PYEXT_PUBLIC PyObject : private RemoteType
 	{
 
 	public: // Typedefs.
-		using Offset = std::uint64_t;
+		using RemoteType::Offset;
 		using SSize = std::int64_t;
 
 	public: // Construction/Destruction.
@@ -28,32 +29,17 @@ namespace PyExt::Remote {
 		/// Polymorphic constructor. Creates the most-derived PyObject it can.
 		static auto make(PyObject::Offset remoteAddress) -> std::unique_ptr<PyObject>;
 
-	public: // Copy/Move.
-		PyObject(const PyObject&);
-		PyObject& operator=(const PyObject&);
-		PyObject(PyObject&&);
-		PyObject& operator=(PyObject&&);
-
 	public: // Members.
-		auto offset() const -> Offset;
-		auto symbolName() const -> std::string;
+		using RemoteType::offset;
+		using RemoteType::symbolName;
 		auto refCount() const -> SSize;
 		auto type() const -> PyTypeObject;
 		virtual auto repr(bool pretty = true) const -> std::string;
 
 	protected: // Helpers for more derived classes.
-		/// Access to the PyObject's memory in the debuggee.
-		auto remoteObj() const -> ExtRemoteTyped&;
-
 		/// Returns a field by name in the `ob_base` member.
 		auto baseField(const std::string& fieldName) const -> ExtRemoteTyped;
-
-	private: // Data.
-#pragma warning (push)
-#pragma warning (disable: 4251) //< Hide warnings about exporting private symbols.
-		std::shared_ptr<ExtRemoteTyped> remoteObj_;
-		std::string symbolName_;
-#pragma warning (pop)
+		using RemoteType::remoteType;
 
 	};
 

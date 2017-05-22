@@ -16,7 +16,7 @@ namespace PyExt::Remote {
 
 	auto PyIntObject::intValue() const -> int32_t
 	{
-		auto ival = remoteObj().Field("ob_ival");
+		auto ival = remoteType().Field("ob_ival");
 		return utils::readIntegral<int32_t>(ival);
 	}
 

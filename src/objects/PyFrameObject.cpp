@@ -23,43 +23,43 @@ namespace PyExt::Remote {
 	auto PyFrameObject::locals() const -> unique_ptr<PyDictObject>
 	{
 		// Note: The CPython code comments indicate that this isn't always a dict object. In practice, it seems to be.
-		return utils::fieldAsPyObject<PyDictObject>(remoteObj(), "f_locals");
+		return utils::fieldAsPyObject<PyDictObject>(remoteType(), "f_locals");
 	}
 
 
 	auto PyFrameObject::globals() const -> unique_ptr<PyDictObject>
 	{
-		return utils::fieldAsPyObject<PyDictObject>(remoteObj(), "f_globals");
+		return utils::fieldAsPyObject<PyDictObject>(remoteType(), "f_globals");
 	}
 
 
 	auto PyFrameObject::builtins() const -> unique_ptr<PyDictObject>
 	{
-		return utils::fieldAsPyObject<PyDictObject>(remoteObj(), "f_builtins");
+		return utils::fieldAsPyObject<PyDictObject>(remoteType(), "f_builtins");
 	}
 
 
 	auto PyFrameObject::code() const -> unique_ptr<PyCodeObject>
 	{
-		return utils::fieldAsPyObject<PyCodeObject>(remoteObj(), "f_code");
+		return utils::fieldAsPyObject<PyCodeObject>(remoteType(), "f_code");
 	}
 
 
 	auto PyFrameObject::back() const -> unique_ptr<PyFrameObject>
 	{
-		return utils::fieldAsPyObject<PyFrameObject>(remoteObj(), "f_back");
+		return utils::fieldAsPyObject<PyFrameObject>(remoteType(), "f_back");
 	}
 
 
 	auto PyFrameObject::trace() const -> unique_ptr<PyFunctionObject>
 	{
-		return utils::fieldAsPyObject<PyFunctionObject>(remoteObj(), "f_trace");
+		return utils::fieldAsPyObject<PyFunctionObject>(remoteType(), "f_trace");
 	}
 
 
 	auto PyFrameObject::lastInstruction() const -> int
 	{
-		auto lasti = remoteObj().Field("f_lasti");
+		auto lasti = remoteType().Field("f_lasti");
 		return utils::readIntegral<int>(lasti);
 	}
 
@@ -70,7 +70,7 @@ namespace PyExt::Remote {
 		auto traceFunction = trace();
 		auto codeObject = code();
 		if (traceFunction != nullptr || codeObject == nullptr) {
-			auto lineno = remoteObj().Field("f_lineno");
+			auto lineno = remoteType().Field("f_lineno");
 			return utils::readIntegral<int>(lineno);
 		}
 

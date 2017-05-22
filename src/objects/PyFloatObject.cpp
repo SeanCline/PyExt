@@ -14,7 +14,7 @@ namespace PyExt::Remote {
 
 	auto PyFloatObject::floatValue() const -> double
 	{
-		auto fval = remoteObj().Field("ob_fval");
+		auto fval = remoteType().Field("ob_fval");
 		return fval.GetDouble();
 	}
 

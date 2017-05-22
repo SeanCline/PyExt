@@ -40,7 +40,7 @@ namespace PyExt::Remote {
 			return { };
 
 		vector<uint8_t> buff(utils::lossless_cast<size_t>(len), '\0');
-		auto bytesField = remoteObj().Field("ob_bytes");
+		auto bytesField = remoteType().Field("ob_bytes");
 		bytesField.Dereference().ReadBuffer(buff.data(), static_cast<ULONG>(buff.size()));
 		return buff;
 	}

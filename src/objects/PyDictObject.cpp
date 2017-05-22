@@ -96,9 +96,9 @@ namespace PyExt::Remote {
 	{
 		vector<pair<unique_ptr<PyObject>, unique_ptr<PyObject>>> pairs;
 
-		auto table = getEntriesTable(remoteObj());
-		const auto tableSize = getEntriesTableSize(remoteObj());
-		const bool isCombined = getIsCombined(remoteObj());
+		auto table = getEntriesTable(remoteType());
+		const auto tableSize = getEntriesTableSize(remoteType());
+		const bool isCombined = getIsCombined(remoteType());
 		for (SSize i = 0; i < tableSize; ++i) {
 			auto dictEntry = table.ArrayElement(i);
 
@@ -107,7 +107,7 @@ namespace PyExt::Remote {
 			if (isCombined) {
 				valuePtr = dictEntry.Field("me_value").GetPtr();
 			} else {
-				valuePtr = remoteObj().Field("ma_values").ArrayElement(i).GetPtr();
+				valuePtr = remoteType().Field("ma_values").ArrayElement(i).GetPtr();
 			}
 
 			if (keyPtr == 0 || valuePtr == 0) //< The hash bucket might be empty.

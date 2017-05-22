@@ -117,7 +117,10 @@
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="PyInterpreterState.cpp" />
     <ClCompile Include="pystack.cpp" />
+    <ClCompile Include="PyThreadState.cpp" />
+    <ClCompile Include="RemoteType.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(WindowsSdkDir)\Debuggers\inc\engextcpp.cpp">
@@ -131,6 +134,9 @@
     <ResourceCompile Include="$(ProjectName).rc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\PyInterpreterState.h" />
+    <ClInclude Include="..\include\PyThreadState.h" />
+    <ClInclude Include="..\include\RemoteType.h" />
     <ClInclude Include="extension.h" />
     <ClInclude Include="..\include\globals.h" />
     <ClInclude Include="..\include\PyStringValue.h" />

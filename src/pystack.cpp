@@ -3,6 +3,8 @@
 #include "PyFrameObject.h"
 #include "PyDictObject.h"
 #include "PyCodeObject.h"
+#include "PyInterpreterState.h"
+#include "PyThreadState.h"
 using namespace PyExt::Remote;
 
 #include "ExtHelpers.h"
@@ -19,14 +21,13 @@ using namespace std;
 namespace {
 	auto getPythonFrameForThread(uint64_t threadId) -> unique_ptr<PyFrameObject>
 	{
-		auto threadState = ExtRemoteTyped("autoInterpreterState").Field("tstate_head");
+		auto interpState = PyInterpreterState::makeAutoInterpreterState();
 
 		// Iterate over each threadState, looking for one with a matching threadId.
-		for (; threadState.GetPtr() != 0; threadState = threadState.Field("next")) {
-			auto threadIdField = threadState.Field("thread_id");
-			auto curThreadId = utils::readIntegral<uint64_t>(threadIdField);
-			if (curThreadId == threadId)
-				return make_unique<PyFrameObject>(threadState.Field("frame").GetPtr()); //< Found it!
+		for (auto tstate = interpState->tstate_head(); tstate != nullptr; tstate = tstate->next()) {
+			if (tstate->thread_id() == threadId) {
+				return tstate->frame(); //< Found it!
+			}
 		}
 
 		return { };

@@ -17,7 +17,7 @@ namespace PyExt::Remote {
 
 	auto PyBoolObject::boolValue() const -> bool
 	{
-		auto ival = remoteObj().Field("ob_ival");
+		auto ival = remoteType().Field("ob_ival");
 		return utils::readIntegral<bool>(ival);
 	}
 

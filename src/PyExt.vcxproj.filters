@@ -99,7 +99,16 @@
     <ClCompile Include="objects\PyObjectMake.cpp">
       <Filter>Source Files\objects</Filter>
     </ClCompile>
+    <ClCompile Include="RemoteType.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PyInterpreterState.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="\Debuggers\inc\engextcpp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PyThreadState.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -187,6 +196,15 @@
     </ClInclude>
     <ClInclude Include="..\include\PyTypeObject.h">
       <Filter>Header Files\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\RemoteType.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\PyInterpreterState.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\PyThreadState.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

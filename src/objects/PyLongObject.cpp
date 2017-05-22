@@ -26,7 +26,7 @@ namespace PyExt::Remote {
 
 	auto PyLongObject::repr(bool /*pretty*/) const -> string
 	{
-		auto digits = remoteObj().Field("ob_digit");
+		auto digits = remoteType().Field("ob_digit");
 		const auto bytesPerDigit = digits.ArrayElement(0).GetTypeSize();
 
 		// Set up our constants based on how CPython was compiled.

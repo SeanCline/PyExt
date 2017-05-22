@@ -15,7 +15,7 @@ namespace PyExt::Remote {
 	auto PyTypeObject::name() const -> string
 	{
 		ExtBuffer<char> buff;
-		remoteObj().Field("tp_name").Dereference().GetString(&buff);
+		remoteType().Field("tp_name").Dereference().GetString(&buff);
 		return buff.GetBuffer();
 	}
 
@@ -23,7 +23,7 @@ namespace PyExt::Remote {
 	auto PyTypeObject::documentation() const -> string
 	{
 		ExtBuffer<char> buff;
-		auto doc = remoteObj().Field("ob_type").Field("tp_doc");
+		auto doc = remoteType().Field("ob_type").Field("tp_doc");
 		if (doc.GetPtr() == 0)
 			return {};
 
@@ -36,7 +36,7 @@ namespace PyExt::Remote {
 	// which type to construct when a Python3 type differs from a Python 2 type of the same name.
 	auto PyTypeObject::isPython2() const -> bool
 	{
-		return !remoteObj().HasField("ob_base");
+		return !remoteType().HasField("ob_base");
 	}
 
 

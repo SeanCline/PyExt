@@ -24,7 +24,7 @@ namespace PyExt::Remote {
 
 	auto PyCodeObject::firstLineNumber() const -> int
 	{
-		auto firstlineno = remoteObj().Field("co_firstlineno");
+		auto firstlineno = remoteType().Field("co_firstlineno");
 		return utils::readIntegral<int>(firstlineno);
 	}
 
@@ -64,7 +64,7 @@ namespace PyExt::Remote {
 
 	auto PyCodeObject::filename() const -> string
 	{
-		auto filenameStr = utils::fieldAsPyObject<PyStringValue>(remoteObj(), "co_filename");
+		auto filenameStr = utils::fieldAsPyObject<PyStringValue>(remoteType(), "co_filename");
 		if (filenameStr == nullptr)
 			return { };
 
@@ -74,7 +74,7 @@ namespace PyExt::Remote {
 
 	auto PyCodeObject::name() const -> string
 	{
-		auto nameStr = utils::fieldAsPyObject<PyStringValue>(remoteObj(), "co_name");
+		auto nameStr = utils::fieldAsPyObject<PyStringValue>(remoteType(), "co_name");
 		if (nameStr == nullptr)
 			return { };
 
@@ -84,7 +84,7 @@ namespace PyExt::Remote {
 
 	auto PyCodeObject::lineNumberTable() const -> vector<uint8_t>
 	{
-		auto codeStr = utils::fieldAsPyObject<PyStringValue>(remoteObj(), "co_lnotab");
+		auto codeStr = utils::fieldAsPyObject<PyStringValue>(remoteType(), "co_lnotab");
 		if (codeStr == nullptr)
 			return { };
 

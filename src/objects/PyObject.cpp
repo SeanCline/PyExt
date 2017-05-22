@@ -11,32 +11,13 @@ using namespace std;
 namespace PyExt::Remote {
 
 	PyObject::PyObject(Offset objectAddress, const string& symbolName /*= "PyObject"*/)
-		: remoteObj_(make_shared<ExtRemoteTyped>(symbolName.c_str(), objectAddress, true)),
-		symbolName_(symbolName)
+		: RemoteType(objectAddress, symbolName)
 	{
 	}
 
 
 	PyObject::~PyObject()
 	{
-	}
-
-
-	PyObject::PyObject(const PyObject&) = default;
-	PyObject& PyObject::operator=(const PyObject&) = default;
-	PyObject::PyObject(PyObject&&) = default;
-	PyObject& PyObject::operator=(PyObject&&) = default;
-
-
-	auto PyObject::offset() const -> Offset
-	{
-		return remoteObj().GetPtr();
-	}
-
-
-	auto PyObject::symbolName() const -> std::string
-	{
-		return symbolName_;
 	}
 
 
@@ -59,15 +40,9 @@ namespace PyExt::Remote {
 	}
 
 
-	auto PyObject::remoteObj() const -> ExtRemoteTyped&
-	{
-		return *remoteObj_;
-	}
-
-
 	auto PyObject::baseField(const string & fieldName) const -> ExtRemoteTyped
 	{
-		ExtRemoteTyped obj = remoteObj();
+		ExtRemoteTyped obj = remoteType();
 
 		// Python3 tucks the base members away in a struct named ob_base.
 		while (obj.HasField("ob_base") && !obj.HasField(fieldName.c_str())) {

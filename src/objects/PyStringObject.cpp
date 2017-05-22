@@ -34,7 +34,7 @@ namespace PyExt::Remote {
 
 		// String objects in Python can embed \0's, especially in Python2, when used to store bytes.
 		// GetString() stops at the first \0 so ReadBuffer() is a better choice.
-		auto sval = remoteObj().Field("ob_sval");
+		auto sval = remoteType().Field("ob_sval");
 		sval.Dereference().ReadBuffer(buff.data(), static_cast<ULONG>(buff.size()));
 		return { begin(buff), end(buff) };
 	}

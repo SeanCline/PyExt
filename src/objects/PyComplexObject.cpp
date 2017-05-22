@@ -16,7 +16,7 @@ namespace PyExt::Remote {
 
 	auto PyComplexObject::complexValue() const -> complex<double>
 	{
-		auto cval = remoteObj().Field("cval");
+		auto cval = remoteType().Field("cval");
 		return { cval.Field("real").GetDouble(), cval.Field("imag").GetDouble() };
 	}
 

@@ -31,7 +31,7 @@ namespace PyExt::Remote {
 		if (index < 0 || index >= numItems())
 			throw out_of_range("PyListObject::at index out of range.");
 
-		auto obj = remoteObj();
+		auto obj = remoteType();
 		auto itemPtr = obj.Field("ob_item").ArrayElement(index).GetPtr();
 		return PyObject::make(itemPtr);
 	}
