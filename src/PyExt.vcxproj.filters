@@ -105,9 +105,6 @@
     <ClCompile Include="PyInterpreterState.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="\Debuggers\inc\engextcpp.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="PyThreadState.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

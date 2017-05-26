@@ -5,8 +5,7 @@
 #include <engextcpp.hpp>
 
 #include <string>
-#include <vector>
-#include <iterator>
+#include <stdexcept>
 using namespace std;
 
 namespace PyExt::Remote {
@@ -20,23 +19,24 @@ namespace PyExt::Remote {
 	auto PyBaseStringObject::stringLength() const -> SSize
 	{
 		auto len = size();
-		return (len < 0) ? 0 : len; //< Don't let the length go negative. Python enforces this.
+
+		// Don't let the length go negative. Python enforces this invariant.
+		if (len < 0)
+			throw runtime_error("Negative size in PyBaseStringObject."); 
+
+		return len; 
 	}
 
 
 	auto PyBaseStringObject::stringValue() const -> string
 	{
-		auto len = stringLength();
-		if (len <= 0)
-			return { };
-
-		vector<char> buff(utils::lossless_cast<size_t>(len), '\0');
-
-		// String objects in Python can embed \0's, especially in Python2, when used to store bytes.
-		// GetString() stops at the first \0 so ReadBuffer() is a better choice.
+		// String and Bytes objects in Python can embed \0's so we read `len` bytes from the debuggee
+		// instead of stopping at the first \0.
+		const auto len = stringLength();
+		string buffer(utils::lossless_cast<size_t>(len), '\0');
 		auto sval = remoteType().Field("ob_sval");
-		sval.Dereference().ReadBuffer(buff.data(), static_cast<ULONG>(buff.size()));
-		return { begin(buff), end(buff) };
+		sval.Dereference().ReadBuffer(buffer.data(), utils::lossless_cast<ULONG>(buffer.size()));
+		return buffer;
 	}
 
 

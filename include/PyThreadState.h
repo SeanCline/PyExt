@@ -27,6 +27,9 @@ namespace PyExt::Remote {
 		auto use_tracing() const -> long;
 		auto thread_id() const -> long;
 
+	public: // Utility functions around the members.
+		/// Returns a range of all the frames in this threadState.
+		auto allFrames() const -> std::vector<PyFrameObject>; //< TODO: Return generator<PyFrameObject>
 	};
 
 }

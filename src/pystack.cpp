@@ -15,24 +15,13 @@ using namespace PyExt::Remote;
 #include <utility>
 #include <sstream>
 #include <stdexcept>
+#include <algorithm>
+#include <iterator>
+#include <optional>
 using namespace std;
 
 
 namespace {
-	auto getPythonFrameForThread(uint64_t threadId) -> unique_ptr<PyFrameObject>
-	{
-		auto interpState = PyInterpreterState::makeAutoInterpreterState();
-
-		// Iterate over each threadState, looking for one with a matching threadId.
-		for (auto tstate = interpState->tstate_head(); tstate != nullptr; tstate = tstate->next()) {
-			if (tstate->thread_id() == threadId) {
-				return tstate->frame(); //< Found it!
-			}
-		}
-
-		return { };
-	}
-
 
 	auto getCurrentThreadId(IDebugSystemObjects* pSystem) -> uint64_t
 	{
@@ -127,14 +116,15 @@ namespace PyExt {
 			// Either start at the user-provided PyFrameObject, or find the top frame of the current thread, if one exists.
 			if (m_NumUnnamedArgs < 1) {
 				// Print the thread header.
-				auto threadId = getCurrentThreadId(m_System);
-				auto threadHeader = "Thread " + to_string(threadId) + ":";
+				auto threadHeader = "Thread " + to_string(getCurrentThreadId(m_System)) + ":";
 				Out("%s\n", threadHeader.c_str());
 
 				auto threadSystemId = getCurrentThreadSystemId(m_System);
-				frameObject = getPythonFrameForThread(threadSystemId);
-				if (frameObject == nullptr)
+				auto threadState = PyInterpreterState::findThreadStateBySystemThreadId(threadSystemId);
+				if (!threadState.has_value())
 					throw runtime_error("Thread does not contain any Python frames.");
+
+				frameObject = threadState->frame();
 			} else {
 				// Print info about the user-provided PyFrameObject as a header.
 				auto frameOffset = evalOffset(GetUnnamedArgStr(0));
@@ -142,6 +132,9 @@ namespace PyExt {
 
 				frameObject = make_unique<PyFrameObject>(frameOffset);
 			}
+
+			if (frameObject == nullptr)
+				throw runtime_error("Could not find PyFrameObject.");
 
 			// Print each frame.
 			for (; frameObject != nullptr; frameObject = frameObject->back()) {

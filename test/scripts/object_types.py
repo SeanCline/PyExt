@@ -1,31 +1,33 @@
 import win32debug, sys, os
 
-stringObj = "TestString123"
-bigStringObj = stringObj * 100
-bytesObj = b"TestBytes123"
-byteArrayObject = bytearray(b'TestBytearray123')
-intObj = int(1)
-longObj = 123456789012345678901234567890123456789012345678901234567890
-floatObj = 3.1415
-complexObj = complex(1.5, -2.25)
-boolTrueObj = True
-boolFalseObj = False
-noneObj = None
-typeObj = dict
-notImplementedObj = NotImplemented
-funcObj = lambda x: x*x
+string_obj = "TestString123"
+big_string_obj = string_obj * 100
+bytes_obj = b"TestBytes123"
+byte_array_object = bytearray(b'TestBytearray123')
+int_obj = int(1)
+long_obj = 123456789012345678901234567890123456789012345678901234567890
+float_obj = 3.1415
+complex_obj = complex(1.5, -2.25)
+bool_true_obj = True
+bool_false_obj = False
+none_obj = None
+type_obj = dict
+not_implemented_obj = NotImplemented
 
-listObj = [stringObj, intObj, longObj]
+def test_function(x):
+    """Some DocString"""
+    return x*x
 
-tupleObj = (stringObj, intObj, longObj)
+func_obj = test_function
 
-dictObj = {
-	"stringObj": stringObj,
-	"intObj": intObj,
-	"longObj": longObj,
+list_obj = [string_obj, int_obj, long_obj]
+
+tuple_obj = (string_obj, int_obj, long_obj)
+
+dict_obj = {
+	"string_obj": string_obj,
+	"int_obj": int_obj,
+	"long_obj": long_obj,
 }
 
-pythonVersionStr = ".".join(str(x) for x in sys.version_info[:3])
-fileNameStr = os.path.splitext(os.path.basename(__file__))[0]
-bittessStr = 'x64' if sys.maxsize > 2**32 else 'x86'
-win32debug.dump_process('.'.join([fileNameStr, pythonVersionStr, bittessStr, "dmp"]))
+win32debug.dump_process()

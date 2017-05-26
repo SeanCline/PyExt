@@ -5,7 +5,7 @@
 #include "PyTupleObject.h"
 #include "PyDictObject.h"
 #include "PyListObject.h"
-#include "PyStringObject.h"
+#include "PyStringValue.h"
 #include "../fieldAsPyObject.h"
 
 #include <engextcpp.hpp>
@@ -58,9 +58,9 @@ namespace PyExt::Remote {
 	}
 
 
-	auto PyFunctionObject::name() const -> unique_ptr<PyStringObject>
+	auto PyFunctionObject::name() const -> unique_ptr<PyStringValue>
 	{
-		return utils::fieldAsPyObject<PyStringObject>(remoteType(), "func_name");
+		return utils::fieldAsPyObject<PyStringValue>(remoteType(), "func_name");
 	}
 
 
@@ -88,9 +88,9 @@ namespace PyExt::Remote {
 	}
 
 
-	auto PyFunctionObject::qualname() const -> unique_ptr<PyStringObject>
+	auto PyFunctionObject::qualname() const -> unique_ptr<PyStringValue>
 	{
-		return utils::fieldAsPyObject<PyStringObject>(remoteType(), "func_qualname");
+		return utils::fieldAsPyObject<PyStringValue>(remoteType(), "func_qualname");
 	}
 
 

@@ -13,7 +13,7 @@ namespace PyExt {
 
 	/// Initializes the extension as calls from DbgEng.dll would.
 	/// Intended to be called by the test harness to set up the global state.
-	PYEXT_PUBLIC void InitializePyExtForTest(IDebugClient* pClient)
+	PYEXT_PUBLIC void InitializeGlobalsForTest(IDebugClient* pClient)
 	{
 		g_Ext = g_ExtInstancePtr;
 		g_Ext->Query(pClient);
@@ -21,7 +21,7 @@ namespace PyExt {
 
 
 	/// Intended to be called by the test harness to reset the global state.
-	PYEXT_PUBLIC void UninitializePyExtForTest()
+	PYEXT_PUBLIC void UninitializeGlobalsForTest()
 	{
 		g_Ext->Release();
 	}

@@ -9,7 +9,7 @@ using namespace std;
 namespace PyExt::Remote {
 
 	RemoteType::RemoteType(Offset objectAddress, const std::string& symbolName)
-		: symbolName_(symbolName_),
+		: symbolName_(symbolName),
 		  remoteType_(make_shared<ExtRemoteTyped>(symbolName.c_str(), objectAddress, true))
 	{
 	}

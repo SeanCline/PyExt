@@ -65,4 +65,14 @@ namespace PyExt::Remote {
 		return utils::readIntegral<long>(field);
 	}
 
+
+	auto PyThreadState::allFrames() const -> std::vector<PyFrameObject>
+	{
+		vector<PyFrameObject> frames;
+		for (auto f = frame(); f != nullptr; f = f->back()) {
+			frames.push_back(*f);
+		}
+		return frames;
+	}
+
 }

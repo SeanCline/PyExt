@@ -12,7 +12,7 @@ namespace PyExt::Remote {
 	class PyTupleObject;
 	class PyDictObject;
 	class PyListObject;
-	class PyStringObject;
+	class PyStringValue;
 
 	/// Represents a PyFunctionObject in the debuggee's address space.
 	class PYEXT_PUBLIC PyFunctionObject : public PyObject
@@ -28,12 +28,12 @@ namespace PyExt::Remote {
 		auto kwdefaults() const -> std::unique_ptr<PyDictObject>;
 		auto closure() const -> std::unique_ptr<PyTupleObject>;
 		auto doc() const -> std::unique_ptr<PyObject>;
-		auto name() const -> std::unique_ptr<PyStringObject>;
+		auto name() const -> std::unique_ptr<PyStringValue>;
 		auto dict() const -> std::unique_ptr<PyDictObject>;
 		auto weakreflist() const -> std::unique_ptr<PyListObject>;
 		auto module() const -> std::unique_ptr<PyObject>;
 		auto annotations() const -> std::unique_ptr<PyDictObject>;
-		auto qualname() const -> std::unique_ptr<PyStringObject>;
+		auto qualname() const -> std::unique_ptr<PyStringValue>;
 		auto repr(bool pretty = true) const -> std::string override;
 
 	};

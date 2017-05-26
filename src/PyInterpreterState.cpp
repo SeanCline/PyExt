@@ -7,7 +7,10 @@
 
 #include <engextcpp.hpp>
 
+#include <cstdint>
 #include <memory>
+#include <vector>
+#include <optional>
 using namespace std;
 
 namespace PyExt::Remote {
@@ -30,11 +33,35 @@ namespace PyExt::Remote {
 	}
 
 
+	auto PyInterpreterState::allInterpreterStates() -> std::vector<PyInterpreterState>
+	{
+		vector<PyInterpreterState> states;
+		for (auto state = makeAutoInterpreterState(); state != nullptr; state = state->next()) {
+			states.push_back(*state);
+		}
+		return states;
+	}
+
+
+	auto PyInterpreterState::findThreadStateBySystemThreadId(uint64_t systemThreadId) -> optional<PyThreadState>
+	{
+		for (auto istate = makeAutoInterpreterState(); istate != nullptr; istate = istate->next()) {
+			for (auto tstate = istate->tstate_head(); tstate != nullptr; tstate = tstate->next()) {
+				if (tstate->thread_id() == systemThreadId) {
+					return move(*tstate);
+				}
+			}
+		}
+
+		return { };
+	}
+
+
 	auto PyInterpreterState::next() const -> std::unique_ptr<PyInterpreterState>
 	{
 		auto nextPtr = remoteType().Field("next").GetPtr();
 		if (nextPtr == 0)
-			return {};
+			return { };
 
 		return make_unique<PyInterpreterState>(nextPtr);
 	}
@@ -61,6 +88,16 @@ namespace PyExt::Remote {
 	auto PyInterpreterState::builtins() const -> std::unique_ptr<PyDictObject>
 	{
 		return utils::fieldAsPyObject<PyDictObject>(remoteType(), "builtins");
+	}
+
+
+	auto PyInterpreterState::allThreadStates() const -> std::vector<PyThreadState>
+	{
+		vector<PyThreadState> states;
+		for (auto state = tstate_head(); state != nullptr; state = state->next()) {
+			states.push_back(*state);
+		}
+		return states;
 	}
 
 }
