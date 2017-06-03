@@ -43,7 +43,7 @@ namespace {
 			indexSize = pointerSize;
 		}
 
-		auto entriesPtr = keys.Field("dk_indices").Field("as_1").GetPtr() + (size * indexSize);
+		auto entriesPtr = keys.Field("dk_indices").Field("as_1").GetPointerTo().GetPtr() + (size * indexSize);
 		return ExtRemoteTyped("PyDictKeyEntry", entriesPtr, true);
 	}
 

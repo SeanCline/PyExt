@@ -1,6 +1,7 @@
 #include "Catch.hpp"
 
 #include "PythonDumpFile.h"
+#include "TestConfigData.h"
 
 #include <globals.h>
 #include <PyStringValue.h>
@@ -44,7 +45,7 @@ namespace {
 
 TEST_CASE("object_types.py has a stack frame with expected locals.", "[integration][object_types]")
 {
-	auto dump = PythonDumpFile("../scripts/object_types.3.5.3.x64.dmp");
+	auto dump = PythonDumpFile(TestConfigData::instance().objectTypesDumpFileNameOrDefault());
 
 	// Set up pyext.dll so it thinks DbgEng is calling into it.
 	PyExt::InitializeGlobalsForTest(dump.pClient.Get());

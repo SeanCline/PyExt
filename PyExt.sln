@@ -12,28 +12,28 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PyExtTest", "test\PyExtTest
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
 		Debug|x64 = Debug|x64
-		Debug|x86 = Debug|x86
+		Release|Win32 = Release|Win32
 		Release|x64 = Release|x64
-		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EEBC73BA-27F2-4483-8639-54A108B77594}.Debug|Win32.ActiveCfg = Debug|Win32
+		{EEBC73BA-27F2-4483-8639-54A108B77594}.Debug|Win32.Build.0 = Debug|Win32
 		{EEBC73BA-27F2-4483-8639-54A108B77594}.Debug|x64.ActiveCfg = Debug|x64
 		{EEBC73BA-27F2-4483-8639-54A108B77594}.Debug|x64.Build.0 = Debug|x64
-		{EEBC73BA-27F2-4483-8639-54A108B77594}.Debug|x86.ActiveCfg = Debug|Win32
-		{EEBC73BA-27F2-4483-8639-54A108B77594}.Debug|x86.Build.0 = Debug|Win32
+		{EEBC73BA-27F2-4483-8639-54A108B77594}.Release|Win32.ActiveCfg = Release|Win32
+		{EEBC73BA-27F2-4483-8639-54A108B77594}.Release|Win32.Build.0 = Release|Win32
 		{EEBC73BA-27F2-4483-8639-54A108B77594}.Release|x64.ActiveCfg = Release|x64
 		{EEBC73BA-27F2-4483-8639-54A108B77594}.Release|x64.Build.0 = Release|x64
-		{EEBC73BA-27F2-4483-8639-54A108B77594}.Release|x86.ActiveCfg = Release|Win32
-		{EEBC73BA-27F2-4483-8639-54A108B77594}.Release|x86.Build.0 = Release|Win32
+		{AE750E22-5A8E-401E-A843-B9D56B09A015}.Debug|Win32.ActiveCfg = Debug|Win32
+		{AE750E22-5A8E-401E-A843-B9D56B09A015}.Debug|Win32.Build.0 = Debug|Win32
 		{AE750E22-5A8E-401E-A843-B9D56B09A015}.Debug|x64.ActiveCfg = Debug|x64
 		{AE750E22-5A8E-401E-A843-B9D56B09A015}.Debug|x64.Build.0 = Debug|x64
-		{AE750E22-5A8E-401E-A843-B9D56B09A015}.Debug|x86.ActiveCfg = Debug|Win32
-		{AE750E22-5A8E-401E-A843-B9D56B09A015}.Debug|x86.Build.0 = Debug|Win32
+		{AE750E22-5A8E-401E-A843-B9D56B09A015}.Release|Win32.ActiveCfg = Release|Win32
+		{AE750E22-5A8E-401E-A843-B9D56B09A015}.Release|Win32.Build.0 = Release|Win32
 		{AE750E22-5A8E-401E-A843-B9D56B09A015}.Release|x64.ActiveCfg = Release|x64
 		{AE750E22-5A8E-401E-A843-B9D56B09A015}.Release|x64.Build.0 = Release|x64
-		{AE750E22-5A8E-401E-A843-B9D56B09A015}.Release|x86.ActiveCfg = Release|Win32
-		{AE750E22-5A8E-401E-A843-B9D56B09A015}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

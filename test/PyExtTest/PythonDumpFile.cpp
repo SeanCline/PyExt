@@ -1,4 +1,5 @@
 #include "PythonDumpFile.h"
+#include "TestConfigData.h"
 
 #include <PyInterpreterState.h>
 #include <PyThreadState.h>
@@ -19,7 +20,7 @@ PythonDumpFile::PythonDumpFile(const std::string& dumpFilename)
 {
 	createDebugInterfaces();
 	openDumpFile(dumpFilename);
-	setSymbolPath(getPythonPath() + ";srv*http://msdl.microsoft.com/download/symbols");
+	setSymbolPath(TestConfigData::instance().symbolPathOrDefault());
 	loadPyExt();
 }
 
@@ -27,6 +28,7 @@ PythonDumpFile::PythonDumpFile(const std::string& dumpFilename)
 PythonDumpFile::~PythonDumpFile()
 {
 }
+
 
 auto PythonDumpFile::getMainThreadFrames() const -> std::vector<PyExt::Remote::PyFrameObject>
 {
@@ -68,7 +70,7 @@ auto PythonDumpFile::openDumpFile(const std::string & dumpFilename) -> void
 {
 	HRESULT hr = pClient->OpenDumpFile(dumpFilename.c_str());
 	if (FAILED(hr))
-		throw runtime_error("Failed to OpenDumpFile.");
+		throw runtime_error("OpenDumpFile failed with dumpFilename=" + dumpFilename);
 
 	// The debug session isn't completely open until we call WaitForEvent.
 	hr = pControl->WaitForEvent(DEBUG_WAIT_DEFAULT, 3000 /*ms*/);
@@ -98,28 +100,4 @@ auto PythonDumpFile::loadPyExt() -> void
 	HRESULT hr = pControl->AddExtension(pyExtFile.data(), 0, &pyExtHandle);
 	if (FAILED(hr))
 		throw runtime_error("Failed to load PyExt extension.");
-}
-
-
-auto PythonDumpFile::getPythonPath() const -> std::string
-{
-	ULONG moduleIndex = 0;
-	ULONG64 moduleBase = 0;
-	HRESULT hr = pSymbols->GetModuleByModuleName("python", 0, &moduleIndex, &moduleBase);
-	if (FAILED(hr))
-		throw runtime_error("GetModuleByModuleName failed find python module.");
-
-	ULONG moduleNameSize = 2048;
-	string moduleName(moduleNameSize, '\0');
-	hr = pSymbols->GetModuleNameString(DEBUG_MODNAME_IMAGE, moduleIndex, moduleBase, moduleName.data(), moduleNameSize, &moduleNameSize);
-	if (FAILED(hr))
-		throw runtime_error("GetModuleNameString failed for python module.");
-	moduleName.resize(moduleNameSize);
-
-	string drive(_MAX_DRIVE, '\0');
-	string dir(_MAX_DIR, '\0');
-	_splitpath_s(moduleName.c_str(), drive.data(), drive.size(), dir.data(), dir.size(), nullptr, 0, nullptr, 0);
-	drive.resize(drive.find('\0', 0));
-	dir.resize(dir.find('\0', 0));
-	return drive + dir;
 }

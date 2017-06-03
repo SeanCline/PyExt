@@ -30,4 +30,4 @@ dict_obj = {
 	"long_obj": long_obj,
 }
 
-win32debug.dump_process()
+win32debug.dump_process("object_types.dmp")

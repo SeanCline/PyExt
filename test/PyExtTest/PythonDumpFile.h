@@ -32,6 +32,5 @@ private: // Helpers.
 	auto setSymbolPath(const std::string& symbolPath) -> void;
 	auto openDumpFile(const std::string & dumpFilename) -> void;
 	auto loadPyExt() -> void;
-	auto getPythonPath() const->std::string;
 
 };

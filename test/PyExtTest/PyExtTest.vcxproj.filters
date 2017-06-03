@@ -27,9 +27,15 @@
     <ClCompile Include="ObjectTypes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TestConfigData.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PythonDumpFile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TestConfigData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

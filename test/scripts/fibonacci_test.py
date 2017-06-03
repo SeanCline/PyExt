@@ -15,7 +15,7 @@ def recursive_fib(n):
     
     # Write a highest point of the call stack.
     if n == 1:
-        win32debug.dump_process() # Asserted line 18.
+        win32debug.dump_process("fibonacci_test.dmp") # Asserted line 18.
         exit(0)
     
     if n < 2:

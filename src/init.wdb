@@ -1,4 +1,4 @@
-.sympath "C:\Python36;c:\pythonsymbols\2.7.13-x86\;c:\pythonsymbols\2.7.13-x64\;symsrv*c:\symbols*https://msdl.microsoft.com/download/symbols";
+.sympath "srv*c:\symbols*http://pythonsymbols.sdcline.com/symbols;srv*c:\symbols*http://msdl.microsoft.com/download/symbols";
 .reload;
 
 ~0s;

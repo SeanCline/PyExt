@@ -102,6 +102,15 @@
       <AdditionalDependencies>$(TargetDir)\pyext.lib;dbgeng.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
     </Link>
+    <PostBuildEvent>
+      <Command>echo Copying dbghelp.dll and symsrv.dll locally...
+cd $(TargetDir)
+IF NOT EXIST dbgeng.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\dbgeng.dll" .\
+IF NOT EXIST dbghelp.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\dbghelp.dll" .\
+IF NOT EXIST symsrv.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\symsrv.dll" .\
+</Command>
+      <Message>Copy dbghelp and symsrv from the Debugging Tools for Windows package since the one that ships in system32 can't download symbols from a remote server.</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -116,6 +125,15 @@
       <AdditionalDependencies>$(TargetDir)\pyext.lib;dbgeng.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
     </Link>
+    <PostBuildEvent>
+      <Command>echo Copying dbghelp.dll and symsrv.dll locally...
+cd $(TargetDir)
+IF NOT EXIST dbgeng.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\dbgeng.dll" .\
+IF NOT EXIST dbghelp.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\dbghelp.dll" .\
+IF NOT EXIST symsrv.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\symsrv.dll" .\
+</Command>
+      <Message>Copy dbghelp and symsrv from the Debugging Tools for Windows package since the one that ships in system32 can't download symbols from a remote server.</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -134,6 +152,15 @@
       <AdditionalDependencies>$(TargetDir)\pyext.lib;dbgeng.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
     </Link>
+    <PostBuildEvent>
+      <Command>echo Copying dbghelp.dll and symsrv.dll locally...
+cd $(TargetDir)
+IF NOT EXIST dbgeng.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\dbgeng.dll" .\
+IF NOT EXIST dbghelp.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\dbghelp.dll" .\
+IF NOT EXIST symsrv.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\symsrv.dll" .\
+</Command>
+      <Message>Copy dbghelp and symsrv from the Debugging Tools for Windows package since the one that ships in system32 can't download symbols from a remote server.</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -152,12 +179,22 @@
       <AdditionalDependencies>$(TargetDir)\pyext.lib;dbgeng.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
     </Link>
+    <PostBuildEvent>
+      <Command>echo Copying dbghelp.dll and symsrv.dll locally...
+cd $(TargetDir)
+IF NOT EXIST dbgeng.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\dbgeng.dll" .\
+IF NOT EXIST dbghelp.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\dbghelp.dll" .\
+IF NOT EXIST symsrv.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\symsrv.dll" .\
+</Command>
+      <Message>Copy dbghelp and symsrv from the Debugging Tools for Windows package since the one that ships in system32 can't download symbols from a remote server.</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="FibonacciTest.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ObjectTypes.cpp" />
     <ClCompile Include="PythonDumpFile.cpp" />
+    <ClCompile Include="TestConfigData.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\PyExt.vcxproj">
@@ -167,6 +204,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PythonDumpFile.h" />
+    <ClInclude Include="TestConfigData.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
