@@ -24,7 +24,7 @@ test_script:
 
 # Package up build artifacts.
 after_build:
-  - 7z a PyExt-$(Platform)-$(Configuration).zip .\*\*\pyext.dll .\*\*\pyext.pdb
+  - 7z a PyExt-%PLATFORM-%CONFIGURATION%.zip .\*\*\pyext.dll .\*\*\pyext.pdb
 
 artifacts:
   - path: PyExt-$(Platform)-$(Configuration).zip
@@ -37,7 +37,7 @@ deploy:
     description: 'AppVeyor deploy of PyExt v$(appveyor_build_version)'
     auth_token:
       secure: FLeKshd/j9QXbwrM1rCA+tNGkFz8DnN/2Xr/m66oHzv2Qzm9GMb4Bj5UT4GNC5IQ
-    artifact: PyExt.zip
+    artifact: PyExt-$(Platform)-$(Configuration).zip
     draft: true
     prerelease: true
 #    on:
