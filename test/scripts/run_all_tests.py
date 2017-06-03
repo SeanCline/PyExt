@@ -5,11 +5,14 @@ if __name__ == '__main__':
     num_failed_tests = 0
     for installation in python_installations.get_python_installations():
         # Only test against official CPython installations.
+        if installation.company != "PythonCore":
+            print("Skipping", installation, end="\n\n")
+            continue
+        
         # Also skip versions before 2.7 since they don't have symbols.
-        version = tuple(int(n) for n in installation.version.split("."))        
-        if installation.company != "PythonCore" or version < (2, 7):
-            print("Skipping", installation)
-            print()
+        version = tuple(int(n) for n in installation.sys_version.split("."))        
+        if version < (2, 7):
+            print("Skipping", installation, end="\n\n")
             continue
         
         # Create the dump files.
