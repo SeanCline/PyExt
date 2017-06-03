@@ -1,7 +1,10 @@
 ============================
 WinDbg Extensions for Python
 ============================
-
+.. image:: https://ci.appveyor.com/api/projects/status/f4osp2swvm1l25ct?svg=true
+   :alt: Build Status
+   :target: https://ci.appveyor.com/project/SeanCline/pyext
+   
 This debugger extension provides visualizations for Python objects and stacktraces when debugging the CPython interpreter. It helps with live debugging and post-mortem analysis of dump files.
 
 The goal of this project is to provide a similar debugging experience in WinDbg/CDB/NTSD as `already exists in GDB <https://wiki.python.org/moin/DebuggingWithGdb>`_.
