@@ -24,20 +24,20 @@ test_script:
 
 # Package up build artifacts.
 after_build:
-  - 7z a PyExt.zip .\*\Release\pyext.dll
-  - 7z a PyExtDebug.zip .\*\*\*.dll .\*\*\*.pdb .\*\*\*.exe
+  - 7z a PyExt-%PLATFORM%-%CONFIGURATION%.zip .\*\*\pyext.dll .\*\*\pyext.pdb
 
 artifacts:
-  - path: PyExt.zip
-    name: PyExt
-
-  - path: PyExtDebug.zip
-    name: PyExtDebug
+  - path: PyExt-$(Platform)-$(Configuration).zip
+    name: PyExt-$(Platform)-$(Configuration)
 
 # Deploy build artifacts to GitHub Releases
 deploy:
   - provider: GitHub
-    artifact: PyExt.zip
+    release: PyExt-v$(appveyor_build_version)
+    description: 'AppVeyor deploy of PyExt v$(appveyor_build_version)'
+    auth_token:
+      secure: FLeKshd/j9QXbwrM1rCA+tNGkFz8DnN/2Xr/m66oHzv2Qzm9GMb4Bj5UT4GNC5IQ
+    artifact: PyExt-$(Platform)-$(Configuration).zip
     draft: true
     prerelease: true
     on:
