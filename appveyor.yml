@@ -1,0 +1,45 @@
+version: 0.1.{build}
+
+image: Visual Studio 2017
+
+shallow_clone: true
+
+install:
+  - choco install -y windbg
+
+platform:
+  - Win32
+  - x64
+
+configuration:
+  - Debug
+  - Release
+
+build:
+  project: PyExt.sln
+
+test_script:
+  - cd test\scripts
+  - py -3 run_all_tests.py %APPVEYOR_BUILD_FOLDER%/%PLATFORM%/%CONFIGURATION%/PyExtTest.exe
+
+# Package up build artifacts.
+after_build:
+  - 7z a PyExt.zip .\*\Release\pyext.dll
+  - 7z a PyExtDebug.zip .\*\*\*.dll .\*\*\*.pdb .\*\*\*.exe
+
+artifacts:
+  - path: PyExt.zip
+    name: PyExt
+
+  - path: PyExtDebug.zip
+    name: PyExtDebug
+
+# Deploy build artifacts to GitHub Releases
+deploy:
+  - provider: GitHub
+    artifact: PyExt.zip
+    draft: true
+    prerelease: true
+    on:
+      branch: master                # release from master branch only
+      appveyor_repo_tag: true       # deploy on tag push only
