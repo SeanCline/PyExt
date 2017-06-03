@@ -24,7 +24,7 @@ test_script:
 
 # Package up build artifacts.
 after_build:
-  - 7z a PyExt-%PLATFORM-%CONFIGURATION%.zip .\*\*\pyext.dll .\*\*\pyext.pdb
+  - 7z a PyExt-%PLATFORM%-%CONFIGURATION%.zip .\*\*\pyext.dll .\*\*\pyext.pdb
 
 artifacts:
   - path: PyExt-$(Platform)-$(Configuration).zip
