@@ -24,6 +24,8 @@ list_obj = [string_obj, int_obj, long_obj]
 
 tuple_obj = (string_obj, int_obj, long_obj)
 
+set_obj = { string_obj, int_obj, long_obj }
+
 dict_obj = {
 	"string_obj": string_obj,
 	"int_obj": int_obj,

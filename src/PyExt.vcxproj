@@ -92,6 +92,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="extension.cpp" />
+    <ClCompile Include="objects\PySetObject.cpp" />
     <ClCompile Include="objects\PyStringValue.cpp" />
     <ClCompile Include="objects\PyBoolObject.cpp" />
     <ClCompile Include="objects\PyByteArrayObject.cpp" />
@@ -135,6 +136,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\PyInterpreterState.h" />
+    <ClInclude Include="..\include\PySetObject.h" />
     <ClInclude Include="..\include\PyThreadState.h" />
     <ClInclude Include="..\include\RemoteType.h" />
     <ClInclude Include="extension.h" />

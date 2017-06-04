@@ -16,6 +16,7 @@
 #include <PyFunctionObject.h>
 #include <PyListObject.h>
 #include <PyTupleObject.h>
+#include <PySetObject.h>
 using namespace PyExt::Remote;
 
 #include <utils/ScopeExit.h>
@@ -273,6 +274,20 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 		std::regex expectedRegex(R"(\(\s*b?'TestString123',\s*1,\s*123456789012345678901234567890123456789012345678901234567890,?\s*\))");
 		REQUIRE(regex_match(tuple_obj.repr(false), expectedRegex));
 		REQUIRE(regex_match(tuple_obj.repr(true), expectedRegex));
+	}
+
+
+	SECTION("Value of set_obj.")
+	{
+		auto& set_obj = dynamic_cast<PySetObject&>(findValueByKey(localPairs, "set_obj"));
+		REQUIRE(set_obj.type().name() == "set");
+		REQUIRE(set_obj.numItems() == 3);
+		REQUIRE(set_obj.listValue().size() == 3);
+
+		// Expected to be similar to: {'TestString123', 1, 123456789012345678901234567890123456789012345678901234567890}
+		std::regex expectedRegex(R"(\{((b?'TestString123'\s*)|(\d+)|\s*|,)+\})");
+		REQUIRE(regex_match(set_obj.repr(false), expectedRegex));
+		REQUIRE(regex_match(set_obj.repr(true), expectedRegex));
 	}
 
 

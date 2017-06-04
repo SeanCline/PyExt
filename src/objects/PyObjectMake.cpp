@@ -6,6 +6,7 @@
 #include "PyByteArrayObject.h"
 #include "PyListObject.h"
 #include "PyTupleObject.h"
+#include "PySetObject.h"
 #include "PyDictObject.h"
 #include "PyIntObject.h"
 #include "PyLongObject.h"
@@ -46,6 +47,8 @@ namespace PyExt::Remote {
 			return make_unique<PyListObject>(remoteAddress);
 		} else if (typeName == "tuple") {
 			return make_unique<PyTupleObject>(remoteAddress);
+		} else if (typeName == "set") {
+			return make_unique<PySetObject>(remoteAddress);
 		} else if (typeName == "dict") {
 			return make_unique<PyDictObject>(remoteAddress);
 		} else if (typeName == "int") {
