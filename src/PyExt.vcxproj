@@ -120,6 +120,7 @@
     </ClCompile>
     <ClCompile Include="PyInterpreterState.cpp" />
     <ClCompile Include="pystack.cpp" />
+    <ClCompile Include="pysymfix.cpp" />
     <ClCompile Include="PyThreadState.cpp" />
     <ClCompile Include="RemoteType.cpp" />
   </ItemGroup>

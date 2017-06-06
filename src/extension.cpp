@@ -84,6 +84,11 @@ namespace PyExt {
 
 	auto EXT_CLASS::ensureSymbolsLoaded() -> void
 	{
+		// Hide the massive wall o'text `GetSymbolTypeId` prints when it fails to resolve a symbol.
+		// We'll print our own if it fails...
+		ExtCaptureOutputA ignoreOut;
+		ignoreOut.Start();
+
 		// See if the symbol can be found.
 		ULONG typeId = 0;
 		HRESULT hr = m_Symbols->GetSymbolTypeId("autoInterpreterState", &typeId, nullptr);
@@ -97,12 +102,17 @@ namespace PyExt {
 		if (SUCCEEDED(hr))
 			return;
 
+		ignoreOut.Delete();
 		Err("\n\n");
 		Err("*************************************************************************\n");
 		Err("***            ERROR: Python symbols could not be loaded.             ***\n");
 		Err("***   Install the debugging symbols for your version of Python##.dll  ***\n");
 		Err("***                 and add them to the symbol path.                  ***\n");
+		Err("***                                                                   ***\n");
+		Err("***   Alternatively, you run the command !pysymfix to add the Python  ***\n");
+		Err("***        symbol server created for use with this extension          ***\n");
 		Err("*************************************************************************\n");
+		Err("\n\n");
 		// Don't bother throwing. If there really is a symbol issue, it will be caught later on.
 	}
 

@@ -11,3 +11,4 @@ EXPORTS
 ; Extension commands.
 	pyobj
 	pystack
+	pysymfix

@@ -111,6 +111,9 @@
     <ClCompile Include="objects\PySetObject.cpp">
       <Filter>Source Files\objects</Filter>
     </ClCompile>
+    <ClCompile Include="pysymfix.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="extension.h">
