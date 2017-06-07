@@ -192,8 +192,9 @@ IF NOT EXIST symsrv.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\syms
   <ItemGroup>
     <ClCompile Include="FibonacciTest.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="ObjectTypes.cpp" />
+    <ClCompile Include="ObjectTypesTest.cpp" />
     <ClCompile Include="PythonDumpFile.cpp" />
+    <ClCompile Include="ScopeExitTest.cpp" />
     <ClCompile Include="TestConfigData.cpp" />
   </ItemGroup>
   <ItemGroup>

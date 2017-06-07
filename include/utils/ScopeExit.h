@@ -10,21 +10,38 @@ namespace utils {
 
 	public:
 		ScopeExit(Invokable&& f)
-			: f_(std::forward<Invokable>(f))
+			: f_{ std::forward<Invokable>(f) },
+			  armed_{ true }
 		{ }
-
 
 		~ScopeExit()
 		{
-			f_();
+			if (armed_)
+				f_();
 		}
 
-		ScopeExit(ScopeExit&&) = default;
-		ScopeExit& operator=(ScopeExit&&) = default;
+		ScopeExit(ScopeExit&& other)
+			: f_{ std::move(other.f_) },
+			armed_{ true }
+		{
+			other.reset();
+		};
+
+		ScopeExit& operator=(ScopeExit&&)
+		{
+			f_ = std::move(other.f_);
+			other.reset();
+		}
 
 		void set(Invokable&& f)
 		{
 			f_ = std::forward<Invokable>(f);
+			armed_ = true;
+		}
+
+		void reset()
+		{
+			armed_ = false;
 		}
 
 
@@ -34,6 +51,7 @@ namespace utils {
 
 	private:
 		Invokable f_;
+		bool armed_;
 
 	};
 

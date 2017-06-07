@@ -24,10 +24,13 @@
     <ClCompile Include="FibonacciTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ObjectTypes.cpp">
+    <ClCompile Include="TestConfigData.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TestConfigData.cpp">
+    <ClCompile Include="ObjectTypesTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ScopeExitTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
