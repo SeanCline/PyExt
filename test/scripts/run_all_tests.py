@@ -4,17 +4,22 @@ import sys, subprocess, python_installations
 if __name__ == '__main__':
     num_failed_tests = 0
     for installation in python_installations.get_python_installations():
+         # Skip versions with no executable.
+        if installation.exec_path == None:
+            print("Skipping (no executable)", installation, end="\n\n", flush=True)
+            continue
+    
         # Only test against official CPython installations.
         if installation.company != "PythonCore":
-            print("Skipping", installation, end="\n\n", flush=True)
+            print("Skipping (PythonCore)", installation, end="\n\n", flush=True)
             continue
         
         # Also skip versions before 2.7 since they don't have symbols.
         version = tuple(int(n) for n in installation.sys_version.split("."))        
         if version < (2, 7):
-            print("Skipping", installation, end="\n\n", flush=True)
+            print("Skipping (too old)", installation, end="\n\n", flush=True)
             continue
-        
+
         # Create the dump files.
         print("Creating dump files with python executable:", installation.exec_path, flush=True)
         subprocess.check_call([installation.exec_path, "object_types.py"])
