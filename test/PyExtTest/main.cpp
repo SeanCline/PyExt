@@ -13,41 +13,41 @@
 // Provide a pretty-printer for the ExtException used by EngExtCpp.
 CATCH_TRANSLATE_EXCEPTION(ExtException& ex)
 {
-	return ex.GetMessageA();
+	return ex.GetMessage();
 }
 
 
 // Provide our own main as explained here:
-// https://github.com/philsquared/Catch/blob/master/docs/own-main.md
+// https://github.com/catchorg/Catch2/blob/master/docs/own-main.md
 // This lets us parse a couple extra command line arguments.
 int main(int argc, char* argv[])
 {
-	// Let Catch parse the command line first.
+	auto& configData = TestConfigData::instance();
+
+	// Add our own command line argments.
+	using namespace Catch::clara;
 	Catch::Session session;
-	int returnCode = session.applyCommandLine(argc, argv, Catch::Session::OnUnusedOptions::Ignore);
+	auto cli = session.cli();
+
+	cli |= Opt(configData.objectTypesDumpFileName, "objectTypesDumpFileName")
+		["--object-types-dump-file"]
+		("The dump file to run tests object - types test against.");
+
+	cli |= Opt(configData.fibonacciDumpFileName, "fibonaciiDumpFileName")
+		["--fibonacci-dump-file"]
+		("The dump file to run tests fibonacci tests against.");
+
+	cli |= Opt(configData.symbolPath, "symbolPath")
+		["--symbol-path"]
+		("Location to look for Python symbols. (PDB files)");
+
+	// Send our command line changes back into Catch.
+	session.cli(cli);
+
+	int returnCode = session.applyCommandLine(argc, argv);
 	if (returnCode != 0) // Indicates a command line error
 		return returnCode;
 
-	// Now we can parse our own command line options.
-	Catch::Clara::CommandLine<TestConfigData> cli;
-
-	cli["--object-types-dump-file"]
-		.describe("The dump file to run tests object-types test against.")
-		.bind(&TestConfigData::objectTypesDumpFileName, "objectTypesDumpFileName");
-
-	cli["--fibonacci-dump-file"]
-		.describe("The dump file to run tests fibonacci tests against.")
-		.bind(&TestConfigData::fibonacciDumpFileName, "fibonaciiDumpFileName");
-
-	cli["--symbol-path"]
-		.describe("Location to look for Python symbols. (PDB files)")
-		.bind(&TestConfigData::symbolPath, "symbolPath");
-
-	cli.parseInto(Catch::Clara::argsToVector(argc, argv), TestConfigData::instance());
-
 	// Run the tests!
-	int numFailed = session.run();
-
-	// Clamp to prevent false negatives.
-	return (numFailed < 0xff ? numFailed : 0xff);
+	return session.run();
 }
