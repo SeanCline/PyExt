@@ -124,7 +124,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(WindowsSdkDir)\Debuggers\inc\engextcpp.cpp">
-      <DisableSpecificWarnings>4838;4267;4245</DisableSpecificWarnings>
+      <DisableSpecificWarnings>5040;4838;4267;4245</DisableSpecificWarnings>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
