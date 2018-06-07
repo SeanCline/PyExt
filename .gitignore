@@ -15,3 +15,6 @@ x86/
 
 # Python artifacts.
 *.pyc
+
+# Unit test artifacts.
+/test/scripts/*.dmp
