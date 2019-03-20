@@ -11,6 +11,12 @@ The goal of this project is to provide a similar debugging experience in WinDbg/
 
 Currently, the extension is tested against 32bit and 64bit builds of Python versions 2.7, 3.3, 3.4, 3.5, and 3.6.
 
+Installation
+============
+ - Build from source or download binaries from the Releases page
+ - Copy `pyext.dll` of the appropriate bitness into `<WINDBG_ROOT>\<BITNESS>\winext`
+ - Ensure you have Microsoft Visual C++ 2017 Redistributable installed
+
 Extension Commands
 ==================
 
@@ -34,7 +40,7 @@ Example usage:
         File ".\fibonacci_test.py", line 28, in <module>
 
 Use `~*e!pystack` to display the Python stack for all threads.
-		
+
 !pyobj
 ------
 Displays the reference count, type, and value of a Python object, using similar formatting to Python's builtin `repr()` function.
