@@ -15,6 +15,12 @@ using Microsoft::WRL::ComPtr;
 #include <string>
 using namespace std;
 
+namespace {
+	string hresult_to_string(HRESULT hr)
+	{
+		return to_string(hr);
+	}
+}
 
 PythonDumpFile::PythonDumpFile(const std::string& dumpFilename)
 {
@@ -45,13 +51,13 @@ auto PythonDumpFile::createDebugInterfaces() -> void
 {
 	HRESULT hr = DebugCreate(__uuidof(IDebugClient), reinterpret_cast<void**>(pClient.GetAddressOf()));
 	if (FAILED(hr))
-		throw runtime_error("Failed to create IDebugClient.");
+		throw runtime_error("Failed to create IDebugClient. hr=" + hresult_to_string(hr));
 
 	if (FAILED(pClient.As(&pControl)))
-		throw runtime_error("Failed to query IDebugControl.");
+		throw runtime_error("Failed to query IDebugControl. hr=" + hresult_to_string(hr));
 
 	if (FAILED(pClient.As(&pSymbols)))
-		throw runtime_error("Failed to query IDebugSymbols2.");
+		throw runtime_error("Failed to query IDebugSymbols2. hr=" + hresult_to_string(hr));
 }
 
 
@@ -59,7 +65,7 @@ auto PythonDumpFile::setSymbolPath(const string& symbolPath) -> void
 {
 	HRESULT hr = pSymbols->SetSymbolPath(symbolPath.c_str());
 	if (FAILED(hr))
-		throw runtime_error("Failed to SetSymbolPath.");
+		throw runtime_error("Failed to SetSymbolPath. hr=" + hresult_to_string(hr));
 
 	pSymbols->Reload("");
 	pSymbols->Reload("/f python*");
@@ -75,7 +81,7 @@ auto PythonDumpFile::openDumpFile(const std::string & dumpFilename) -> void
 	// The debug session isn't completely open until we call WaitForEvent.
 	hr = pControl->WaitForEvent(DEBUG_WAIT_DEFAULT, 3000 /*ms*/);
 	if (FAILED(hr) || hr == S_FALSE)
-		throw runtime_error("Failed to WaitForEvent.");
+		throw runtime_error("Failed to WaitForEvent. hr=" + hresult_to_string(hr));
 }
 
 
@@ -99,5 +105,5 @@ auto PythonDumpFile::loadPyExt() -> void
 	ULONG64 pyExtHandle = 0;
 	HRESULT hr = pControl->AddExtension(pyExtFile.data(), 0, &pyExtHandle);
 	if (FAILED(hr))
-		throw runtime_error("Failed to load PyExt extension.");
+		throw runtime_error("Failed to load PyExt extension. hr=" + hresult_to_string(hr));
 }
