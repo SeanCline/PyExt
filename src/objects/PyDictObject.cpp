@@ -43,7 +43,17 @@ namespace {
 			indexSize = pointerSize;
 		}
 
-		auto entriesPtr = keys.Field("dk_indices").Field("as_1").GetPointerTo().GetPtr() + (size * indexSize);
+		auto indicies = keys.Field("dk_indices"); // 3.6 and 3.7 both have an indicies field.
+		ExtRemoteTyped indiciesPtr;
+		if (indicies.HasField("as_1")) {
+			// Python 3.6 accesses dk_indicies though a union.
+			indiciesPtr = indicies.Field("as_1").GetPointerTo();
+		} else {
+			// Python 3.7 accesses it as a char[].
+			indiciesPtr = indicies.GetPointerTo();
+		}
+
+		auto entriesPtr = indiciesPtr.GetPtr() + (size * indexSize);
 		return ExtRemoteTyped("PyDictKeyEntry", entriesPtr, true);
 	}
 
