@@ -28,7 +28,19 @@ namespace PyExt::Remote {
 
 	auto PyInterpreterState::makeAutoInterpreterState() -> unique_ptr<PyInterpreterState>
 	{
-		auto autoInterpreterState = ExtRemoteTyped("autoInterpreterState");
+		ExtRemoteTyped autoInterpreterState;
+
+		try
+		{
+			// In Python 3.7, the autoInterpreterState has moved into the gilstate. Try it first.
+			autoInterpreterState = ExtRemoteTyped("_PyRuntime.gilstate.autoInterpreterState");
+		}
+		catch (...)
+		{
+			// Fall back on the pre-3.7 global autoInterpreterState.
+			autoInterpreterState = ExtRemoteTyped("autoInterpreterState");
+		}
+
 		return make_unique<PyInterpreterState>(autoInterpreterState.GetPtr());
 	}
 
