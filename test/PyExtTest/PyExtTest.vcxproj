@@ -103,13 +103,15 @@
       <SubSystem>Console</SubSystem>
     </Link>
     <PostBuildEvent>
-      <Command>echo Copying dbghelp.dll and symsrv.dll locally...
+      <Command>echo Copying Windows SDK debugger DLLs to target directory...
 cd $(TargetDir)
 IF NOT EXIST dbgeng.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\dbgeng.dll" .\
+IF NOT EXIST dbgcore.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\dbgcore.dll" .\
 IF NOT EXIST dbghelp.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\dbghelp.dll" .\
+IF NOT EXIST DbgModel.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\DbgModel.dll" .\
 IF NOT EXIST symsrv.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\symsrv.dll" .\
 </Command>
-      <Message>Copy dbghelp and symsrv from the Debugging Tools for Windows package since the one that ships in system32 can't download symbols from a remote server.</Message>
+      <Message>Copying dbghelp and symsrv from the Debugging Tools for Windows package since the one that ships in system32 can't download symbols from a remote server...</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -126,13 +128,15 @@ IF NOT EXIST symsrv.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\syms
       <SubSystem>Console</SubSystem>
     </Link>
     <PostBuildEvent>
-      <Command>echo Copying dbghelp.dll and symsrv.dll locally...
+      <Command>echo Copying Windows SDK debugger DLLs to target directory...
 cd $(TargetDir)
 IF NOT EXIST dbgeng.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\dbgeng.dll" .\
+IF NOT EXIST dbgcore.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\dbgcore.dll" .\
 IF NOT EXIST dbghelp.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\dbghelp.dll" .\
+IF NOT EXIST DbgModel.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\DbgModel.dll" .\
 IF NOT EXIST symsrv.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\symsrv.dll" .\
 </Command>
-      <Message>Copy dbghelp and symsrv from the Debugging Tools for Windows package since the one that ships in system32 can't download symbols from a remote server.</Message>
+      <Message>Copying dbghelp and symsrv from the Debugging Tools for Windows package since the one that ships in system32 can't download symbols from a remote server...</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -153,13 +157,15 @@ IF NOT EXIST symsrv.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\syms
       <SubSystem>Console</SubSystem>
     </Link>
     <PostBuildEvent>
-      <Command>echo Copying dbghelp.dll and symsrv.dll locally...
+      <Command>echo Copying Windows SDK debugger DLLs to target directory...
 cd $(TargetDir)
 IF NOT EXIST dbgeng.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\dbgeng.dll" .\
+IF NOT EXIST dbgcore.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\dbgcore.dll" .\
 IF NOT EXIST dbghelp.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\dbghelp.dll" .\
+IF NOT EXIST DbgModel.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\DbgModel.dll" .\
 IF NOT EXIST symsrv.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\symsrv.dll" .\
 </Command>
-      <Message>Copy dbghelp and symsrv from the Debugging Tools for Windows package since the one that ships in system32 can't download symbols from a remote server.</Message>
+      <Message>Copying dbghelp and symsrv from the Debugging Tools for Windows package since the one that ships in system32 can't download symbols from a remote server...</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -180,13 +186,15 @@ IF NOT EXIST symsrv.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\syms
       <SubSystem>Console</SubSystem>
     </Link>
     <PostBuildEvent>
-      <Command>echo Copying dbghelp.dll and symsrv.dll locally...
+      <Command>echo Copying Windows SDK debugger DLLs to target directory...
 cd $(TargetDir)
 IF NOT EXIST dbgeng.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\dbgeng.dll" .\
+IF NOT EXIST dbgcore.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\dbgcore.dll" .\
 IF NOT EXIST dbghelp.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\dbghelp.dll" .\
+IF NOT EXIST DbgModel.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\DbgModel.dll" .\
 IF NOT EXIST symsrv.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\symsrv.dll" .\
 </Command>
-      <Message>Copy dbghelp and symsrv from the Debugging Tools for Windows package since the one that ships in system32 can't download symbols from a remote server.</Message>
+      <Message>Copying dbghelp and symsrv from the Debugging Tools for Windows package since the one that ships in system32 can't download symbols from a remote server...</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
