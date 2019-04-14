@@ -38,6 +38,16 @@ namespace {
 			throw runtime_error("SetSymbolPath failed with hr=" + hr);
 	}
 
+	string concatenatePaths(const string& path1, const string& path2, char delim = ';')
+	{
+		auto cattedPath = path1;
+		if (!cattedPath.empty() && cattedPath.back() != delim) {
+			cattedPath += delim;
+		}
+		cattedPath += path2;
+		return cattedPath;
+	}
+
 }
 
 
@@ -50,7 +60,8 @@ namespace PyExt {
 
 		if (sympath.find("pythonsymbols.sdcline.com/symbols") == string::npos) {
 			Out("Adding symbol server to path...\n");
-			setSymbolPath(m_Symbols, sympath + "srv*http://pythonsymbols.sdcline.com/symbols");
+			const auto newPath = concatenatePaths(sympath, "srv*http://pythonsymbols.sdcline.com/symbols");
+			setSymbolPath(m_Symbols, newPath);
 			Out("New symbol path: %s\n", getSymbolPath(m_Symbols).c_str());
 		} else {
 			Out("Python symbol server already in path.\n");
