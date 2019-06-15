@@ -91,14 +91,15 @@ namespace PyExt {
 
 		// See if the symbol can be found.
 		ULONG typeId = 0;
-		HRESULT hr = m_Symbols->GetSymbolTypeId("autoInterpreterState", &typeId, nullptr);
+		HRESULT hr = m_Symbols->GetSymbolTypeId("PyInterpreterState", &typeId, nullptr);
+		
 		if (SUCCEEDED(hr))
 			return;
 
 		// See if triggering a reload and retrying helps matters.
 		m_Symbols->Reload("/f python*");
 
-		hr = m_Symbols->GetSymbolTypeId("autoInterpreterState", &typeId, nullptr);
+		hr = m_Symbols->GetSymbolTypeId("PyInterpreterState", &typeId, nullptr);
 		if (SUCCEEDED(hr))
 			return;
 

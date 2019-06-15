@@ -144,9 +144,12 @@ namespace PyExt {
 				auto frameCommandStr = frameToCommandString(*frameObject);
 				Dml("\t\t%s\n", frameCommandStr.c_str());
 			}
-
 		} catch (exception& ex) {
 			Warn("\t%s\n", ex.what());
+			if (!HasFullMemBasic()) {
+				Err("\tThe dump file does not contain enough data for PyExt to work properly.\n");
+				Err("\tCapture a dump with full memory to ensure PyExt can reconstruct callstacks.\n");
+			}
 		}
 
 		Out("\n");
