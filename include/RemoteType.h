@@ -20,6 +20,7 @@ namespace PyExt::Remote {
 		using SSize = std::int64_t;
 
 	public: // Construction/Destruction.
+		explicit RemoteType(const std::string& objectExpression);
 		explicit RemoteType(Offset objectAddress, const std::string& symbolName);
 		virtual ~RemoteType();
 

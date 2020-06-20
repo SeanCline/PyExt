@@ -20,12 +20,10 @@ namespace PyExt::Remote {
 	class PYEXT_PUBLIC PyInterpreterState : private RemoteType
 	{
 	public: // Contruction/Destruction.
-		explicit PyInterpreterState(Offset objectAddress);
+		explicit PyInterpreterState(const std::string& objectExpression);
+		explicit PyInterpreterState(Offset objectAddress, const std::string& objectTypeName);
 		~PyInterpreterState();
-
-		/// Return the name of the PyInterpreterState type. Python versions use various names for the PyInterpreterState struct.
-		static auto pyInterpreterStateTypeName() -> std::string;
-
+		
 		/// Returns the Python's global interpreter state instance.
 		static auto makeAutoInterpreterState() -> std::unique_ptr<PyInterpreterState>;
 
@@ -34,6 +32,10 @@ namespace PyExt::Remote {
 
 		/// Returns the PyThreadState associated with a thread id or None if no such thread exists.
 		static auto findThreadStateBySystemThreadId(std::uint64_t systemThreadId) -> std::optional<PyThreadState>;
+
+		/// Provide a way to manually specify the interpreter state used by makeAutoInterpreterState().
+		static void setAutoInterpreterStateExpression(const std::string& expression);
+
 
 	public: // Members of the remote type.
 		auto next() const -> std::unique_ptr<PyInterpreterState>;
@@ -46,6 +48,11 @@ namespace PyExt::Remote {
 		/// Returns a range of all the threads in this interpreter.
 		auto allThreadStates() const -> std::vector<PyThreadState>; //< TODO: Return generator<PyThreadState>
 
+	private:
+#pragma warning (push)
+#pragma warning (disable: 4251) //< Hide warnings about exporting private symbols.
+		static std::string autoInterpreterStateExpressionOverride;
+#pragma warning (pop)
 	};
 
 }

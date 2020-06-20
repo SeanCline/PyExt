@@ -15,8 +15,13 @@ using namespace std;
 
 namespace PyExt::Remote {
 
-	PyInterpreterState::PyInterpreterState(Offset objectAddress)
-		: RemoteType(objectAddress, pyInterpreterStateTypeName().c_str())
+	PyInterpreterState::PyInterpreterState(const std::string& objectExpression)
+		: RemoteType(objectExpression)
+	{
+	}
+
+	PyInterpreterState::PyInterpreterState(Offset objectAddress, const std::string& objectTypeName)
+		: RemoteType(objectAddress, objectTypeName)
 	{
 	}
 
@@ -25,49 +30,40 @@ namespace PyExt::Remote {
 	{
 	}
 
-	auto PyInterpreterState::pyInterpreterStateTypeName() -> std::string
-	{
-		ULONG typeId = 0;
-		HRESULT hr = S_OK;
-		hr = g_Ext->m_Symbols->GetSymbolTypeId("PyInterpreterState", &typeId, nullptr);
-		if (SUCCEEDED(hr))
-			return "PyInterpreterState";
-
-		hr = g_Ext->m_Symbols->GetSymbolTypeId("_is", &typeId, nullptr);
-		if (SUCCEEDED(hr))
-			return "_is";
-
-		throw runtime_error("PyInterpreterState symbol could not be located. Ensure proper symbols are loaded.");
-	}
-
 
 	auto PyInterpreterState::makeAutoInterpreterState() -> unique_ptr<PyInterpreterState>
 	{
-		bool autoInterpreterStateFound = false;
-		ExtRemoteTyped autoInterpreterState;
+		string errorMessage; // Build a string of everything that went wrong.
 
+		// Capture any errors that occured. Only print them when none of the fallbacks were successful.
+		ExtCaptureOutputA errorOutput;
+		errorOutput.Start();
+
+		// See if a autoInterpreterState offset has been manually provided.
+		if (!autoInterpreterStateExpressionOverride.empty()) {
+			try {
+				return make_unique<PyInterpreterState>(autoInterpreterStateExpressionOverride);
+			} catch (ExtException& ex) {
+				errorMessage += ex.GetMessage() + "\n"s;
+			};
+		}
+		
 		// In Python 3.7, the autoInterpreterState has moved into the gilstate. Try it first.
 		try {
-			autoInterpreterState = ExtRemoteTyped("_PyRuntime.gilstate.autoInterpreterState");
-			autoInterpreterStateFound = true;
-		}
-		catch (ExtException&) {}
-		
-		if (!autoInterpreterStateFound) {
-			// Fall back on the pre-3.7 global autoInterpreterState.
-			try {
-				autoInterpreterState = ExtRemoteTyped("autoInterpreterState");
-				autoInterpreterStateFound = true;
-			}
-			catch (ExtException&) {}
-		}
+			return make_unique<PyInterpreterState>("_PyRuntime.gilstate.autoInterpreterState");
+		} catch (ExtException& ex) {
+			errorMessage += ex.GetMessage() + "\n"s;
+		};
 
-		if (!autoInterpreterStateFound) {
-			// The fallback failed. Report the error.
-			throw runtime_error("Could not find autoInterpreterState.");
-		}
+		// Fall back on the pre-3.7 global autoInterpreterState.
+		try {
+			return make_unique<PyInterpreterState>("autoInterpreterState");
+		} catch (ExtException& ex) {
+			errorMessage += ex.GetMessage() + "\n"s;
+		};
 
-		return make_unique<PyInterpreterState>(autoInterpreterState.GetPtr());
+		// All fallbacks failed. Report the error.
+		throw runtime_error("Could not find autoInterpreterState.\n"s + errorMessage + "\n"s + errorOutput.GetTextNonNull());
 	}
 
 
@@ -94,6 +90,13 @@ namespace PyExt::Remote {
 		return { };
 	}
 
+	string PyInterpreterState::autoInterpreterStateExpressionOverride;
+	void PyInterpreterState::setAutoInterpreterStateExpression(const string& expression)
+	{
+		// TODO: Consider validating the expression here rather than only in makeAutoInterpreterState.
+		autoInterpreterStateExpressionOverride = expression;
+	}
+
 
 	auto PyInterpreterState::next() const -> std::unique_ptr<PyInterpreterState>
 	{
@@ -101,7 +104,7 @@ namespace PyExt::Remote {
 		if (nextPtr == 0)
 			return { };
 
-		return make_unique<PyInterpreterState>(nextPtr);
+		return make_unique<PyInterpreterState>(nextPtr, remoteType().GetTypeName());
 	}
 
 

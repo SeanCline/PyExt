@@ -22,7 +22,7 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{EEBC73BA-27F2-4483-8639-54A108B77594}</ProjectGuid>
     <RootNamespace>PyExt</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
     <WindowsTargetPlatformMinVersion>10.0.10240.0</WindowsTargetPlatformMinVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -32,7 +32,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
     <UseDebugLibraries>true</UseDebugLibraries>
@@ -121,7 +121,11 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="PyInterpreterState.cpp" />
+    <ClInclude Include="..\include\PyCellObject.h" />
+    <ClInclude Include="PyInterpreterState.h" />
+    <ClInclude Include="..\include\PyMemberDef.h" />
     <ClCompile Include="PyMemberDef.cpp" />
+    <ClCompile Include="pysetautointerpreterstate.cpp" />
     <ClCompile Include="pystack.cpp" />
     <ClCompile Include="pysymfix.cpp" />
     <ClCompile Include="PyThreadState.cpp" />
@@ -139,9 +143,7 @@
     <ResourceCompile Include="$(ProjectName).rc" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\PyCellObject.h" />
     <ClInclude Include="..\include\PyInterpreterState.h" />
-    <ClInclude Include="..\include\PyMemberDef.h" />
     <ClInclude Include="..\include\PySetObject.h" />
     <ClInclude Include="..\include\PyThreadState.h" />
     <ClInclude Include="..\include\RemoteType.h" />

@@ -102,9 +102,6 @@
     <ClCompile Include="RemoteType.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PyInterpreterState.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="PyThreadState.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -114,14 +111,23 @@
     <ClCompile Include="pysymfix.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ExtHelpers.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="PyMemberDef.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="$(WindowsSdkDir)\Debuggers\inc\engextcpp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pysetautointerpreterstate.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ExtHelpers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="objects\PyCellObject.cpp">
-      <Filter>Source Files\objects</Filter>
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PyInterpreterState.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -221,11 +227,14 @@
     <ClInclude Include="..\include\PySetObject.h">
       <Filter>Header Files\objects</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\PyMemberDef.h">
+    <ClInclude Include="..\include\PyCellObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\PyCellObject.h">
-      <Filter>Header Files\objects</Filter>
+    <ClInclude Include="PyInterpreterState.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\PyMemberDef.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
