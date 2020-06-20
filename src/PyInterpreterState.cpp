@@ -16,13 +16,28 @@ using namespace std;
 namespace PyExt::Remote {
 
 	PyInterpreterState::PyInterpreterState(Offset objectAddress)
-		: RemoteType(objectAddress, "PyInterpreterState")
+		: RemoteType(objectAddress, pyInterpreterStateTypeName().c_str())
 	{
 	}
 
 
 	PyInterpreterState::~PyInterpreterState()
 	{
+	}
+
+	auto PyInterpreterState::pyInterpreterStateTypeName() -> std::string
+	{
+		ULONG typeId = 0;
+		HRESULT hr = S_OK;
+		hr = g_Ext->m_Symbols->GetSymbolTypeId("PyInterpreterState", &typeId, nullptr);
+		if (SUCCEEDED(hr))
+			return "PyInterpreterState";
+
+		hr = g_Ext->m_Symbols->GetSymbolTypeId("_is", &typeId, nullptr);
+		if (SUCCEEDED(hr))
+			return "_is";
+
+		throw runtime_error("PyInterpreterState symbol could not be located. Ensure proper symbols are loaded.");
 	}
 
 

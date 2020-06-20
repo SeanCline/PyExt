@@ -23,6 +23,9 @@ namespace PyExt::Remote {
 		explicit PyInterpreterState(Offset objectAddress);
 		~PyInterpreterState();
 
+		/// Return the name of the PyInterpreterState type. Python versions use various names for the PyInterpreterState struct.
+		static auto pyInterpreterStateTypeName() -> std::string;
+
 		/// Returns the Python's global interpreter state instance.
 		static auto makeAutoInterpreterState() -> std::unique_ptr<PyInterpreterState>;
 

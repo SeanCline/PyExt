@@ -3,6 +3,7 @@
 #include "PyObject.h"
 #include "PyVarObject.h"
 #include "PyTypeObject.h"
+#include "PyInterpreterState.h"
 using namespace PyExt::Remote;
 
 #include <engextcpp.hpp>
@@ -90,18 +91,22 @@ namespace PyExt {
 		ignoreOut.Start();
 
 		// See if the symbol can be found.
-		ULONG typeId = 0;
-		HRESULT hr = m_Symbols->GetSymbolTypeId("PyInterpreterState", &typeId, nullptr);
-		
-		if (SUCCEEDED(hr))
+		try {
+			PyInterpreterState::pyInterpreterStateTypeName();
 			return;
+		} catch (...) { }
 
 		// See if triggering a reload and retrying helps matters.
 		m_Symbols->Reload("/f python*");
 
-		hr = m_Symbols->GetSymbolTypeId("PyInterpreterState", &typeId, nullptr);
-		if (SUCCEEDED(hr))
+		// Try again now that symbols are reloaded.
+		try {
+			PyInterpreterState::pyInterpreterStateTypeName();
 			return;
+		}
+		catch (...) { }
+
+		// No luck finding the interpreter state symbol. Print a message to the user.
 
 		ignoreOut.Delete();
 		Err("\n\n");
