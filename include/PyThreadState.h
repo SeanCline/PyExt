@@ -16,7 +16,7 @@ namespace PyExt::Remote {
 	class PYEXT_PUBLIC PyThreadState : private RemoteType
 	{
 	public:
-		explicit PyThreadState(Offset objectAddress);
+		explicit PyThreadState(const RemoteType& remoteType);
 		~PyThreadState();
 
 	public: // Members of the remote type.

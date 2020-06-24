@@ -22,6 +22,7 @@ namespace PyExt::Remote {
 	public: // Construction/Destruction.
 		explicit RemoteType(const std::string& objectExpression);
 		explicit RemoteType(Offset objectAddress, const std::string& symbolName);
+		explicit RemoteType(ExtRemoteTyped remoteType);
 		virtual ~RemoteType();
 
 	public: // Copy/Move.

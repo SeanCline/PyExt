@@ -20,8 +20,7 @@ namespace PyExt::Remote {
 	class PYEXT_PUBLIC PyInterpreterState : private RemoteType
 	{
 	public: // Contruction/Destruction.
-		explicit PyInterpreterState(const std::string& objectExpression);
-		explicit PyInterpreterState(Offset objectAddress, const std::string& objectTypeName);
+		explicit PyInterpreterState(const RemoteType& remoteType);
 		~PyInterpreterState();
 		
 		/// Returns the Python's global interpreter state instance.

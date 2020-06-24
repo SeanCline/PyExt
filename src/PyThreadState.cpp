@@ -11,8 +11,8 @@ using namespace std;
 
 namespace PyExt::Remote {
 
-	PyThreadState::PyThreadState(Offset objectAddress)
-		: RemoteType(objectAddress, "PyThreadState")
+	PyThreadState::PyThreadState(const RemoteType& remoteType)
+		: RemoteType(remoteType)
 	{
 	}
 
@@ -24,11 +24,11 @@ namespace PyExt::Remote {
 
 	auto PyThreadState::next() const -> std::unique_ptr<PyThreadState>
 	{
-		auto nextPtr = remoteType().Field("next").GetPtr();
-		if (nextPtr == 0)
+		auto next = remoteType().Field("next");
+		if (next.GetPtr() == 0)
 			return { };
 
-		return make_unique<PyThreadState>(nextPtr);
+		return make_unique<PyThreadState>(RemoteType(next));
 	}
 
 

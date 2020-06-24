@@ -15,16 +15,11 @@ using namespace std;
 
 namespace PyExt::Remote {
 
-	PyInterpreterState::PyInterpreterState(const std::string& objectExpression)
-		: RemoteType(objectExpression)
+	PyInterpreterState::PyInterpreterState(const RemoteType& remoteType)
+		: RemoteType(remoteType)
 	{
 	}
-
-	PyInterpreterState::PyInterpreterState(Offset objectAddress, const std::string& objectTypeName)
-		: RemoteType(objectAddress, objectTypeName)
-	{
-	}
-
+	
 
 	PyInterpreterState::~PyInterpreterState()
 	{
@@ -42,7 +37,7 @@ namespace PyExt::Remote {
 		// See if a autoInterpreterState offset has been manually provided.
 		if (!autoInterpreterStateExpressionOverride.empty()) {
 			try {
-				return make_unique<PyInterpreterState>(autoInterpreterStateExpressionOverride);
+				return make_unique<PyInterpreterState>(RemoteType(autoInterpreterStateExpressionOverride));
 			} catch (ExtException& ex) {
 				errorMessage += ex.GetMessage() + "\n"s;
 			};
@@ -50,14 +45,14 @@ namespace PyExt::Remote {
 		
 		// In Python 3.7, the autoInterpreterState has moved into the gilstate. Try it first.
 		try {
-			return make_unique<PyInterpreterState>("_PyRuntime.gilstate.autoInterpreterState");
+			return make_unique<PyInterpreterState>(RemoteType("_PyRuntime.gilstate.autoInterpreterState"s));
 		} catch (ExtException& ex) {
 			errorMessage += ex.GetMessage() + "\n"s;
 		};
 
 		// Fall back on the pre-3.7 global autoInterpreterState.
 		try {
-			return make_unique<PyInterpreterState>("autoInterpreterState");
+			return make_unique<PyInterpreterState>(RemoteType("autoInterpreterState"s));
 		} catch (ExtException& ex) {
 			errorMessage += ex.GetMessage() + "\n"s;
 		};
@@ -100,17 +95,17 @@ namespace PyExt::Remote {
 
 	auto PyInterpreterState::next() const -> std::unique_ptr<PyInterpreterState>
 	{
-		auto nextPtr = remoteType().Field("next").GetPtr();
-		if (nextPtr == 0)
+		auto next = remoteType().Field("next");
+		if (next.GetPtr() == 0)
 			return { };
 
-		return make_unique<PyInterpreterState>(nextPtr, remoteType().GetTypeName());
+		return make_unique<PyInterpreterState>(RemoteType(next));
 	}
 
 
 	auto PyInterpreterState::tstate_head() const -> unique_ptr<PyThreadState>
 	{
-		return make_unique<PyThreadState>(remoteType().Field("tstate_head").GetPtr());
+		return make_unique<PyThreadState>(RemoteType(remoteType().Field("tstate_head")));
 	}
 
 

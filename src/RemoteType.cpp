@@ -5,6 +5,7 @@
 
 #include <string>
 #include <memory>
+#include <utility>
 using namespace std;
 
 namespace PyExt::Remote {
@@ -20,6 +21,10 @@ namespace PyExt::Remote {
 	{
 	}
 
+	RemoteType::RemoteType(ExtRemoteTyped remoteType)
+		: remoteType_(make_shared<ExtRemoteTyped>(std::move(remoteType)))
+	{
+	}
 
 	RemoteType::~RemoteType() = default;
 	RemoteType::RemoteType(const RemoteType&) = default;
