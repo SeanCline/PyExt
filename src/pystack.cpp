@@ -43,33 +43,6 @@ namespace {
 	}
 
 
-	auto escapeDml(const string& str) -> string
-	{
-		std::string buffer;
-		buffer.reserve(str.size());
-		for (auto ch : str) {
-			switch (ch) {
-				case '&':  buffer += "&amp;";  break;
-				case '\"': buffer += "&quot;"; break;
-				case '\'': buffer += "&apos;"; break;
-				case '<':  buffer += "&lt;";   break;
-				case '>':  buffer += "&gt;";   break;
-				default:   buffer += ch;       break;
-			}
-		}
-		return buffer;
-	}
-
-	auto link(const string& text, const string& cmd, const string& alt = ""s) -> string
-	{
-		ostringstream oss;
-		oss << "<link cmd=\"" << escapeDml(cmd) << "\"";
-		if (!alt.empty())
-			oss << " alt=\"" << escapeDml(alt) << "\"";
-		oss << ">" << escapeDml(text) << "</link>";
-		return oss.str();
-	}
-
 	auto frameToString(const PyFrameObject& frameObject) -> string
 	{
 		ostringstream oss;
@@ -79,9 +52,9 @@ namespace {
 			throw runtime_error("Warning: PyFrameObject is missing PyCodeObject.");
 
 		auto filename = codeObject->filename();
-		oss << "File \"" << link(filename, ".open " + filename, "Open source code.")
+		oss << "File \"" << utils::link(filename, ".open " + filename, "Open source code.")
 			<< "\", line " << frameObject.currentLineNumber()
-			<< ", in " << link(codeObject->name(), "!pyobj 0n" + to_string(codeObject->offset()), "Inspect PyCodeObject.");
+			<< ", in " << utils::link(codeObject->name(), "!pyobj 0n" + to_string(codeObject->offset()), "Inspect PyCodeObject.");
 
 		return oss.str();
 	}
@@ -91,13 +64,15 @@ namespace {
 	{
 		ostringstream oss;
 
+		oss << utils::link("[Frame]", "!pyobj 0n"s + to_string(frameObject.offset()), "Inspect frame object (including localsplus).") << " ";
+
 		auto locals = frameObject.locals();
 		if (locals != nullptr && locals->offset() != 0)
-			oss << link("[Locals]", "!pyobj 0n"s + to_string(locals->offset()), "Inspect this frame's locals.") << " ";
+			oss << utils::link("[Locals]", "!pyobj 0n"s + to_string(locals->offset()), "Inspect this frame's locals.") << " ";
 
 		auto globals = frameObject.globals();
 		if (globals != nullptr && globals->offset() != 0)
-			oss << link("[Globals]", "!pyobj 0n"s + to_string(globals->offset()), "Inspect this frame's captured globals.") << " ";
+			oss << utils::link("[Globals]", "!pyobj 0n"s + to_string(globals->offset()), "Inspect this frame's captured globals.") << " ";
 
 		return oss.str();
 	}

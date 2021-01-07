@@ -50,7 +50,7 @@ namespace PyExt::Remote {
 	}
 
 
-	auto PyListObject::repr(bool /*pretty*/) const -> string
+	auto PyListObject::repr(bool pretty) const -> string
 	{
 		ostringstream oss;
 		oss << "[ ";
@@ -59,7 +59,7 @@ namespace PyExt::Remote {
 		for (SSize i = 0; i < count; ++i) {
 			auto elem = at(i);
 			if (elem != nullptr)
-				oss << elem->repr();
+				oss << elem->repr(pretty);
 
 			if (i + 1 < count)
 				oss << ", ";

@@ -146,7 +146,7 @@ namespace PyExt::Remote {
 			oss << indentation << key->repr(pretty) << ": " << value->repr(pretty) << ',' << elementSeparator;
 		}
 
-		oss << elementSeparator << '}';
+		oss << '}';
 		return oss.str();
 	}
 

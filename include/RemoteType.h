@@ -17,6 +17,7 @@ namespace PyExt::Remote {
 
 	public: // Typedefs.
 		using Offset = std::uint64_t;
+		using SSize = std::int64_t;
 
 	public: // Construction/Destruction.
 		explicit RemoteType(Offset objectAddress, const std::string& symbolName);

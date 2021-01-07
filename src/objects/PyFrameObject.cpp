@@ -9,6 +9,7 @@
 
 #include <engextcpp.hpp>
 #include <string>
+#include <sstream>
 #include <memory>
 using namespace std;
 
@@ -26,6 +27,26 @@ namespace PyExt::Remote {
 		return utils::fieldAsPyObject<PyDictObject>(remoteType(), "f_locals");
 	}
 
+	auto PyFrameObject::localsplus() const -> vector<pair<string, unique_ptr<PyObject>>>
+	{
+		auto codeObject = code();
+		if (codeObject == nullptr)
+			return {};
+		// TODO: co_cellvars + co_freevars
+		int numLocalsPlus = codeObject->numberOfLocals();
+		if (numLocalsPlus == 0)
+			return {};
+		vector<string> varNames = codeObject->varNames();
+		auto f_localsplus = remoteType().Field("f_localsplus");
+		auto pyObjAddrs = utils::readArray<PyObject::Offset>(f_localsplus, numLocalsPlus);
+		vector<pair<string, unique_ptr<PyObject>>> localsplus(numLocalsPlus);
+		for (size_t i = 0; i < numLocalsPlus; ++i) {
+			auto addr = pyObjAddrs.at(i);
+			auto objPtr = PyObject::make(addr);
+			localsplus[i] = make_pair(varNames.at(i), move(objPtr));
+		}
+		return localsplus;
+	}
 
 	auto PyFrameObject::globals() const -> unique_ptr<PyDictObject>
 	{
@@ -79,9 +100,31 @@ namespace PyExt::Remote {
 	}
 
 
-	auto PyFrameObject::repr(bool /*pretty*/) const -> string
+	auto PyFrameObject::repr(bool pretty) const -> string
 	{
-		return "<frame object>";
+		string repr = "<frame object>";
+		if (pretty)
+			return utils::link(repr, "!pyobj 0n"s + to_string(offset()));
+		return repr;
+	}
+
+
+	auto PyFrameObject::details() const -> string
+	{
+		const auto elementSeparator = "\n";
+		const auto indentation = "\t";
+
+		ostringstream oss;
+		oss << "localsplus: {" << elementSeparator;
+
+		for (auto const& pairValue : localsplus()) {
+			auto const& key = pairValue.first;
+			auto const& value = pairValue.second;
+			oss << indentation << key << ": " << value->repr(true) << ',' << elementSeparator;
+		}
+
+		oss << '}';
+		return oss.str();
 	}
 
 }

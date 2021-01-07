@@ -2,6 +2,7 @@
 #include "PyStringValue.h"
 
 #include "utils/lossless_cast.h"
+#include "../ExtHelpers.h"
 
 #include <engextcpp.hpp>
 
@@ -46,9 +47,10 @@ namespace PyExt::Remote {
 	}
 
 
-	auto PyByteArrayObject::repr(bool /*pretty*/) const -> string
+	auto PyByteArrayObject::repr(bool pretty) const -> string
 	{
-		return "bytearray(b"s + escapeAndQuoteString(stringValue()) + ")"s;
+		string repr = "bytearray(b"s + escapeAndQuoteString(stringValue()) + ")"s;
+		return pretty ? utils::escapeDml(repr) : repr;
 	}
 
 }

@@ -37,6 +37,14 @@ int main(int argc, char* argv[])
 		["--fibonacci-dump-file"]
 		("The dump file to run tests fibonacci tests against.");
 
+	cli |= Opt(configData.objectDetailsDumpFileName, "objectDetailsDumpFileName")
+			["--object-details-dump-file"]
+		("The dump file to run tests object - details test against.");
+
+	cli |= Opt(configData.localsplusDumpFileName, "localsplusDumpFileName")
+			["--localsplus-dump-file"]
+		("The dump file to run tests localsplus tests against.");
+
 	cli |= Opt(configData.symbolPath, "symbolPath")
 		["--symbol-path"]
 		("Location to look for Python symbols. (PDB files)");

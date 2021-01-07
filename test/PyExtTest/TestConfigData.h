@@ -18,6 +18,18 @@ struct TestConfigData {
 		return fibonacciDumpFileName.empty() ? "fibonacci_test.dmp" : fibonacciDumpFileName;
 	}
 	
+	std::string objectDetailsDumpFileName;
+	auto objectDetailsDumpFileNameOrDefault() const -> std::string
+	{
+		return objectDetailsDumpFileName.empty() ? "object_details.dmp" : objectDetailsDumpFileName;
+	}
+
+	std::string localsplusDumpFileName;
+	auto localsplusDumpFileNameOrDefault() const -> std::string
+	{
+		return localsplusDumpFileName.empty() ? "localsplus_test.dmp" : localsplusDumpFileName;
+	}
+
 	std::string symbolPath;
 	auto symbolPathOrDefault() const -> std::string
 	{

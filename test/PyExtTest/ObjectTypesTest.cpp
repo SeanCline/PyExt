@@ -210,7 +210,10 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 		auto& type_obj = dynamic_cast<PyTypeObject&>(findValueByKey(localPairs, "type_obj"));
 		REQUIRE(type_obj.type().name() == "type");
 		REQUIRE(type_obj.name() == "dict");
-		REQUIRE(type_obj.repr() == "<class 'dict'>");
+		REQUIRE(type_obj.repr(false) == "<class 'dict'>");
+		// Expected to be similar to: "<link cmd="!pyobj 0n140729205561440">&lt;class 'dict'&gt;</link>"
+		std::regex expectedRegex(R"(<link cmd="!pyobj 0n\d+">&lt;class 'dict'&gt;</link>)");
+		REQUIRE(regex_match(type_obj.repr(), expectedRegex));
 	}
 
 
@@ -226,7 +229,10 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 	{
 		auto& func_obj = dynamic_cast<PyFunctionObject&>(findValueByKey(localPairs, "func_obj"));
 		REQUIRE(func_obj.type().name() == "function");
-		REQUIRE(func_obj.repr() == "<function test_function>");
+		REQUIRE(func_obj.repr(false) == "<function test_function>");
+		// Expected to be similar to: "<link cmd="!pyobj 0n140729205561440">&lt;function test_function&gt;</link>"
+		std::regex expectedRegex(R"(<link cmd="!pyobj 0n\d+">&lt;function test_function&gt;</link>)");
+		REQUIRE(regex_match(func_obj.repr(), expectedRegex));
 		REQUIRE(func_obj.name()->stringValue() == "test_function");
 		REQUIRE(func_obj.code() != nullptr);
 		REQUIRE(func_obj.doc()->repr().find("Some DocString") != string::npos);

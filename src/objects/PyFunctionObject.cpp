@@ -7,6 +7,7 @@
 #include "PyListObject.h"
 #include "PyStringValue.h"
 #include "../fieldAsPyObject.h"
+#include "../ExtHelpers.h"
 
 #include <engextcpp.hpp>
 
@@ -94,13 +95,17 @@ namespace PyExt::Remote {
 	}
 
 
-	auto PyFunctionObject::repr(bool /*pretty*/) const -> string
+	auto PyFunctionObject::repr(bool pretty) const -> string
 	{
 		auto nameObject = name();
+		string repr;
 		if (nameObject == nullptr)
-			return "<function>";
-
-		return "<function " + nameObject->stringValue() + ">";
+			repr = "<function>";
+		else
+			repr = "<function " + nameObject->stringValue() + ">";
+		if (pretty)
+			return utils::link(repr, "!pyobj 0n"s + to_string(offset()));
+		return repr;
 	}
 
 }

@@ -20,6 +20,7 @@ namespace PyExt::Remote {
 
 	public: // Members.
 		auto locals() const -> std::unique_ptr<PyDictObject>;
+		auto localsplus() const -> std::vector<std::pair<std::string, std::unique_ptr<PyObject>>>;
 		auto globals() const -> std::unique_ptr<PyDictObject>;
 		auto builtins() const -> std::unique_ptr<PyDictObject>;
 		auto code() const -> std::unique_ptr<PyCodeObject>;
@@ -28,6 +29,7 @@ namespace PyExt::Remote {
 		auto lastInstruction() const -> int;
 		auto currentLineNumber() const -> int;
 		auto repr(bool pretty = true) const -> std::string override;
+		auto details() const -> std::string override;
 
 	};
 

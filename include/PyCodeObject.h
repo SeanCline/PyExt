@@ -14,9 +14,12 @@ namespace PyExt::Remote {
 	public: // Construction/Destruction.
 		explicit PyCodeObject(Offset objectAddress);
 
-	public: // Members.
+	public:
+		// Members.
+		auto numberOfLocals() const -> int;
 		auto firstLineNumber() const -> int;
 		auto lineNumberFromInstructionOffset(int instruction) const -> int;
+		auto varNames() const->std::vector<std::string>;
 		auto filename() const -> std::string;
 		auto name() const -> std::string;
 		auto lineNumberTable() const -> std::vector<std::uint8_t>;

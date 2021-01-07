@@ -3,6 +3,7 @@
 #include <engextcpp.hpp>
 #include <type_traits>
 #include <vector>
+using namespace std::literals::string_literals;
 
 namespace utils {
 
@@ -42,4 +43,9 @@ namespace utils {
 		remoteData.ReadBuffer(buffer.data(), numElements*remoteSize);
 		return buffer;
 	}
+
+
+	auto escapeDml(const std::string& str)->std::string;
+	auto link(const std::string& text, const std::string& cmd, const std::string& alt = ""s) -> std::string;
+
 }

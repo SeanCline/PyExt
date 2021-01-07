@@ -1,7 +1,9 @@
 #include "PyCodeObject.h"
 
 #include "PyStringValue.h"
+#include "PyTupleObject.h"
 
+#include "utils/lossless_cast.h"
 #include "../fieldAsPyObject.h"
 #include "../ExtHelpers.h"
 
@@ -19,6 +21,13 @@ namespace PyExt::Remote {
 	PyCodeObject::PyCodeObject(Offset objectAddress)
 		: PyObject(objectAddress, "PyCodeObject")
 	{
+	}
+
+
+	auto PyCodeObject::numberOfLocals() const -> int
+	{
+		auto nlocals = remoteType().Field("co_nlocals");
+		return utils::readIntegral<int>(nlocals);
 	}
 
 
@@ -62,6 +71,24 @@ namespace PyExt::Remote {
 	}
 
 
+	auto PyCodeObject::varNames() const -> vector<string>
+	{
+		auto varNames = utils::fieldAsPyObject<PyTupleObject>(remoteType(), "co_varnames");
+		if (varNames == nullptr)
+			return { };
+
+		auto count = utils::lossless_cast<size_t>(varNames->numItems());
+		vector<string> values(count);
+
+		for (size_t i = 0; i < count; ++i) {
+			auto pyVarName = varNames->at(i);
+			values[i] = pyVarName->repr();
+		}
+
+		return values;
+	}
+
+
 	auto PyCodeObject::filename() const -> string
 	{
 		auto filenameStr = utils::fieldAsPyObject<PyStringValue>(remoteType(), "co_filename");
@@ -93,9 +120,12 @@ namespace PyExt::Remote {
 	}
 
 
-	auto PyCodeObject::repr(bool /*pretty*/) const -> string
+	auto PyCodeObject::repr(bool pretty) const -> string
 	{
-		return "<code object, file \"" + filename() + "\", line " + to_string(firstLineNumber()) + ">";
+		string repr =  "<code object, file \"" + filename() + "\", line " + to_string(firstLineNumber()) + ">";
+		if (pretty)
+			return utils::link(repr, "!pyobj 0n"s + to_string(offset()));
+		return repr;
 	}
 
 }
