@@ -178,12 +178,10 @@ namespace PyExt::Remote {
 	}
 
 
-	auto PyUnicodeObject::repr(bool /*pretty*/) const -> string
+	auto PyUnicodeObject::repr(bool pretty) const -> string
 	{
-		if (!isReady())
-			return "<str object not ready>";
-
-		return escapeAndQuoteString(stringValue());
+		string repr = isReady() ? escapeAndQuoteString(stringValue()) : "<str object not ready>";
+		return pretty ? utils::escapeDml(repr) : repr;
 	}
 
 }

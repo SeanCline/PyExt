@@ -27,7 +27,7 @@ namespace utils {
 			other.reset();
 		};
 
-		ScopeExit& operator=(ScopeExit&&)
+		ScopeExit& operator=(ScopeExit&& other)
 		{
 			f_ = std::move(other.f_);
 			other.reset();

@@ -79,7 +79,11 @@ namespace PyExt {
 
 		auto repr = pyObj->repr(true);
 		if (!repr.empty())
-			Out("\tRepr: %s\n", repr.c_str());
+			Dml("\tRepr: %s\n", repr.c_str());
+
+		auto details = pyObj->details();
+		if (!details.empty())
+			Dml("\tDetails:\n%s\n", details.c_str());
 	}
 
 
