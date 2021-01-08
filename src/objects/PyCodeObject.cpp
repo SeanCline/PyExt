@@ -73,19 +73,19 @@ namespace PyExt::Remote {
 
 	auto PyCodeObject::varNames() const -> vector<string>
 	{
-		auto varNames = utils::fieldAsPyObject<PyTupleObject>(remoteType(), "co_varnames");
-		if (varNames == nullptr)
-			return { };
+		return readStringTuple("co_varnames");
+	}
 
-		auto count = utils::lossless_cast<size_t>(varNames->numItems());
-		vector<string> values(count);
 
-		for (size_t i = 0; i < count; ++i) {
-			auto pyVarName = varNames->at(i);
-			values[i] = pyVarName->repr();
-		}
+	auto PyCodeObject::freeVars() const -> vector<string>
+	{
+		return readStringTuple("co_freevars");
+	}
 
-		return values;
+
+	auto PyCodeObject::cellVars() const -> vector<string>
+	{
+		return readStringTuple("co_cellvars");
 	}
 
 
@@ -128,4 +128,21 @@ namespace PyExt::Remote {
 		return repr;
 	}
 
+
+	auto PyCodeObject::readStringTuple(string name) const -> vector<string>
+	{
+		auto tuplePtr = utils::fieldAsPyObject<PyTupleObject>(remoteType(), name);
+		if (tuplePtr == nullptr)
+			return { };
+
+		auto count = utils::lossless_cast<size_t>(tuplePtr->numItems());
+		vector<string> values(count);
+
+		for (size_t i = 0; i < count; ++i) {
+			auto pyVarName = tuplePtr->at(i);
+			values[i] = pyVarName->repr();
+		}
+
+		return values;
+	}
 }

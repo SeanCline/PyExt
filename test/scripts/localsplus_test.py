@@ -5,18 +5,31 @@ class A:
     def __init__(self, a):
         self.a = a
 
-    def f(self, a, b):
-        c = {1: 2, 3: 4}
-        win32debug.dump_process("localsplus_test.dmp")
+    def f_cellvar(self, param1, param2):
+        local1 = 5
+        # c is cell variable because it is used in f_cellfreevar
+        cell1 = {1: 2, 3: 4}
 
+        def f_cellfreevar(param):
+            # cell1 is free variable because it is defined outside f_cellfreevar
+            # cell2 is cell variable because it is used in f_freevar
+            cell2 = param + cell1[1]
+            local2 = 6
 
-class B:
-    def __init__(self, b):
-        self.b = b
+            def f_freevar():
+                x = cell2
+                win32debug.dump_process("localsplus_test.dmp")
+
+            f_freevar()
+
+        assert 'cell2' in f_cellfreevar.__code__.co_cellvars
+        assert 'cell1' in f_cellfreevar.__code__.co_freevars
+        assert f_cellfreevar.__code__.co_nlocals == 3  # param, local2, f_freevar
+        f_cellfreevar(7)
 
 
 def main(a):
-    a.f("test", [1,2,3])
+    a.f_cellvar("test", [1,2,3])
 
 
-main(A(B(1)))
+main(A(1))

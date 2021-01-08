@@ -20,11 +20,16 @@ namespace PyExt::Remote {
 		auto firstLineNumber() const -> int;
 		auto lineNumberFromInstructionOffset(int instruction) const -> int;
 		auto varNames() const->std::vector<std::string>;
+		auto freeVars() const->std::vector<std::string>;
+		auto cellVars() const->std::vector<std::string>;
 		auto filename() const -> std::string;
 		auto name() const -> std::string;
 		auto lineNumberTable() const -> std::vector<std::uint8_t>;
 		auto repr(bool pretty = true) const -> std::string override;
 
+	protected:
+		// Helpers.
+		auto readStringTuple(std::string name) const -> std::vector<std::string>;
 	};
 
 }

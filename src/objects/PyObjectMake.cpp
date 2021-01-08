@@ -16,6 +16,7 @@
 #include "PyFrameObject.h"
 #include "PyCodeObject.h"
 #include "PyFunctionObject.h"
+#include "PyCellObject.h"
 #include "PyNoneObject.h"
 #include "PyNotImplementedObject.h"
 
@@ -75,6 +76,8 @@ namespace PyExt::Remote {
 			return make_unique<PyCodeObject>(remoteAddress);
 		} else if (typeName == "function") {
 			return make_unique<PyFunctionObject>(remoteAddress);
+		} else if (typeName == "cell") {
+			return make_unique<PyCellObject>(remoteAddress);
 		} else if (typeName == "NoneType") {
 			return make_unique<PyNoneObject>(remoteAddress);
 		} else if (typeName == "NotImplementedType") {

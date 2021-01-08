@@ -32,18 +32,27 @@ namespace PyExt::Remote {
 		auto codeObject = code();
 		if (codeObject == nullptr)
 			return {};
-		// TODO: co_cellvars + co_freevars
-		int numLocalsPlus = codeObject->numberOfLocals();
-		if (numLocalsPlus == 0)
-			return {};
+
 		vector<string> varNames = codeObject->varNames();
+		vector<string> cellVars = codeObject->cellVars();
+		vector<string> freeVars = codeObject->freeVars();
+		int numLocalsplus = varNames.size() + cellVars.size() + freeVars.size();
+		if (numLocalsplus == 0)
+			return {};
+
+		vector<string> names;
+		names.reserve(numLocalsplus);
+		names.insert(names.end(), varNames.begin(), varNames.end());
+		names.insert(names.end(), cellVars.begin(), cellVars.end());
+		names.insert(names.end(), freeVars.begin(), freeVars.end());
+
 		auto f_localsplus = remoteType().Field("f_localsplus");
-		auto pyObjAddrs = utils::readArray<PyObject::Offset>(f_localsplus, numLocalsPlus);
-		vector<pair<string, unique_ptr<PyObject>>> localsplus(numLocalsPlus);
-		for (size_t i = 0; i < numLocalsPlus; ++i) {
+		auto pyObjAddrs = utils::readArray<PyObject::Offset>(f_localsplus, numLocalsplus);
+		vector<pair<string, unique_ptr<PyObject>>> localsplus(numLocalsplus);
+		for (size_t i = 0; i < numLocalsplus; ++i) {
 			auto addr = pyObjAddrs.at(i);
 			auto objPtr = PyObject::make(addr);
-			localsplus[i] = make_pair(varNames.at(i), move(objPtr));
+			localsplus[i] = make_pair(names.at(i), move(objPtr));
 		}
 		return localsplus;
 	}
