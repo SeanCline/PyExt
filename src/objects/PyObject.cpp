@@ -90,12 +90,32 @@ namespace PyExt::Remote {
 
 	auto PyObject::details() const -> string
 	{
+		const auto sectionSeparator = "\n";
 		const auto elementSeparator = "\n";
 		const auto indentation = "\t";
 		ostringstream oss;
+		bool empty = true;
 
+		// repr of built-in base types
+		for (auto const& typeObj : type().mro()->listValue()) {
+			auto const typeName = static_cast<PyTypeObject*>(typeObj.get())->name();
+			auto const& types = PyTypeObject::builtinTypes;
+			if (find(types.begin(), types.end(), typeName) != types.end()) {
+				if (!empty)
+					oss << sectionSeparator;
+				else
+					empty = false;
+				oss << typeName << " repr: " << make(offset(), typeName)->repr();
+			}
+		}
+
+		// __slots__ (including base types)
 		auto slots_ = slots();
 		if (slots_.size() > 0) {
+			if (!empty)
+				oss << sectionSeparator;
+			else
+				empty = false;
 			oss << "slots: {" << elementSeparator;
 			for (auto const& pairValue : slots()) {
 				auto const& name = pairValue.first;
@@ -105,10 +125,13 @@ namespace PyExt::Remote {
 			oss << '}';
 		}
 
+		// __dict__
 		auto dictPtr = dict();
 		if (dictPtr != nullptr) {
-			if (slots_.size() > 0)
-				oss << "\n";
+			if (!empty)
+				oss << sectionSeparator;
+			else
+				empty = false;
 			oss << "dict: " << dictPtr->repr(true);
 		}
 

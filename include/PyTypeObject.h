@@ -3,6 +3,7 @@
 #include "PyVarObject.h"
 #include "PyMemberDef.h"
 #include "PyTupleObject.h"
+#include <array>
 #include <string>
 
 namespace PyExt::Remote {
@@ -10,6 +11,27 @@ namespace PyExt::Remote {
 	/// Represents a PyTypeObject in the debuggee's address space.
 	class PYEXT_PUBLIC PyTypeObject : public PyVarObject
 	{
+	public:
+		static const inline std::array builtinTypes{
+			"type",
+			"str",
+			"bytes",
+			"bytearray",
+			"tuple",
+			"set",
+			"dict",
+			"int",
+			"long",
+			"float",
+			"bool",
+			"complex",
+			"frame",
+			"code",
+			"function",
+			"cell",
+			"NoneType",
+			"NotImplementedType",
+		};
 
 	public: // Construction/Destruction.
 		explicit PyTypeObject(Offset objectAddress);

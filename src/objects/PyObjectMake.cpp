@@ -31,10 +31,17 @@ namespace PyExt::Remote {
 		const auto typeObj = PyObject(remoteAddress).type();
 		const auto typeName = typeObj.name();
 
+		return make(remoteAddress, typeName);
+	}
+
+
+	auto PyObject::make(PyObject::Offset remoteAddress, const std::string& typeName) -> unique_ptr<PyObject>
+	{
 		// TODO: Turn this into a map to factory functions.
 		if (typeName == "type") {
 			return make_unique<PyTypeObject>(remoteAddress);
 		} else if (typeName == "str") {
+			const auto typeObj = PyObject(remoteAddress).type();
 			if (typeObj.isPython2()) {
 				return make_unique<PyStringObject>(remoteAddress);
 			} else {
@@ -53,6 +60,7 @@ namespace PyExt::Remote {
 		} else if (typeName == "dict") {
 			return make_unique<PyDictObject>(remoteAddress);
 		} else if (typeName == "int") {
+			const auto typeObj = PyObject(remoteAddress).type();
 			if (typeObj.isPython2()) {
 				return make_unique<PyIntObject>(remoteAddress);
 			} else {
@@ -63,6 +71,7 @@ namespace PyExt::Remote {
 		} else if (typeName == "float") {
 			return make_unique<PyFloatObject>(remoteAddress);
 		} else if (typeName == "bool") {
+			const auto typeObj = PyObject(remoteAddress).type();
 			if (typeObj.isPython2()) {
 				return make_unique<PyBoolObject>(remoteAddress);
 			} else {
