@@ -34,12 +34,14 @@ class SsubS(S):
 
 
 class DsubS(S):
+    """dict, parent slots"""
     def __init__(self, s1, s2, d3):
         S.__init__(self, s1, s2)
         self.d3 = d3
 
 
 class SsubD(D):
+    """slots, parent dict"""
     __slots__ = 'slot3'
 
     def __init__(self, d1, d2, s3):
@@ -48,12 +50,20 @@ class SsubD(D):
 
 
 class SsubDS(D, S):
+    """slots, parents dict and slots"""
     __slots__ = 'slot3'
 
     def __init__(self, d1, d2, s1, s2, s3):
         D.__init__(self, d1, d2)
         S.__init__(self, s1, s2)
         self.slot3 = s3
+
+
+class NegDictOffset(tuple):
+    """inheriting from tuple leads to a negative tp_dictoffset"""
+
+    def __init__(self, tupleValue):
+        self.attr = 'test'
 
 
 d = D(1, 2)
@@ -63,4 +73,5 @@ ssubs = SsubS(1, 2, 3)
 dsubs = DsubS(1, 2, 3)
 ssubd = SsubD(1, 2, 3)
 ssubds = SsubDS(1, 2, 3, 4, 5)
+negDictOffset = NegDictOffset((1, 2, 3))
 win32debug.dump_process("object_details.dmp")

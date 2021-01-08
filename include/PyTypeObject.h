@@ -16,6 +16,8 @@ namespace PyExt::Remote {
 
 	public: // Members.
 		auto name() const -> std::string;
+		auto basicSize() const -> SSize;
+		auto itemSize() const->SSize;
 		auto documentation() const -> std::string;
 		auto members() const -> std::vector<std::unique_ptr<PyMemberDef>>;
 		auto dictOffset() const -> SSize;

@@ -58,13 +58,14 @@ TEST_CASE("object_details.py has a stack frame with expected locals.", "[integra
 	{
 		vector<vector<int>> test { { 1, 2}, {3, 4} };
 		vector<vector<string>> expectations{
-			{ "d"     , "D"     , "dict: {\n\t'd1': 1,\n\t'd2': 2,\n}" },
-			{ "s"     , "S"     , "slots: {\n\tslot1: 1,\n\tslot2: 2,\n}" },
-			{ "dsubd" , "DsubD" , "dict: {\n\t'd1': 1,\n\t'd2': 2,\n\t'd3': 3,\n}" },
-			{ "ssubs" , "SsubS" , "slots: {\n\tslot3: 3,\n\tslot1: 1,\n\tslot2: 2,\n}" },
-			{ "dsubs" , "DsubS" , "slots: {\n\tslot1: 1,\n\tslot2: 2,\n}\ndict: {\n\t'd3': 3,\n}" },
-			{ "ssubd" , "SsubD" , "slots: {\n\tslot3: 3,\n}\ndict: {\n\t'd1': 1,\n\t'd2': 2,\n}" },
-			{ "ssubds", "SsubDS", "slots: {\n\tslot3: 5,\n\tslot1: 3,\n\tslot2: 4,\n}\ndict: {\n\t'd1': 1,\n\t'd2': 2,\n}" },
+			{ "d"            , "D"            , "dict: {\n\t'd1': 1,\n\t'd2': 2,\n}" },
+			{ "s"            , "S"            , "slots: {\n\tslot1: 1,\n\tslot2: 2,\n}" },
+			{ "dsubd"        , "DsubD"        , "dict: {\n\t'd1': 1,\n\t'd2': 2,\n\t'd3': 3,\n}" },
+			{ "ssubs"        , "SsubS"        , "slots: {\n\tslot3: 3,\n\tslot1: 1,\n\tslot2: 2,\n}" },
+			{ "dsubs"        , "DsubS"        , "slots: {\n\tslot1: 1,\n\tslot2: 2,\n}\ndict: {\n\t'd3': 3,\n}" },
+			{ "ssubd"        , "SsubD"        , "slots: {\n\tslot3: 3,\n}\ndict: {\n\t'd1': 1,\n\t'd2': 2,\n}" },
+			{ "ssubds"       , "SsubDS"       , "slots: {\n\tslot3: 5,\n\tslot1: 3,\n\tslot2: 4,\n}\ndict: {\n\t'd1': 1,\n\t'd2': 2,\n}" },
+			{ "negDictOffset", "NegDictOffset", "dict: {\n\t'attr': 'test',\n}" },
 		};
 		for (auto& objExp : expectations) {
 			auto& name = objExp[0];
