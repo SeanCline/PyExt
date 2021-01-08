@@ -1,6 +1,7 @@
 #include "PyObject.h"
 
 #include "PyTypeObject.h"
+#include "PyVarObject.h"
 #include "PyDictObject.h"
 #include "../ExtHelpers.h"
 
@@ -64,8 +65,13 @@ namespace PyExt::Remote {
 		if (dictOffset_ == 0)
 			return nullptr;
 		if (dictOffset_ < 0) {
-			// TODO: offset + size - dictoffset
-			return nullptr;
+			auto thisAsVar = PyVarObject(this->offset());
+			auto obSize = thisAsVar.size();
+			if (obSize < 0)
+				obSize = -obSize;
+			dictOffset_ += type().basicSize() + obSize * type().itemSize();
+			// alignment
+			dictOffset_ = (dictOffset_ + (sizeof(void*) - 1)) & ~(sizeof(void*) - 1);
 		}
 		auto dictPtr = ExtRemoteTyped("(PyDictObject**)@$extin", offset() + dictOffset_);
 		auto dictAddr = dictPtr.Dereference().GetPtr();

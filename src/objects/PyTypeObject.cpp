@@ -23,6 +23,20 @@ namespace PyExt::Remote {
 	}
 
 
+	auto PyTypeObject::basicSize() const -> SSize
+	{
+		auto basicSize = remoteType().Field("tp_basicsize");
+		return utils::readIntegral<SSize>(basicSize);
+	}
+
+
+	auto PyTypeObject::itemSize() const -> SSize
+	{
+		auto itemSize = remoteType().Field("tp_itemsize");
+		return utils::readIntegral<SSize>(itemSize);
+	}
+
+
 	auto PyTypeObject::documentation() const -> string
 	{
 		ExtBuffer<char> buff;
