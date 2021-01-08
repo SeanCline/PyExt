@@ -65,7 +65,7 @@ TEST_CASE("object_details.py has a stack frame with expected locals.", "[integra
 			{ "dsubs"        , "DsubS"        , "slots: {\n\tslot1: 1,\n\tslot2: 2,\n}\ndict: {\n\t'd3': 3,\n}" },
 			{ "ssubd"        , "SsubD"        , "slots: {\n\tslot3: 3,\n}\ndict: {\n\t'd1': 1,\n\t'd2': 2,\n}" },
 			{ "ssubds"       , "SsubDS"       , "slots: {\n\tslot3: 5,\n\tslot1: 3,\n\tslot2: 4,\n}\ndict: {\n\t'd1': 1,\n\t'd2': 2,\n}" },
-			{ "negDictOffset", "NegDictOffset", "dict: {\n\t'attr': 'test',\n}" },
+			{ "negDictOffset", "NegDictOffset", "tuple repr: (1, 2, 3)\ndict: {\n\t'attr': 'test',\n}" },
 		};
 		for (auto& objExp : expectations) {
 			auto& name = objExp[0];

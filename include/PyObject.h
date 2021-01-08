@@ -27,8 +27,10 @@ namespace PyExt::Remote {
 		explicit PyObject(Offset objectAddress, const std::string& symbolName = "PyObject");
 		virtual ~PyObject();
 
-		/// Polymorphic constructor. Creates the most-derived PyObject it can.
+		// Polymorphic constructor. Creates the most-derived PyObject it can.
 		static auto make(PyObject::Offset remoteAddress) -> std::unique_ptr<PyObject>;
+		// Constructor by type name. Necessary to get the base type repr for types derived from built-in types.
+		static auto make(PyObject::Offset remoteAddress, const std::string& typeName) -> std::unique_ptr<PyObject>;
 
 	public: // Members.
 		using RemoteType::offset;
