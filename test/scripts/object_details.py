@@ -1,7 +1,7 @@
 import win32debug, sys, os
 
 
-class D:
+class D(object):
     """dict"""
     def __init__(self, d1, d2):
         self.d1 = d1
@@ -11,7 +11,7 @@ class D:
         self.d_uninitialized = 1
 
 
-class S:
+class S(object):
     """slots"""
     __slots__ = 'slot1', 'slot2', 'slot_uninitialized'
 

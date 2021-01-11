@@ -24,9 +24,11 @@ if __name__ == '__main__':
         print("Creating dump files with python executable:", installation.exec_path, flush=True)
         subprocess.check_call([installation.exec_path, "object_types.py"])
         subprocess.check_call([installation.exec_path, "fibonacci_test.py"])
+        subprocess.check_call([installation.exec_path, "object_details.py"])
+        subprocess.check_call([installation.exec_path, "localsplus_test.py"])
         
         # Run the tests against the dump files.
         py_ext_test_exe = sys.argv[1] if len(sys.argv) > 1 else "../../x64/Debug/PyExtTest.exe"
         num_failed_tests += subprocess.call(py_ext_test_exe)
 
-sys.exit(num_failed_tests)
+    sys.exit(num_failed_tests)

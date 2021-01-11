@@ -2,7 +2,8 @@ import win32debug, sys, os
 
 string_obj = "TestString123"
 big_string_obj = string_obj * 100
-bytes_obj = b"TestBytes123"
+bytes_obj = b"TestBytes123"  # Python 2: str, Python 3: bytes
+unicode_obj = u"TestUnicode"  # Python 2: unicode, Python 3: str
 byte_array_object = bytearray(b'TestBytearray123')
 int_obj = int(1)
 long_obj = 123456789012345678901234567890123456789012345678901234567890
