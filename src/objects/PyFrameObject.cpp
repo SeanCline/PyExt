@@ -51,7 +51,7 @@ namespace PyExt::Remote {
 		vector<pair<string, unique_ptr<PyObject>>> localsplus(numLocalsplus);
 		for (size_t i = 0; i < numLocalsplus; ++i) {
 			auto addr = pyObjAddrs.at(i);
-			auto objPtr = PyObject::make(addr);
+			auto objPtr = addr ? make(addr) : nullptr;
 			localsplus[i] = make_pair(names.at(i), move(objPtr));
 		}
 		return localsplus;
@@ -129,7 +129,8 @@ namespace PyExt::Remote {
 		for (auto const& pairValue : localsplus()) {
 			auto const& key = pairValue.first;
 			auto const& value = pairValue.second;
-			oss << indentation << key << ": " << value->repr(true) << ',' << elementSeparator;
+			if (value != nullptr)
+				oss << indentation << key << ": " << value->repr(true) << ',' << elementSeparator;
 		}
 
 		oss << '}';
