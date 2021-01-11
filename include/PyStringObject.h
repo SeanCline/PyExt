@@ -16,7 +16,7 @@ namespace PyExt::Remote {
 	public: // Members.
 		auto stringLength() const -> SSize;
 		auto stringValue() const -> std::string override;
-		auto repr(bool pretty = true) const -> std::string override;
+		virtual auto repr(bool pretty = true) const -> std::string override;
 
 	};
 
@@ -27,6 +27,7 @@ namespace PyExt::Remote {
 	class PYEXT_PUBLIC PyBytesObject : public PyBaseStringObject {
 	public:
 		explicit PyBytesObject(Offset objectAddress);
+		auto repr(bool pretty = true) const -> std::string override;
 	};
 
 

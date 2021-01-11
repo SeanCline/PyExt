@@ -272,7 +272,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 		REQUIRE_THROWS(list_obj.at(3));
 
 		// Expected to be similar to: [ 'TestString123', 1, 123456789012345678901234567890123456789012345678901234567890 ]
-		std::regex expectedRegex(R"(\[\s*b?'TestString123',\s*1,\s*123456789012345678901234567890123456789012345678901234567890,?\s*\])");
+		std::regex expectedRegex(R"(\[\s*'TestString123',\s*1,\s*123456789012345678901234567890123456789012345678901234567890,?\s*\])");
 		REQUIRE(regex_match(list_obj.repr(false), expectedRegex));
 		REQUIRE(regex_match(list_obj.repr(true), expectedRegex));
 		REQUIRE(list_obj.details() == "");
@@ -293,7 +293,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 		REQUIRE_THROWS(tuple_obj.at(3));
 
 		// Expected to be similar to: ('TestString123', 1, 123456789012345678901234567890123456789012345678901234567890)
-		std::regex expectedRegex(R"(\(\s*b?'TestString123',\s*1,\s*123456789012345678901234567890123456789012345678901234567890,?\s*\))");
+		std::regex expectedRegex(R"(\(\s*'TestString123',\s*1,\s*123456789012345678901234567890123456789012345678901234567890,?\s*\))");
 		REQUIRE(regex_match(tuple_obj.repr(false), expectedRegex));
 		REQUIRE(regex_match(tuple_obj.repr(true), expectedRegex));
 		REQUIRE(tuple_obj.details() == "");
@@ -308,7 +308,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 		REQUIRE(set_obj.listValue().size() == 3);
 
 		// Expected to be similar to: {'TestString123', 1, 123456789012345678901234567890123456789012345678901234567890}
-		std::regex expectedRegex(R"(\{((b?'TestString123'\s*)|(\d+)|\s*|,)+\})");
+		std::regex expectedRegex(R"(\{(('TestString123'\s*)|(\d+)|\s*|,)+\})");
 		REQUIRE(regex_match(set_obj.repr(false), expectedRegex));
 		REQUIRE(regex_match(set_obj.repr(true), expectedRegex));
 		REQUIRE(set_obj.details() == "");
@@ -325,7 +325,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 		REQUIRE(pairs.size() == 3);
 
 		// Expected to be similar to: { 'string_obj': 'TestString123', 'int_obj' : 1, 'long_obj' : 123456789012345678901234567890123456789012345678901234567890, }
-		std::regex expectedRegex(R"(\{((b?'string_obj':\s*b?'TestString123')|(b?'int_obj':\s*\d+)|(b?'long_obj':\s*\d+)|\s*|,)+\})");
+		std::regex expectedRegex(R"(\{(('string_obj':\s*'TestString123')|('int_obj':\s*\d+)|('long_obj':\s*\d+)|\s*|,)+\})");
 		REQUIRE(regex_match(dict_obj.repr(false), expectedRegex));
 		REQUIRE(regex_match(dict_obj.repr(true), expectedRegex));
 		REQUIRE(dict_obj.details() == "");

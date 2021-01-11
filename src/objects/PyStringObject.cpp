@@ -43,7 +43,7 @@ namespace PyExt::Remote {
 
 	auto PyBaseStringObject::repr(bool pretty) const -> string
 	{
-		string repr = "b" + escapeAndQuoteString(stringValue());
+		string repr = escapeAndQuoteString(stringValue());
 		return pretty ? utils::escapeDml(repr) : repr;
 	}
 
@@ -52,6 +52,12 @@ namespace PyExt::Remote {
 	PyBytesObject::PyBytesObject(Offset objectAddress)
 		: PyBaseStringObject(objectAddress, "PyBytesObject")
 	{
+	}
+
+
+	auto PyBytesObject::repr(bool pretty) const -> string
+	{
+		return "b" + PyBaseStringObject::repr(pretty);
 	}
 
 

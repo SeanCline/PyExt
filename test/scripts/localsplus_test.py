@@ -1,7 +1,7 @@
 import win32debug, sys, os
 
 
-class A:
+class A(object):
     def __init__(self, a):
         self.a = a
 

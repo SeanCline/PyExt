@@ -54,27 +54,29 @@ TEST_CASE("object_details.py has a stack frame with expected locals.", "[integra
 	REQUIRE(localPairs.size() >= 14);
 
 
-	SECTION("Details of objects.")
-	{
-		vector<vector<int>> test { { 1, 2}, {3, 4} };
-		vector<vector<string>> expectations{
-			{ "d"            , "D"            , "dict: {\n\t'd1': 1,\n\t'd2': 2,\n}" },
-			{ "s"            , "S"            , "slots: {\n\tslot1: 1,\n\tslot2: 2,\n}" },
-			{ "dsubd"        , "DsubD"        , "dict: {\n\t'd1': 1,\n\t'd2': 2,\n\t'd3': 3,\n}" },
-			{ "ssubs"        , "SsubS"        , "slots: {\n\tslot3: 3,\n\tslot1: 1,\n\tslot2: 2,\n}" },
-			{ "dsubs"        , "DsubS"        , "slots: {\n\tslot1: 1,\n\tslot2: 2,\n}\ndict: {\n\t'd3': 3,\n}" },
-			{ "ssubd"        , "SsubD"        , "slots: {\n\tslot3: 3,\n}\ndict: {\n\t'd1': 1,\n\t'd2': 2,\n}" },
-			{ "ssubds"       , "SsubDS"       , "slots: {\n\tslot3: 5,\n\tslot1: 3,\n\tslot2: 4,\n}\ndict: {\n\t'd1': 1,\n\t'd2': 2,\n}" },
-			{ "negDictOffset", "NegDictOffset", "tuple repr: (1, 2, 3)\ndict: {\n\t'attr': 'test',\n}" },
-		};
-		for (auto& objExp : expectations) {
-			auto& name = objExp[0];
-			auto& expectedType = objExp[1];
-			auto& expectedDetails = objExp[2];
+	vector<vector<string>> expectations{
+		// Regex only necessary due to Python 2 (dicts not sorted)
+		{ "d"            , "D"            , R"(dict: \{\n\t'(d1': 1,\n\t'd2': 2,|d2': 2,\n\t'd1': 1,)\n\})" },
+		{ "s"            , "S"            , R"(slots: \{\n\tslot1: 1,\n\tslot2: 2,\n\})" },
+		{ "dsubd"        , "DsubD"        , R"(dict: \{\n(\t('d1': 1|'d2': 2|'d3': 3),\n){3}\})" },
+		{ "ssubs"        , "SsubS"        , R"(slots: \{\n\tslot3: 3,\n\tslot1: 1,\n\tslot2: 2,\n\})" },
+		{ "dsubs"        , "DsubS"        , R"(slots: \{\n\tslot1: 1,\n\tslot2: 2,\n\}\ndict: \{\n\t'd3': 3,\n\})" },
+		{ "ssubd"        , "SsubD"        , R"(slots: \{\n\tslot3: 3,\n\}\ndict: \{\n(\t('d1': 1|'d2': 2),\n){2}\})" },
+		{ "ssubds"       , "SsubDS"       , R"(slots: \{\n\tslot3: 5,\n\tslot1: 3,\n\tslot2: 4,\n\}\ndict: \{\n(\t('d1': 1|'d2': 2),\n){2}\})" },
+		{ "negDictOffset", "NegDictOffset", R"(tuple repr: \(1, 2, 3\)\ndict: \{\n\t'attr': 'test',\n\})" },
+	};
 
+	for (auto& objExp : expectations) {
+		auto& name = objExp[0];
+		auto& expectedType = objExp[1];
+		auto& expectedDetails = objExp[2];
+
+		SECTION("Details of " + name + " object")
+		{	
 			auto& obj = findValueByKey(localPairs, name);
 			REQUIRE(obj.type().name() == expectedType);
-			REQUIRE(obj.details() == expectedDetails);
+			std::regex expectedRegex(expectedDetails);
+			REQUIRE(regex_match(obj.details(), expectedRegex));
 		}
 	}
 
