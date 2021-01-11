@@ -95,16 +95,18 @@ namespace PyExt::Remote {
 		ostringstream oss;
 		bool empty = true;
 
-		// repr of built-in base types
-		for (auto const& typeObj : type().mro()->listValue()) {
-			auto const typeName = PyTypeObject(typeObj->offset()).name();
-			auto const& types = PyTypeObject::builtinTypes;
-			if (find(types.begin(), types.end(), typeName) != types.end()) {
-				if (!empty)
-					oss << sectionSeparator;
-				else
-					empty = false;
-				oss << typeName << " repr: " << make(offset(), typeName)->repr();
+		// repr of built-in base types (not for built-in types itself)
+		auto const& types = PyTypeObject::builtinTypes;
+		if (find(types.begin(), types.end(), type().name()) == types.end()) {
+			for (auto const& typeObj : type().mro()->listValue()) {
+				auto const typeName = PyTypeObject(typeObj->offset()).name();
+				if (find(types.begin(), types.end(), typeName) != types.end()) {
+					if (!empty)
+						oss << sectionSeparator;
+					else
+						empty = false;
+					oss << typeName << " repr: " << make(offset(), typeName)->repr();
+				}
 			}
 		}
 

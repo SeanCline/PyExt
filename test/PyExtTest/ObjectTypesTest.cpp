@@ -70,6 +70,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 		auto& string_obj = findValueByKey(localPairs, "string_obj");
 		REQUIRE(string_obj.type().name() == "str");
 		REQUIRE(string_obj.repr().find(expectedValue) != string::npos);
+		REQUIRE(string_obj.details() == "");
 
 		auto stringValue = dynamic_cast<PyStringValue&>(string_obj).stringValue();
 		REQUIRE(stringValue == expectedValue);
@@ -85,6 +86,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 		auto& big_string_obj = findValueByKey(localPairs, "big_string_obj");
 		REQUIRE(big_string_obj.type().name() == "str");
 		REQUIRE(big_string_obj.repr().find(expectedValue) != string::npos);
+		REQUIRE(big_string_obj.details() == "");
 
 		auto stringValue = dynamic_cast<PyStringValue&>(big_string_obj).stringValue();
 		REQUIRE(stringValue == expectedValue);
@@ -99,6 +101,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 		auto typeName = bytes_obj.type().name();
 		REQUIRE((typeName == "str" || typeName == "bytes"));
 		REQUIRE(bytes_obj.repr().find(expectedValue) != string::npos);
+		REQUIRE(bytes_obj.details() == "");
 
 		auto stringValue = dynamic_cast<PyStringValue&>(bytes_obj).stringValue();
 		REQUIRE(stringValue == expectedValue);
@@ -112,6 +115,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 		auto& byte_array_object = findValueByKey(localPairs, "byte_array_object");
 		REQUIRE(byte_array_object.type().name() == "bytearray");
 		REQUIRE(byte_array_object.repr() == "bytearray(b'"+ expectedValue + "')");
+		REQUIRE(byte_array_object.details() == "");
 
 		auto stringValue = dynamic_cast<PyStringValue&>(byte_array_object).stringValue();
 		REQUIRE(stringValue == expectedValue);
@@ -125,6 +129,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 		auto& int_obj = findValueByKey(localPairs, "int_obj");
 		REQUIRE(int_obj.type().name() == "int");
 		REQUIRE(int_obj.repr() == to_string(expectedValue));
+		REQUIRE(int_obj.details() == "");
 
 		if (dynamic_cast<PyIntObject*>(&int_obj) != nullptr) { //< PyIntObject only applies to Python2.
 			const auto actualValue = dynamic_cast<PyIntObject&>(int_obj).intValue();
@@ -142,6 +147,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 		REQUIRE((typeName == "int" || typeName == "long"));
 		REQUIRE(!long_obj.isNegative());
 		REQUIRE(long_obj.repr() == expectedValue);
+		REQUIRE(long_obj.details() == "");
 	}
 
 
@@ -152,6 +158,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 		auto& float_obj = dynamic_cast<PyFloatObject&>(findValueByKey(localPairs, "float_obj"));
 		REQUIRE(float_obj.type().name() == "float");
 		REQUIRE(float_obj.repr().find(to_string(expectedValue)) == 0);
+		REQUIRE(float_obj.details() == "");
 
 		// Comparing floats can be error prone. If this fails, it might need some wiggle room in the compare.
 		REQUIRE(float_obj.floatValue() == expectedValue);
@@ -173,6 +180,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 		auto c = complex_obj.repr(false);
 		REQUIRE(regex_match(complex_obj.repr(false), expectedRegex));
 		REQUIRE(regex_match(complex_obj.repr(true), expectedRegex));
+		REQUIRE(complex_obj.details() == "");
 	}
 
 
@@ -184,6 +192,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 
 		const auto actualValue = bool_true_obj.repr();
 		REQUIRE((actualValue == "True" || actualValue == "1"));
+		REQUIRE(bool_true_obj.details() == "");
 	}
 
 
@@ -194,6 +203,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 
 		const auto actualValue = bool_false_obj.repr();
 		REQUIRE((actualValue == "False" || actualValue == "0"));
+		REQUIRE(bool_false_obj.details() == "");
 	}
 
 
@@ -202,6 +212,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 		auto& none_obj = findValueByKey(localPairs, "none_obj");
 		REQUIRE(none_obj.type().name() == "NoneType");
 		REQUIRE(none_obj.repr() == "None");
+		REQUIRE(none_obj.details() == "");
 	}
 
 
@@ -214,6 +225,8 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 		// Expected to be similar to: "<link cmd="!pyobj 0n140729205561440">&lt;class 'dict'&gt;</link>"
 		std::regex expectedRegex(R"(<link cmd="!pyobj 0n\d+">&lt;class 'dict'&gt;</link>)");
 		REQUIRE(regex_match(type_obj.repr(), expectedRegex));
+		expectedRegex = std::regex(R"(dict: \{[^]+\})");
+		REQUIRE(regex_match(type_obj.details(), expectedRegex));
 	}
 
 
@@ -222,6 +235,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 		auto& not_implemented_obj = findValueByKey(localPairs, "not_implemented_obj");
 		REQUIRE(not_implemented_obj.type().name() == "NotImplementedType");
 		REQUIRE(not_implemented_obj.repr() == "NotImplemented");
+		REQUIRE(not_implemented_obj.details() == "");
 	}
 
 
@@ -236,6 +250,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 		REQUIRE(func_obj.name()->stringValue() == "test_function");
 		REQUIRE(func_obj.code() != nullptr);
 		REQUIRE(func_obj.doc()->repr().find("Some DocString") != string::npos);
+		REQUIRE(func_obj.details() == "");
 
 		auto qualname = func_obj.qualname();
 		if (qualname != nullptr) //< Python2 doesn't have qualified names.
@@ -260,6 +275,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 		std::regex expectedRegex(R"(\[\s*b?'TestString123',\s*1,\s*123456789012345678901234567890123456789012345678901234567890,?\s*\])");
 		REQUIRE(regex_match(list_obj.repr(false), expectedRegex));
 		REQUIRE(regex_match(list_obj.repr(true), expectedRegex));
+		REQUIRE(list_obj.details() == "");
 	}
 
 
@@ -280,6 +296,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 		std::regex expectedRegex(R"(\(\s*b?'TestString123',\s*1,\s*123456789012345678901234567890123456789012345678901234567890,?\s*\))");
 		REQUIRE(regex_match(tuple_obj.repr(false), expectedRegex));
 		REQUIRE(regex_match(tuple_obj.repr(true), expectedRegex));
+		REQUIRE(tuple_obj.details() == "");
 	}
 
 
@@ -294,6 +311,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 		std::regex expectedRegex(R"(\{((b?'TestString123'\s*)|(\d+)|\s*|,)+\})");
 		REQUIRE(regex_match(set_obj.repr(false), expectedRegex));
 		REQUIRE(regex_match(set_obj.repr(true), expectedRegex));
+		REQUIRE(set_obj.details() == "");
 	}
 
 
@@ -310,5 +328,6 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 		std::regex expectedRegex(R"(\{((b?'string_obj':\s*b?'TestString123')|(b?'int_obj':\s*\d+)|(b?'long_obj':\s*\d+)|\s*|,)+\})");
 		REQUIRE(regex_match(dict_obj.repr(false), expectedRegex));
 		REQUIRE(regex_match(dict_obj.repr(true), expectedRegex));
+		REQUIRE(dict_obj.details() == "");
 	}
 }
