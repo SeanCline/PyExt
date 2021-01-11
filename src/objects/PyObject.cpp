@@ -39,18 +39,17 @@ namespace PyExt::Remote {
 
 	auto PyObject::slots() const -> vector<pair<string, unique_ptr<PyObject>>>
 	{
-		auto members = type().members();
 		vector<pair<string, unique_ptr<PyObject>>> slots;
 
 		// slots of the type itself and all parents
 		for (auto const& typeObj : type().mro()->listValue()) {
-			auto members = static_cast<PyTypeObject*>(typeObj.get())->members();
+			auto members = PyTypeObject(typeObj->offset()).members();
 			for (auto const& memberDef : members) {
 				// TODO: handle other types than T_OBJECT_EX
 				if (memberDef->type() == PyMemberDef::T_OBJECT_EX) {
 					auto objPtr = ExtRemoteTyped("(PyObject**)@$extin", offset() + memberDef->offset());
-					auto ptr = objPtr.Dereference().GetPtr();
-					auto value = make(objPtr.Dereference().GetPtr());
+					auto addr = objPtr.Dereference().GetPtr();
+					auto value = addr ? make(objPtr.Dereference().GetPtr()) : nullptr;
 					slots.push_back(make_pair(memberDef->name(), move(value)));
 				}
 			}
@@ -75,7 +74,7 @@ namespace PyExt::Remote {
 		}
 		auto dictPtr = ExtRemoteTyped("(PyDictObject**)@$extin", offset() + dictOffset_);
 		auto dictAddr = dictPtr.Dereference().GetPtr();
-		return make_unique<PyDictObject>(dictAddr);
+		return dictAddr ? make_unique<PyDictObject>(dictAddr) : nullptr;
 	}
 
 
@@ -98,7 +97,7 @@ namespace PyExt::Remote {
 
 		// repr of built-in base types
 		for (auto const& typeObj : type().mro()->listValue()) {
-			auto const typeName = static_cast<PyTypeObject*>(typeObj.get())->name();
+			auto const typeName = PyTypeObject(typeObj->offset()).name();
 			auto const& types = PyTypeObject::builtinTypes;
 			if (find(types.begin(), types.end(), typeName) != types.end()) {
 				if (!empty)
@@ -120,7 +119,8 @@ namespace PyExt::Remote {
 			for (auto const& pairValue : slots()) {
 				auto const& name = pairValue.first;
 				auto const& value = pairValue.second;
-				oss << indentation << name << ": " << value->repr(true) << ',' << elementSeparator;
+				if (value != nullptr)
+					oss << indentation << name << ": " << value->repr(true) << ',' << elementSeparator;
 			}
 			oss << '}';
 		}

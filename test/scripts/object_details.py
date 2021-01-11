@@ -7,10 +7,13 @@ class D:
         self.d1 = d1
         self.d2 = d2
 
+    def f(self):
+        self.d_uninitialized = 1
+
 
 class S:
     """slots"""
-    __slots__ = 'slot1', 'slot2'
+    __slots__ = 'slot1', 'slot2', 'slot_uninitialized'
 
     def __init__(self, s1, s2):
         self.slot1 = s1

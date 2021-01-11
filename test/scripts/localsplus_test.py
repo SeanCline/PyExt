@@ -20,11 +20,15 @@ class A:
                 x = cell2
                 win32debug.dump_process("localsplus_test.dmp")
 
-            f_freevar()
+            try:
+                f_freevar()
+            except Exception as e:
+                # e is not initialized (null in localsplus) when creating the dump!
+                pass
 
         assert 'cell2' in f_cellfreevar.__code__.co_cellvars
         assert 'cell1' in f_cellfreevar.__code__.co_freevars
-        assert f_cellfreevar.__code__.co_nlocals == 3  # param, local2, f_freevar
+        assert f_cellfreevar.__code__.co_nlocals == 4  # param, local2, f_freevar, e
         f_cellfreevar(7)
 
 
