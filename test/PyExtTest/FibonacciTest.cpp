@@ -43,7 +43,7 @@ TEST_CASE("fibonacci_test.py has the expected line numbers.", "[integration][fib
 		std::regex expectedRegex(R"(<code object, file "[^"]*fibonacci_test.py", line \d+>)");
 		REQUIRE(regex_match(codeObj->repr(false), expectedRegex));
 		// Expected to be similar to: "<link cmd="!pyobj 0n140729205561440">&lt;code object, file ".\fibonacci_test.py", line 9&gt;</link>"
-		expectedRegex = R"(<link cmd="!pyobj 0n\d+">&lt;code object, file &quot;[^&]*fibonacci_test.py&quot;, line 9&gt;</link>)";
+		expectedRegex = R"(<link cmd="!pyobj 0n\d+">&lt;code object, file &quot;[^&]*fibonacci_test.py&quot;, line \d+&gt;</link>)";
 		REQUIRE(regex_match(codeObj->repr(true), expectedRegex));
 	}
 

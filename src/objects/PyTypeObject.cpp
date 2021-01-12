@@ -53,7 +53,9 @@ namespace PyExt::Remote {
 	{
 		vector<unique_ptr<PyMemberDef>> members;
 		auto tp_members = remoteType().Field("tp_members");
-		if (tp_members.GetPtr() != 0) {
+		auto ptr = tp_members.GetPtr();
+		if (ptr != 0) {
+			tp_members = ExtRemoteTyped("PyMemberDef", ptr, true);  // necessary for Python 3.8+
 			for (int i = 0; ; ++i) {
 				auto elem = tp_members.ArrayElement(i);
 				if (elem.Field("name").GetPtr() == 0)
