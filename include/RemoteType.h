@@ -32,6 +32,8 @@ namespace PyExt::Remote {
 	public: // Methods.
 		auto offset() const -> Offset;
 		auto symbolName() const -> std::string;
+		// necessary for x86 because offsets in remote address space are only 32 Bit
+		static auto readOffsetArray(/*const*/ ExtRemoteTyped& remoteArray, unsigned long numElements) -> std::vector<Offset>;
 
 	protected: // Helpers for more derived classes.
 		/// Access to the instance's memory in the debuggee.

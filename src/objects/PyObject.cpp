@@ -70,7 +70,8 @@ namespace PyExt::Remote {
 				obSize = -obSize;
 			dictOffset_ += type().basicSize() + obSize * type().itemSize();
 			// alignment
-			dictOffset_ = (dictOffset_ + (sizeof(void*) - 1)) & ~(sizeof(void*) - 1);
+			auto ptrSize = utils::getPointerSize();
+			dictOffset_ = (dictOffset_ + (ptrSize - 1)) & ~(ptrSize - 1);
 		}
 		auto dictPtr = ExtRemoteTyped("(PyDictObject**)@$extin", offset() + dictOffset_);
 		auto dictAddr = dictPtr.Dereference().GetPtr();

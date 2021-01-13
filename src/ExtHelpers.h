@@ -15,13 +15,13 @@ namespace utils {
 		auto size = remoteData.GetTypeSize();
 		switch (size) {
 		case 1:
-			return static_cast<Integral>(isSigned ? remoteData.GetChar() : remoteData.GetUchar());
+			return isSigned ? static_cast<Integral>(remoteData.GetChar()) : static_cast<Integral>(remoteData.GetUchar());
 		case 2:
-			return static_cast<Integral>(isSigned ? remoteData.GetShort() : remoteData.GetUshort());
+			return isSigned ? static_cast<Integral>(remoteData.GetShort()) : static_cast<Integral>(remoteData.GetUshort());
 		case 4:
-			return static_cast<Integral>(isSigned ? remoteData.GetLong() : remoteData.GetUlong());
+			return isSigned ? static_cast<Integral>(remoteData.GetLong()) : static_cast<Integral>(remoteData.GetUlong());
 		case 8:
-			return static_cast<Integral>(isSigned ? remoteData.GetLong64() : remoteData.GetUlong64());
+			return isSigned ? static_cast<Integral>(remoteData.GetLong64()) : static_cast<Integral>(remoteData.GetUlong64());
 		}
 
 		g_Ext->ThrowInterrupt();
@@ -44,8 +44,8 @@ namespace utils {
 		return buffer;
 	}
 
-
-	auto escapeDml(const std::string& str)->std::string;
+	auto getPointerSize() -> std::uint64_t;
+	auto escapeDml(const std::string& str) -> std::string;
 	auto link(const std::string& text, const std::string& cmd, const std::string& alt = ""s) -> std::string;
 
 }

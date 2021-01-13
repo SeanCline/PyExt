@@ -1,5 +1,6 @@
 #include "RemoteType.h"
 
+#include "ExtHelpers.h"
 #include <engextcpp.hpp>
 
 #include <string>
@@ -38,4 +39,25 @@ namespace PyExt::Remote {
 	{
 		return *remoteType_;
 	}
+
+
+	auto RemoteType::readOffsetArray(/*const*/ ExtRemoteTyped& remoteArray, unsigned long numElements) -> vector<Offset>
+	{
+		auto ptrSize = utils::getPointerSize();
+		switch (ptrSize) {
+		case 4: {
+			// x86 - 32 Bit Python
+			auto ptrs = utils::readArray<std::uint32_t>(remoteArray, numElements);
+			vector<Offset> offsets(begin(ptrs), end(ptrs));
+			return offsets;
+		}
+		case 8:
+			// x64 - 64 Bit Python
+			return utils::readArray<Offset>(remoteArray, numElements);
+		}
+
+		g_Ext->ThrowInterrupt();
+		g_Ext->ThrowRemote(E_INVALIDARG, "Unsupported pointer size.");
+	}
+
 }
