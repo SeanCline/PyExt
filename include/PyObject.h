@@ -31,6 +31,7 @@ namespace PyExt::Remote {
 		static auto make(PyObject::Offset remoteAddress) -> std::unique_ptr<PyObject>;
 		// Constructor by type name. Necessary to get the base type repr for types derived from built-in types.
 		static auto make(PyObject::Offset remoteAddress, const std::string& typeName) -> std::unique_ptr<PyObject>;
+		using RemoteType::readOffsetArray;
 
 	public: // Members.
 		using RemoteType::offset;

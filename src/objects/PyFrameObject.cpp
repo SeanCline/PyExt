@@ -47,7 +47,7 @@ namespace PyExt::Remote {
 		names.insert(names.end(), freeVars.begin(), freeVars.end());
 
 		auto f_localsplus = remoteType().Field("f_localsplus");
-		auto pyObjAddrs = utils::readArray<PyObject::Offset>(f_localsplus, numLocalsplus);
+		auto pyObjAddrs = readOffsetArray(f_localsplus, numLocalsplus);
 		vector<pair<string, unique_ptr<PyObject>>> localsplus(numLocalsplus);
 		for (size_t i = 0; i < numLocalsplus; ++i) {
 			auto addr = pyObjAddrs.at(i);
