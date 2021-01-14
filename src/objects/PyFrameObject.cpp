@@ -36,7 +36,7 @@ namespace PyExt::Remote {
 		vector<string> varNames = codeObject->varNames();
 		vector<string> cellVars = codeObject->cellVars();
 		vector<string> freeVars = codeObject->freeVars();
-		int numLocalsplus = varNames.size() + cellVars.size() + freeVars.size();
+		auto numLocalsplus = varNames.size() + cellVars.size() + freeVars.size();
 		if (numLocalsplus == 0)
 			return {};
 
