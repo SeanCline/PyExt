@@ -5,7 +5,8 @@ image: Visual Studio 2017
 shallow_clone: true
 
 install:
-  - choco install -y windbg
+  - choco install -y windows-sdk-10-version-1903-windbg
+#  - choco install -y -pre --params "Include_symbols=1" python3
 
 platform:
   - Win32
