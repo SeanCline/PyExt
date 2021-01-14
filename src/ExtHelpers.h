@@ -3,6 +3,8 @@
 #include <engextcpp.hpp>
 #include <type_traits>
 #include <vector>
+#include <string>
+#include <limits>
 using namespace std::literals::string_literals;
 
 namespace utils {
@@ -31,7 +33,7 @@ namespace utils {
 
 	// Reads an array of elements pointed to by an ExtRemoteData.
 	template <typename ElemType>
-	auto readArray(/*const*/ ExtRemoteTyped& remoteArray, unsigned long numElements) -> std::vector<ElemType>
+	auto readArray(/*const*/ ExtRemoteTyped& remoteArray, std::uint64_t numElements) -> std::vector<ElemType>
 	{
 		auto remoteData = remoteArray.Dereference();
 		const auto remoteSize = remoteData.GetTypeSize();
@@ -39,8 +41,14 @@ namespace utils {
 			g_Ext->ThrowRemote(E_INVALIDARG, "sizeof(ElemType) does not match size type size for ExtRemoteTyped array read.");
 		}
 
+		const auto arrayExtent = numElements * remoteSize;
+		// ExtRemoteData only supports arrays with 32bit extents, so we have to narrow it.
+		if (numElements > std::numeric_limits<std::uint32_t>::max()) {
+			g_Ext->ThrowRemote(E_BOUNDS, "Could not read array. Size too large.");
+		}
+
 		std::vector<ElemType> buffer(numElements);
-		remoteData.ReadBuffer(buffer.data(), numElements*remoteSize);
+		remoteData.ReadBuffer(buffer.data(), static_cast<std::uint32_t>(arrayExtent));
 		return buffer;
 	}
 

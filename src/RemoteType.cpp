@@ -51,7 +51,7 @@ namespace PyExt::Remote {
 	}
 
 
-	auto RemoteType::readOffsetArray(/*const*/ ExtRemoteTyped& remoteArray, unsigned long numElements) -> vector<Offset>
+	auto RemoteType::readOffsetArray(/*const*/ ExtRemoteTyped& remoteArray, std::uint64_t numElements) -> vector<Offset>
 	{
 		auto ptrSize = utils::getPointerSize();
 		switch (ptrSize) {
@@ -63,7 +63,7 @@ namespace PyExt::Remote {
 		}
 		case 8:
 			// x64 - 64 Bit Python
-			return utils::readArray<Offset>(remoteArray, numElements);
+			return utils::readArray<std::uint64_t>(remoteArray, numElements);
 		}
 
 		g_Ext->ThrowInterrupt();
