@@ -16,7 +16,7 @@ using namespace std;
 namespace PyExt::Remote {
 
 	PyFrameObject::PyFrameObject(Offset objectAddress)
-		: PyVarObject(objectAddress, "PyFrameObject")
+		: PyVarObject(objectAddress, "_frame")
 	{
 	}
 

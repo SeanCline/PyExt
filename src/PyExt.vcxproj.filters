@@ -129,6 +129,12 @@
     <ClCompile Include="PyInterpreterState.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="$(WindowsSdkDir)\Debuggers\inc\engextcpp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pysetautointerpreterstate.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="extension.h">
