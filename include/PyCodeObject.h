@@ -24,11 +24,14 @@ namespace PyExt::Remote {
 		auto cellVars() const->std::vector<std::string>;
 		auto filename() const -> std::string;
 		auto name() const -> std::string;
-		auto lineNumberTable() const -> std::vector<std::uint8_t>;
+		auto lineNumberTableOld() const -> std::vector<std::uint8_t>;
+		auto lineNumberTableNew() const -> std::vector<std::uint8_t>;
 		auto repr(bool pretty = true) const -> std::string override;
 
 	protected:
 		// Helpers.
+		auto lineNumberFromInstructionOffsetOld(int instruction, const std::vector<uint8_t> &lnotab) const -> int;
+		auto lineNumberFromInstructionOffsetNew(int instruction, const std::vector<uint8_t> &lnotab) const -> int;
 		auto readStringTuple(std::string name) const -> std::vector<std::string>;
 	};
 

@@ -9,7 +9,7 @@ This debugger extension provides visualizations for Python objects and stacktrac
 
 The goal of this project is to provide a similar debugging experience in WinDbg/CDB/NTSD as `already exists in GDB <https://wiki.python.org/moin/DebuggingWithGdb>`_.
 
-Currently, the extension is tested against 32bit and 64bit builds of Python versions 2.7, 3.3, 3.4, 3.5, 3.6, 3.7 and 3.8.
+Currently, the extension is tested against 32bit and 64bit builds of Python versions 2.7, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9 and 3.10.
 
 Installation
 ============

@@ -41,8 +41,29 @@ namespace PyExt::Remote {
 	auto PyCodeObject::lineNumberFromInstructionOffset(int instruction) const -> int
 	{
 		// TODO: Consider caching this table in an ordered container.
-		auto lnotab = lineNumberTable();
+		auto lnotab = lineNumberTableNew();
+		if (lnotab.empty()) {
+			// Python 3.9 and below
+			lnotab = lineNumberTableOld();
+			if (!lnotab.empty()) {
+				return lineNumberFromInstructionOffsetOld(instruction, lnotab);
+			}
+		}
+		else {
+			// Python 3.10 and above
+			// We have to multiply instruction with the size of a code unit
+			// https://github.com/python/cpython/blob/v3.10.0/Python/ceval.c#L5485
+			return lineNumberFromInstructionOffsetNew(instruction * 2, lnotab);
+		}
 
+		return firstLineNumber();
+	}
+
+
+
+	auto PyCodeObject::lineNumberFromInstructionOffsetOld(int instruction, const vector<uint8_t> &lnotab) const -> int
+	{
+		// Python 3.9 and below
 		// This code is explained in the CPython codebase in Objects/lnotab_notes.txt
 		int lineno = 0;
 		int addr = 0;
@@ -68,6 +89,35 @@ namespace PyExt::Remote {
 		}
 
 		return firstLineNumber() + lineno;
+	}
+
+
+	auto PyCodeObject::lineNumberFromInstructionOffsetNew(int instruction, const vector<uint8_t>& lnotab) const -> int
+	{
+		// Python 3.10 and above
+		// This code is based on co_lines(), which can be found in the CPython codebase in Objects/lnotab_notes.txt
+		int line = firstLineNumber();
+		int addr = 0;
+		auto last = end(lnotab);
+		for (auto it = begin(lnotab); it != last; ++it) {
+			auto sdelta = *it++;
+
+			if (it == last) {
+				assert(false && "co_lnotab had an odd number of elements.");
+				break; //< For now, just return the line number we've calculated so far.
+			}
+
+			auto ldelta = static_cast<int8_t>(*it);
+
+			addr += sdelta;
+			if (ldelta == -128)  // no line number, treated as delta of zero
+				ldelta = 0;
+			line += ldelta;
+			if (addr > instruction)
+				break;
+		}
+
+		return line;
 	}
 
 
@@ -109,9 +159,19 @@ namespace PyExt::Remote {
 	}
 
 
-	auto PyCodeObject::lineNumberTable() const -> vector<uint8_t>
+	auto PyCodeObject::lineNumberTableOld() const -> vector<uint8_t>
 	{
 		auto codeStr = utils::fieldAsPyObject<PyStringValue>(remoteType(), "co_lnotab");
+		if (codeStr == nullptr)
+			return { };
+
+		auto tableString = codeStr->stringValue();
+		return vector<uint8_t>(begin(tableString), end(tableString));
+	}
+
+	auto PyCodeObject::lineNumberTableNew() const -> vector<uint8_t>
+	{
+		auto codeStr = utils::fieldAsPyObject<PyStringValue>(remoteType(), "co_linetable");
 		if (codeStr == nullptr)
 			return { };
 
