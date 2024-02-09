@@ -105,7 +105,13 @@ namespace PyExt::Remote {
 
 	auto PyInterpreterState::tstate_head() const -> unique_ptr<PyThreadState>
 	{
-		return make_unique<PyThreadState>(RemoteType(remoteType().Field("tstate_head")));
+		if (remoteType().HasField("tstate_head")) {
+			// Old, pre-3.11 location of tstate_head.
+			return make_unique<PyThreadState>(RemoteType(remoteType().Field("tstate_head")));
+		} else {
+			// New, 3.11+ location of the head thread.
+			return make_unique<PyThreadState>(RemoteType(remoteType().Field("threads").Field("head")));
+		}
 	}
 
 
