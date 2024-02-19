@@ -42,6 +42,7 @@ namespace PyExt::Remote {
 		auto itemSize() const->SSize;
 		auto documentation() const -> std::string;
 		auto members() const -> std::vector<std::unique_ptr<PyMemberDef>>;
+		auto isManagedDict() const -> bool;
 		auto dictOffset() const -> SSize;
 		auto mro() const -> std::unique_ptr<PyTupleObject>;
 		auto isPython2() const -> bool;

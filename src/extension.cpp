@@ -3,6 +3,8 @@
 #include "PyObject.h"
 #include "PyVarObject.h"
 #include "PyTypeObject.h"
+#include "PyInterpreterFrame.h"
+#include "RemoteType.h"
 #include "PyInterpreterState.h"
 using namespace PyExt::Remote;
 
@@ -84,6 +86,18 @@ namespace PyExt {
 		auto details = pyObj->details();
 		if (!details.empty())
 			Dml("\tDetails:\n%s\n", details.c_str());
+	}
+
+
+	EXT_COMMAND(pyinterpreterframe, "Prints information about a Python interpreter frame", "{;s;Frame address}")
+	{
+		ensureSymbolsLoaded();
+
+		auto offset = evalOffset(GetUnnamedArgStr(0));
+		auto frame = make_unique<PyInterpreterFrame>(RemoteType(offset, "_PyInterpreterFrame"));
+
+		auto details = frame->details();
+		Dml("\tDetails:\n%s\n", details.c_str());
 	}
 
 

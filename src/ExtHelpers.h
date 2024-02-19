@@ -52,7 +52,7 @@ namespace utils {
 		return buffer;
 	}
 
-	auto getPointerSize() -> std::uint64_t;
+	auto getPointerSize() -> int;
 	auto escapeDml(const std::string& str) -> std::string;
 	auto link(const std::string& text, const std::string& cmd, const std::string& alt = ""s) -> std::string;
 

@@ -7,11 +7,11 @@ using namespace std;
 
 namespace utils {
 
-	auto getPointerSize() -> uint64_t
+	auto getPointerSize() -> int
 	{
 		string objExpression = "sizeof(void*)"s;
 		ExtRemoteTyped remoteObj(objExpression.c_str());
-		return utils::readIntegral<uint64_t>(remoteObj);
+		return utils::readIntegral<int>(remoteObj);
 	}
 
 

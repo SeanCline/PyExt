@@ -28,6 +28,7 @@ if __name__ == '__main__':
         subprocess.check_call([installation.exec_path, "localsplus_test.py"])
         
         # Run the tests against the dump files.
+        print("Running tests with python executable:", installation.exec_path, flush=True)
         py_ext_test_exe = sys.argv[1] if len(sys.argv) > 1 else "../../x64/Debug/PyExtTest.exe"
         num_failed_tests += subprocess.call(py_ext_test_exe)
 

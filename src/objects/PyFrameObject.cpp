@@ -75,6 +75,12 @@ namespace PyExt::Remote {
 	}
 
 
+	auto PyFrameObject::previous() const -> unique_ptr<PyFrame>
+	{
+		return back();
+	}
+
+
 	auto PyFrameObject::back() const -> unique_ptr<PyFrameObject>
 	{
 		return utils::fieldAsPyObject<PyFrameObject>(remoteType(), "f_back");
@@ -104,7 +110,7 @@ namespace PyExt::Remote {
 			return utils::readIntegral<int>(lineno);
 		}
 
-		// Otherwise, we need to do a lookup into the code object's line number table (co_lnotab).
+		// Otherwise, we need to do a lookup into the code object's line number table (co_linetable resp. co_lnotab).
 		return codeObject->lineNumberFromInstructionOffset(lastInstruction());
 	}
 
@@ -120,21 +126,7 @@ namespace PyExt::Remote {
 
 	auto PyFrameObject::details() const -> string
 	{
-		const auto elementSeparator = "\n";
-		const auto indentation = "\t";
-
-		ostringstream oss;
-		oss << "localsplus: {" << elementSeparator;
-
-		for (auto const& pairValue : localsplus()) {
-			auto const& key = pairValue.first;
-			auto const& value = pairValue.second;
-			if (value != nullptr)
-				oss << indentation << key << ": " << value->repr(true) << ',' << elementSeparator;
-		}
-
-		oss << '}';
-		return oss.str();
+		return PyFrame::details();
 	}
 
 }
