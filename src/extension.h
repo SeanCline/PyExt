@@ -19,6 +19,7 @@ namespace PyExt {
 		EXT_COMMAND_METHOD(pystack);
 		EXT_COMMAND_METHOD(pysymfix);
 		EXT_COMMAND_METHOD(pysetautointerpreterstate);
+		EXT_COMMAND_METHOD(pyinterpreterframe);
 
 	public: // Known structs.
 		auto KnownStructObjectHandler(_In_ PCSTR TypeName, _In_ ULONG Flags, _In_ ULONG64 Offset) -> void;

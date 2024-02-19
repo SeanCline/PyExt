@@ -5,7 +5,7 @@
 
 namespace PyExt::Remote {
 
-	class PYEXT_PUBLIC PyMemberDef : private RemoteType
+	class PYEXT_PUBLIC PyMemberDef
 	{
 
 	public: // Constants.
@@ -31,13 +31,43 @@ namespace PyExt::Remote {
 		static const int T_NONE           = 20;
 
 	public: // Construction/Destruction.
-		explicit PyMemberDef(Offset objectAddress);
-		~PyMemberDef();
+		virtual ~PyMemberDef();
 
 	public: // Members of the remote type.
-		auto name() const -> std::string;
-		auto type() const -> int;
-		auto offset() const -> SSize;
+		virtual auto name() const -> std::string = 0;
+		virtual auto type() const -> int = 0;
+		virtual auto offset() const -> RemoteType::SSize = 0;
+
+	};
+
+
+	class PYEXT_PUBLIC PyMemberDefAuto : private RemoteType, public PyMemberDef
+	{
+
+	public: // Construction/Destruction.
+		explicit PyMemberDefAuto(Offset objectAddress);
+
+	public: // Members of the remote type.
+		auto name() const -> std::string override;
+		auto type() const -> int override;
+		auto offset() const -> SSize override;
+
+	};
+
+
+	class PYEXT_PUBLIC PyMemberDefManual : public PyMemberDef
+	{
+
+	public: // Construction/Destruction.
+		explicit PyMemberDefManual(RemoteType::Offset objectAddress);
+
+	public: // Members of the remote type.
+		auto name() const -> std::string override;
+		auto type() const -> int override;
+		auto offset() const -> RemoteType::SSize override;
+
+	private:
+		RemoteType::Offset objectAddress;
 
 	};
 

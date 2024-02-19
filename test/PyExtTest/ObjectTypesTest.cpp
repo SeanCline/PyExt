@@ -52,11 +52,11 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 	PyExt::InitializeGlobalsForTest(dump.pClient.Get());
 	auto cleanup = utils::makeScopeExit(PyExt::UninitializeGlobalsForTest);
 
-	vector<PyFrameObject> frames = dump.getMainThreadFrames();
-	auto& bottomFrame = frames.back();
-	REQUIRE(bottomFrame.code()->name() == "<module>");
+	auto frames = dump.getMainThreadFrames();
+	auto bottomFrame = frames.back();
+	REQUIRE(bottomFrame->code()->name() == "<module>");
 
-	auto locals = bottomFrame.locals();
+	auto locals = bottomFrame->locals();
 	REQUIRE(locals != nullptr);
 
 	auto localPairs = locals->pairValues();

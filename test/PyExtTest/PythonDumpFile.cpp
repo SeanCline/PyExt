@@ -36,7 +36,7 @@ PythonDumpFile::~PythonDumpFile()
 }
 
 
-auto PythonDumpFile::getMainThreadFrames() const -> std::vector<PyExt::Remote::PyFrameObject>
+auto PythonDumpFile::getMainThreadFrames() const -> std::vector<std::shared_ptr<PyExt::Remote::PyFrame>>
 {
 	auto interpState = PyInterpreterState::makeAutoInterpreterState();
 	auto threads = interpState->allThreadStates();

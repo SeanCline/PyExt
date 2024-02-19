@@ -10,7 +10,7 @@ struct IDebugControl;
 struct IDebugSymbols2;
 
 namespace PyExt::Remote {
-	class PyFrameObject;
+	class PyFrame;
 }
 
 class PythonDumpFile {
@@ -20,7 +20,7 @@ public: // Construction/Destruction.
 	~PythonDumpFile();
 
 public:
-	auto getMainThreadFrames() const -> std::vector<PyExt::Remote::PyFrameObject>;
+	auto getMainThreadFrames() const -> std::vector<std::shared_ptr<PyExt::Remote::PyFrame>>;
 
 public: // Debug interfaces.
 	Microsoft::WRL::ComPtr<IDebugClient> pClient;

@@ -94,6 +94,7 @@
     <ClCompile Include="extension.cpp" />
     <ClCompile Include="ExtHelpers.cpp" />
     <ClCompile Include="objects\PyCellObject.cpp" />
+    <ClCompile Include="objects\PyDictKeysObject.cpp" />
     <ClCompile Include="objects\PySetObject.cpp" />
     <ClCompile Include="objects\PyStringValue.cpp" />
     <ClCompile Include="objects\PyBoolObject.cpp" />
@@ -120,9 +121,13 @@
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="PyFrame.cpp" />
+    <ClCompile Include="PyInterpreterFrame.cpp" />
     <ClCompile Include="PyInterpreterState.cpp" />
     <ClInclude Include="..\include\PyCellObject.h" />
-    <ClInclude Include="PyInterpreterState.h" />
+    <ClInclude Include="..\include\PyDictKeysObject.h" />
+    <ClInclude Include="..\include\PyFrame.h" />
+    <ClInclude Include="..\include\PyInterpreterFrame.h" />
     <ClInclude Include="..\include\PyMemberDef.h" />
     <ClCompile Include="PyMemberDef.cpp" />
     <ClCompile Include="pysetautointerpreterstate.cpp" />

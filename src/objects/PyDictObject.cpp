@@ -1,6 +1,7 @@
 #include "PyDictObject.h"
 
 #include "../ExtHelpers.h"
+#include "PyDictKeysObject.h"
 
 #include <engextcpp.hpp>
 
@@ -15,6 +16,7 @@ using namespace std;
 
 namespace {
 	using PyExt::Remote::PyObject;
+	using PyExt::Remote::PyDictKeysObject;
 
 	auto getEntriesTable(ExtRemoteTyped dictObj) -> ExtRemoteTyped
 	{
@@ -22,39 +24,10 @@ namespace {
 		if (dictObj.HasField("ma_table"))
 			return dictObj.Field("ma_table");
 
-		// Python <= 3.5 stores a pointer to the entries table in `ma_keys->dk_entries`.
+		// Python 3 adds another layer of abstraction and stores a PyDictKeysObject in `ma_keys`.
 		auto keys = dictObj.Field("ma_keys");
-		if (keys.HasField("dk_entries"))
-			return keys.Field("dk_entries");
-
-		// Python 3.6 uses a "compact" layout where the entries appear after the `ma_keys->dk_indices` table.
-		auto sizeField = keys.Field("dk_size");
-		auto size = utils::readIntegral<PyObject::SSize>(sizeField);
-		auto pointerSize = static_cast<int>(keys.GetPointerTo().GetTypeSize());
-
-		int indexSize = 0;
-		if (size <= 0xff) {
-			indexSize = 1;
-		} else if (size <= 0xffff) {
-			indexSize = 2;
-		} else if (size <= 0xffffffff) {
-			indexSize = 4;
-		} else {
-			indexSize = pointerSize;
-		}
-
-		auto indicies = keys.Field("dk_indices"); // 3.6 and 3.7 both have an indicies field.
-		ExtRemoteTyped indiciesPtr;
-		if (indicies.HasField("as_1")) {
-			// Python 3.6 accesses dk_indicies though a union.
-			indiciesPtr = indicies.Field("as_1").GetPointerTo();
-		} else {
-			// Python 3.7 accesses it as a char[].
-			indiciesPtr = indicies.GetPointerTo();
-		}
-
-		auto entriesPtr = indiciesPtr.GetPtr() + (size * indexSize);
-		return ExtRemoteTyped("PyDictKeyEntry", entriesPtr, true);
+		auto dictKeysObj = make_unique<PyDictKeysObject>(keys.GetPtr());
+		return dictKeysObj->getEntriesTable();
 	}
 
 
@@ -67,16 +40,10 @@ namespace {
 			return utils::readIntegral<PyObject::SSize>(mask) + 1;
 		}
 
-
-		// Python 3.5
-		if (!dictObj.Field("ma_keys").HasField("dk_nentries")) {
-			auto sizeField = dictObj.Field("ma_keys").Field("dk_size");
-			return utils::readIntegral<PyObject::SSize>(sizeField);
-		}
-
-		// Python 3.6
-		auto numEntriesField = dictObj.Field("ma_keys").Field("dk_nentries");
-		return utils::readIntegral<PyObject::SSize>(numEntriesField);
+		// Python 3.
+		auto keys = dictObj.Field("ma_keys");
+		auto dictKeysObj = make_unique<PyDictKeysObject>(keys.GetPtr());
+		return dictKeysObj->getEntriesTableSize();
 	}
 
 
@@ -95,6 +62,65 @@ namespace {
 }
 
 namespace PyExt::Remote {
+
+	PyDict::~PyDict()
+	{
+	}
+
+
+	auto PyDict::repr(bool pretty) const -> string
+	{
+		const auto elementSeparator = (pretty) ? "\n" : " "; //< Use a newline when pretty-print is on.
+		const auto indentation = (pretty) ? "\t" : ""; //< Indent only when pretty is on.
+
+		ostringstream oss;
+		oss << '{' << elementSeparator;
+
+		for (auto& pairValue : pairValues()) { //< TODO: Structured bindings. for (auto&& [key, value] : pairValues) {
+			auto& key = pairValue.first;
+			auto& value = pairValue.second;
+			oss << indentation << key->repr(pretty) << ": " << value->repr(pretty) << ',' << elementSeparator;
+		}
+
+		oss << '}';
+		return oss.str();
+	}
+
+
+	PyManagedDict::PyManagedDict(RemoteType::Offset keysPtr, RemoteType::Offset valuesPtrPtr)
+		: keysPtr(keysPtr), valuesPtrPtr(valuesPtrPtr)
+	{
+	}
+
+
+	auto PyManagedDict::pairValues() const -> vector<pair<unique_ptr<PyObject>, unique_ptr<PyObject>>>
+	{
+		vector<pair<unique_ptr<PyObject>, unique_ptr<PyObject>>> pairs;
+
+		auto keys = make_unique<PyDictKeysObject>(keysPtr);
+		auto table = keys->getEntriesTable();
+		auto tableSize = keys->getEntriesTableSize();
+		auto valuesPtr = ExtRemoteTyped("(PyObject***)@$extin", valuesPtrPtr).Dereference().GetPtr();
+		auto ptrSize = utils::getPointerSize();
+
+		for (auto i = 0; i < tableSize; ++i) {
+			auto dictEntry = table.ArrayElement(i);
+
+			auto keyPtr = dictEntry.Field("me_key").GetPtr();
+			auto valuePtr = ExtRemoteTyped("(PyObject**)@$extin", valuesPtr).Dereference().GetPtr();
+
+			if (keyPtr == 0 || valuePtr == 0) //< The hash bucket might be empty.
+				continue;
+
+			auto key = PyObject::make(keyPtr);
+			auto value = PyObject::make(valuePtr);
+			pairs.push_back(make_pair(move(key), move(value)));
+			valuesPtr += ptrSize;
+		}
+
+		return pairs;
+	}
+
 
 	PyDictObject::PyDictObject(Offset objectAddress)
 		: PyObject(objectAddress, "PyDictObject")
@@ -134,20 +160,7 @@ namespace PyExt::Remote {
 
 	auto PyDictObject::repr(bool pretty) const -> string
 	{
-		const auto elementSeparator = (pretty) ? "\n" : " "; //< Use a newline when pretty-print is on.
-		const auto indentation = (pretty) ? "\t" : ""; //< Indent only when pretty is on.
-
-		ostringstream oss;
-		oss << '{' << elementSeparator;
-
-		for (auto& pairValue : pairValues()) { //< TODO: Structured bindings. for (auto&& [key, value] : pairValues) {
-			auto& key = pairValue.first;
-			auto& value = pairValue.second;
-			oss << indentation << key->repr(pretty) << ": " << value->repr(pretty) << ',' << elementSeparator;
-		}
-
-		oss << '}';
-		return oss.str();
+		return PyDict::repr(pretty);
 	}
 
 }

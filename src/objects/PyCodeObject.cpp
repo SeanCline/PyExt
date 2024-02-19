@@ -50,7 +50,7 @@ namespace PyExt::Remote {
 			}
 		}
 		else {
-			// Python 3.10 and above
+			// Python 3.10
 			// We have to multiply instruction with the size of a code unit
 			// https://github.com/python/cpython/blob/v3.10.0/Python/ceval.c#L5485
 			return lineNumberFromInstructionOffsetNew(instruction * 2, lnotab);
@@ -92,18 +92,18 @@ namespace PyExt::Remote {
 	}
 
 
-	auto PyCodeObject::lineNumberFromInstructionOffsetNew(int instruction, const vector<uint8_t>& lnotab) const -> int
+	auto PyCodeObject::lineNumberFromInstructionOffsetNew(int instruction, const vector<uint8_t>& linetable) const -> int
 	{
-		// Python 3.10 and above
+		// Python 3.10
 		// This code is based on co_lines(), which can be found in the CPython codebase in Objects/lnotab_notes.txt
 		int line = firstLineNumber();
 		int addr = 0;
-		auto last = end(lnotab);
-		for (auto it = begin(lnotab); it != last; ++it) {
+		auto last = end(linetable);
+		for (auto it = begin(linetable); it != last; ++it) {
 			auto sdelta = *it++;
 
 			if (it == last) {
-				assert(false && "co_lnotab had an odd number of elements.");
+				assert(false && "co_linetable had an odd number of elements.");
 				break; //< For now, just return the line number we've calculated so far.
 			}
 
@@ -113,6 +113,54 @@ namespace PyExt::Remote {
 			if (ldelta == -128)  // no line number, treated as delta of zero
 				ldelta = 0;
 			line += ldelta;
+			if (addr > instruction)
+				break;
+		}
+
+		return line;
+	}
+
+
+	auto PyCodeObject::lineNumberFromPrevInstruction(int instruction) const -> int
+	{
+		// Python 3.11 and above, see Objects/locations.md
+		auto codeAdaptivePtr = remoteType().Field("co_code_adaptive").GetPointerTo();
+		auto firstInstruction = utils::readIntegral<int>(codeAdaptivePtr);
+		instruction -= firstInstruction;
+
+		int line = firstLineNumber();
+		int addr = 0;
+		auto linetable = lineNumberTableNew();
+		auto last = end(linetable);
+		for (auto it = begin(linetable); it != last;) {
+			auto byte = *it++;
+			auto length = (byte & 7) + 1;
+			addr += length * 2;
+			auto code = (byte >> 3) & 15;
+
+			if (code <= 9) {
+				// short form: 2 bytes, no line delta
+				it++;
+			} else if (code >= 10 && code <= 12) {
+				// one line form: 3 bytes, line delta = code - 10
+				it += 2;
+				line += code - 10;
+			} else if (code == 13) {
+				// no column info
+				line += readSvarint(it);  // start line
+			} else if (code == 14) {
+				// long form
+				line += readSvarint(it);  // start line
+				readVarint(it);  // end line
+				readVarint(it);  // start column
+				readVarint(it);  // end column
+			} else if (code == 15) {
+				// no location
+			} else {
+				assert(false && "unexpected code in co_linetable.");
+				break; //< For now, just return the line number we've calculated so far.
+			}
+
 			if (addr > instruction)
 				break;
 		}
@@ -136,6 +184,12 @@ namespace PyExt::Remote {
 	auto PyCodeObject::cellVars() const -> vector<string>
 	{
 		return readStringTuple("co_cellvars");
+	}
+
+
+	auto PyCodeObject::localsplusNames() const -> vector<string>
+	{
+		return readStringTuple("co_localsplusnames");
 	}
 
 
@@ -204,5 +258,29 @@ namespace PyExt::Remote {
 		}
 
 		return values;
+	}
+
+
+	auto PyCodeObject::readVarint(std::vector<uint8_t>::const_iterator& it) const -> unsigned int
+	{
+		auto ret = 0;
+		uint8_t byte;
+		auto shift = 0;
+		do {
+			byte = *it++;
+			ret += (byte & 63) << shift;
+			shift += 6;
+		} while ((byte & 64) != 0);
+		return ret;
+	}
+
+
+	auto PyCodeObject::readSvarint(std::vector<uint8_t>::const_iterator& it) const -> int
+	{
+		auto varint = readVarint(it);
+		auto svarint = static_cast<int>(varint >> 1);
+		if ((varint & 1) != 0)
+			svarint = -svarint;
+		return svarint;
 	}
 }

@@ -25,16 +25,15 @@ TEST_CASE("fibonacci_test.py has the expected line numbers.", "[integration][fib
 	PyExt::InitializeGlobalsForTest(dump.pClient.Get());
 	auto cleanup = utils::makeScopeExit(PyExt::UninitializeGlobalsForTest);
 
-	std::vector<PyFrameObject> frames = dump.getMainThreadFrames();
+	auto frames = dump.getMainThreadFrames();
 	REQUIRE(frames.size() > 90);
 
 	SECTION("Bottom frame is the module.")
 	{
-		auto& bottomFrame = frames.back();
-		REQUIRE(bottomFrame.type().name() == "frame");
-		REQUIRE(bottomFrame.currentLineNumber() == 28);
+		auto bottomFrame = frames.back();
+		REQUIRE(bottomFrame->currentLineNumber() == 28);
 
-		auto codeObj = bottomFrame.code();
+		auto codeObj = bottomFrame->code();
 		REQUIRE(codeObj != nullptr);
 		REQUIRE(codeObj->name() == "<module>");
 		REQUIRE(codeObj->filename().find("fibonacci_test.py") != std::string::npos);
@@ -49,8 +48,8 @@ TEST_CASE("fibonacci_test.py has the expected line numbers.", "[integration][fib
 
 	SECTION("The next several frames are in function recursive_fib.")
 	{
-		auto numFibFrames = std::count_if(begin(frames), end(frames), [](PyFrameObject& frame) {
-			return frame.code()->name() == "recursive_fib" && frame.currentLineNumber() == 24;
+		auto numFibFrames = std::count_if(begin(frames), end(frames), [](auto frame) {
+			return frame->code()->name() == "recursive_fib" && frame->currentLineNumber() == 24;
 		});
 
 		REQUIRE(numFibFrames > 90);
@@ -58,11 +57,11 @@ TEST_CASE("fibonacci_test.py has the expected line numbers.", "[integration][fib
 
 	SECTION("The top frame in recursive_fib is the one that triggered the dump.")
 	{
-		auto topFrameInFib = std::find_if(begin(frames), end(frames), [](PyFrameObject& frame) {
-			return frame.code()->name() == "recursive_fib";
+		auto topFrameInFib = std::find_if(begin(frames), end(frames), [](auto frame) {
+			return frame->code()->name() == "recursive_fib";
 		});
 
-		REQUIRE(topFrameInFib->currentLineNumber() == 18);
-		REQUIRE((topFrameInFib - 1)->code()->name() == "dump_process");
+		REQUIRE((*topFrameInFib)->currentLineNumber() == 18);
+		REQUIRE((*(topFrameInFib - 1))->code()->name() == "dump_process");
 	}
 }

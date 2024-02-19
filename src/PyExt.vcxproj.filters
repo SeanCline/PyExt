@@ -135,6 +135,15 @@
     <ClCompile Include="pysetautointerpreterstate.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="PyInterpreterFrame.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PyFrame.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="objects\PyDictKeysObject.cpp">
+      <Filter>Source Files\objects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="extension.h">
@@ -236,11 +245,17 @@
     <ClInclude Include="..\include\PyCellObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PyInterpreterState.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\PyMemberDef.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\PyFrame.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\PyInterpreterFrame.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\PyDictKeysObject.h">
+      <Filter>Header Files\objects</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

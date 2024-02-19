@@ -3,6 +3,7 @@
 #include "PyTypeObject.h"
 #include "PyVarObject.h"
 #include "PyDictObject.h"
+#include "PyDictKeysObject.h"
 #include "../ExtHelpers.h"
 
 #include <engextcpp.hpp>
@@ -58,8 +59,16 @@ namespace PyExt::Remote {
 	}
 
 
-	auto PyObject::dict() const -> unique_ptr<PyDictObject>
+	auto PyObject::dict() const -> unique_ptr<PyDict>
 	{
+		if (type().isManagedDict()) {
+			// Python >= 3.11, see PyObject_GenericGetDict
+			auto ht = ExtRemoteTyped("PyHeapTypeObject", type().offset(), true);
+			auto cachedKeys = ht.Field("ht_cached_keys");
+			return make_unique<PyManagedDict>(cachedKeys.GetPtr(), offset() - 4 * utils::getPointerSize());
+		}
+
+		// see https://docs.python.org/3.10/c-api/typeobj.html#c.PyTypeObject.tp_dictoffset
 		auto dictOffset_ = type().dictOffset();
 		if (dictOffset_ == 0)
 			return nullptr;

@@ -27,7 +27,7 @@ TEST_CASE("localsplus_test.py has the expected frames with localsplus.", "[integ
 	PyExt::InitializeGlobalsForTest(dump.pClient.Get());
 	auto cleanup = utils::makeScopeExit(PyExt::UninitializeGlobalsForTest);
 
-	std::vector<PyFrameObject> frames = dump.getMainThreadFrames();
+	auto frames = dump.getMainThreadFrames();
 	REQUIRE(frames.size() > 6);
 
 	vector<vector<string>> expectations{
@@ -74,13 +74,12 @@ TEST_CASE("localsplus_test.py has the expected frames with localsplus.", "[integ
 
 		SECTION("Localsplus for frame in method " + name + "().")
 		{
-			auto frame = std::find_if(begin(frames), end(frames), [&name](PyFrameObject& frame) {
-				return frame.code()->name() == name;
+			auto frame = std::find_if(begin(frames), end(frames), [&name](auto frame) {
+				return frame->code()->name() == name;
 				});
 
 			std::regex expectedRegex(details);
-			//REQUIRE(frameInF->details() == "test");
-			REQUIRE(regex_match(frame->details(), expectedRegex));
+			REQUIRE(regex_match((*frame)->details(), expectedRegex));
 		}
 	}
 	

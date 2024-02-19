@@ -55,15 +55,40 @@ namespace PyExt::Remote {
 		auto tp_members = remoteType().Field("tp_members");
 		auto ptr = tp_members.GetPtr();
 		if (ptr != 0) {
-			tp_members = ExtRemoteTyped("PyMemberDef", ptr, true);  // necessary for Python 3.8+
-			for (int i = 0; ; ++i) {
-				auto elem = tp_members.ArrayElement(i);
-				if (elem.Field("name").GetPtr() == 0)
-					break;
-				members.push_back(make_unique<PyMemberDef>(elem.GetPointerTo().GetPtr()));
+			auto isKnownType = false;
+			try {
+				tp_members = ExtRemoteTyped("PyMemberDef", ptr, true);  // necessary for Python >= 3.8
+				isKnownType = true;
+			} catch (ExtException&) {
+				// The symbol "PyMemberDef" is not available in Python 3.11.
+				// (In Python 3.12 it is available again...)
+				auto ptrSize = utils::getPointerSize();
+				auto memberDefSize = 5 * ptrSize;
+				while (ExtRemoteTyped("(void**)@$extin", ptr).Dereference().GetPtr() != 0) {
+					members.push_back(make_unique<PyMemberDefManual>(ptr));
+					ptr += memberDefSize;
+				}
+			}
+			if (isKnownType) {
+				for (int i = 0; ; ++i) {
+					auto elem = tp_members.ArrayElement(i);
+					if (elem.Field("name").GetPtr() == 0)
+						break;
+					members.push_back(make_unique<PyMemberDefAuto>(elem.GetPointerTo().GetPtr()));
+				}
 			}
 		}
 		return members;
+	}
+
+
+	auto PyTypeObject::isManagedDict() const -> bool
+	{
+		if (isPython2())  // in Python 2 this bit has another meaning
+			return false;
+		auto flags_ = remoteType().Field("tp_flags");
+		auto flags = utils::readIntegral<unsigned long>(flags_);
+		return flags & (1 << 4);  // Py_TPFLAGS_MANAGED_DICT
 	}
 
 

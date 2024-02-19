@@ -13,7 +13,7 @@ class ExtRemoteTyped;
 namespace PyExt::Remote {
 
 	class PyTypeObject; //< Forward Declaration.
-	class PyDictObject; //< Forward Declaration.
+	class PyDict; //< Forward Declaration.
 
 	/// Represents a PyObject in the debuggee's address space. Base class for all types of PyObject.
 	class PYEXT_PUBLIC PyObject : private RemoteType
@@ -39,7 +39,7 @@ namespace PyExt::Remote {
 		auto refCount() const -> SSize;
 		auto type() const -> PyTypeObject;
 		auto slots() const -> std::vector<std::pair<std::string, std::unique_ptr<PyObject>>>;
-		auto dict() const -> std::unique_ptr<PyDictObject>;
+		auto dict() const -> std::unique_ptr<PyDict>;
 		virtual auto repr(bool pretty = true) const -> std::string;
 		virtual auto details() const -> std::string;
 
