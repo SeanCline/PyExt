@@ -10,6 +10,8 @@
 
 #include <string>
 #include <sstream>
+#include <algorithm>
+#include <iterator>
 using namespace std;
 
 namespace PyExt::Remote {
@@ -106,11 +108,11 @@ namespace PyExt::Remote {
 		bool empty = true;
 
 		// repr of built-in base types (not for built-in types itself)
-		auto const& types = PyTypeObject::builtinTypes;
-		if (find(types.begin(), types.end(), type().name()) == types.end()) {
+		auto const& types = PyTypeObject::builtinTypes();
+		if (std::find(begin(types), end(types), type().name()) == types.end()) {
 			for (auto const& typeObj : type().mro()->listValue()) {
 				auto const typeName = PyTypeObject(typeObj->offset()).name();
-				if (find(types.begin(), types.end(), typeName) != types.end()) {
+				if (find(begin(types), end(types), typeName) != end(types)) {
 					if (!empty)
 						oss << sectionSeparator;
 					else

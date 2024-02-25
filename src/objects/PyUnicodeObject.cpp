@@ -29,6 +29,16 @@ namespace {
 		
 		return obj.Field(fieldName.c_str());
 	}
+
+	auto hasField(ExtRemoteTyped obj, const string& fieldName) -> bool
+	{
+		// Follow the _base until we find a field or there are no more bases.
+		while (!obj.HasField(fieldName.c_str()) && obj.HasField("_base")) {
+			obj = obj.Field("_base");
+		}
+
+		return obj.HasField("fieldName.c_str()");
+	}
 }
 
 namespace PyExt::Remote {
@@ -36,7 +46,7 @@ namespace PyExt::Remote {
 	PyUnicodeObject::PyUnicodeObject(Offset objectAddress)
 		: PyObject(objectAddress, "PyASCIIObject")
 	{
-		// We stared off with the base type of PyASCIIObject.
+		// We start off with the base type of PyASCIIObject.
 		// Up-cast ourselved to the most derived type possible.
 		if (isCompact()) {
 			if (isAscii()) {
@@ -80,6 +90,9 @@ namespace PyExt::Remote {
 
 	auto PyUnicodeObject::isReady() const -> bool
 	{
+		if (!hasField(remoteType(), "state"))
+			return true; //< All strings are "ready" in Python 3.12
+
 		auto readyField = getField(remoteType(), "state").Field("ready");
 		return utils::readIntegral<bool>(readyField);
 	}
@@ -123,18 +136,22 @@ namespace PyExt::Remote {
 
 	auto PyUnicodeObject::stringValue() const -> string
 	{
-		auto wstrField = getField(remoteType(), "wstr");
 		const auto length = utils::lossless_cast<ULONG>(stringLength());
 		if (length == 0)
 			return { };
 
-		if (wstrField.GetPtr() != 0) {
-			auto buffer = utils::readArray<wchar_t>(wstrField, length);
+		if (hasField(remoteType(), "wstr")) {
+			// Python <=3.11 had a wstr member in _base that could point directly to the string data.
+			auto wstrField = getField(remoteType(), "wstr");
+			if (wstrField.GetPtr() != 0) {
+				auto buffer = utils::readArray<wchar_t>(wstrField, length);
 
-			if (isAscii()) {
-				return { begin(buffer), end(buffer) };
-			} else {
-				return wstring_to_string({ begin(buffer), end(buffer) });
+				if (isAscii()) {
+					return { begin(buffer), end(buffer) };
+				}
+				else {
+					return wstring_to_string({ begin(buffer), end(buffer) });
+				}
 			}
 		} else {
 			Offset dataPtr = 0;

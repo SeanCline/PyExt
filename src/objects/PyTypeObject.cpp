@@ -8,6 +8,31 @@
 using namespace std;
 
 namespace PyExt::Remote {
+	auto PyTypeObject::builtinTypes() -> const std::vector<std::string>&
+	{
+		static const std::vector<std::string> types {
+			"type",
+			"str",
+			"bytes",
+			"bytearray",
+			"tuple",
+			"set",
+			"dict",
+			"int",
+			"long",
+			"float",
+			"bool",
+			"complex",
+			"frame",
+			"code",
+			"function",
+			"cell",
+			"NoneType",
+			"NotImplementedType",
+		};
+
+		return types;
+	}
 
 	PyTypeObject::PyTypeObject(Offset objectAddress)
 		: PyVarObject(objectAddress, "PyTypeObject")

@@ -43,8 +43,8 @@ namespace PyExt::Remote {
 		} else {
 			throw runtime_error("Unexpected PyLong bytes per digit of " + to_string(bytesPerDigit));
 		}
-		const auto BASE = static_cast<int64_t>(1) << SHIFT;
-		const auto MASK = BASE - 1;
+		//const auto BASE = static_cast<int64_t>(1) << SHIFT;
+		//const auto MASK = BASE - 1;
 
 		// Convert from BASE to DECIMAL_BASE and store the result in `buff`.
 		vector<uint64_t> buff;
