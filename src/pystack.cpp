@@ -65,10 +65,12 @@ namespace {
 	{
 		ostringstream oss;
 
-		try {
-			auto& interpreterFrame = dynamic_cast<const PyInterpreterFrame&>(frame);
-			oss << utils::link("[Frame]", "!pyinterpreterframe 0n"s + to_string(interpreterFrame.offset()), "Inspect interpreter frame (including localsplus).") << " ";
-		} catch (bad_cast&) {
+		auto* interpreterFrame = dynamic_cast<const PyInterpreterFrame*>(&frame);
+		if (interpreterFrame) {
+			// 3.11+
+			oss << utils::link("[Frame]", "!pyinterpreterframe 0n"s + to_string(interpreterFrame->offset()), "Inspect interpreter frame (including localsplus).") << " ";
+		} else {
+			// <3.11
 			auto& frameObject = dynamic_cast<const PyFrameObject&>(frame);
 			oss << utils::link("[Frame]", "!pyobj 0n"s + to_string(frameObject.offset()), "Inspect frame object (including localsplus).") << " ";
 		}
