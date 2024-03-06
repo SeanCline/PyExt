@@ -103,7 +103,7 @@ namespace PyExt::Remote {
 		auto valuesPtr = ExtRemoteTyped("(PyObject***)@$extin", valuesPtrPtr).Dereference().GetPtr();
 		auto ptrSize = utils::getPointerSize();
 
-		for (auto i = 0; i < tableSize; ++i) {
+		for (auto i = 0; i < tableSize; ++i, valuesPtr += ptrSize) {
 			auto dictEntry = table.ArrayElement(i);
 
 			auto keyPtr = dictEntry.Field("me_key").GetPtr();
@@ -115,7 +115,6 @@ namespace PyExt::Remote {
 			auto key = PyObject::make(keyPtr);
 			auto value = PyObject::make(valuePtr);
 			pairs.push_back(make_pair(move(key), move(value)));
-			valuesPtr += ptrSize;
 		}
 
 		return pairs;

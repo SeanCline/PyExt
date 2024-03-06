@@ -4,8 +4,10 @@ import win32debug, sys, os
 class D(object):
     """dict"""
     def __init__(self, d1, d2):
+        self.d0 = 0
         self.d1 = d1
         self.d2 = d2
+        del self.d0  # d0 is still in the object's dict but has no value
 
     def f(self):
         self.d_uninitialized = 1
