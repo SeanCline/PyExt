@@ -56,14 +56,15 @@ TEST_CASE("object_details.py has a stack frame with expected locals.", "[integra
 
 	vector<vector<string>> expectations{
 		// Regex only necessary due to Python 2 (dicts not sorted)
-		{ "d"            , "D"            , R"(dict: \{\n\t'(d1': 1,\n\t'd2': 2,|d2': 2,\n\t'd1': 1,)\n\})" },
-		{ "s"            , "S"            , R"(slots: \{\n\tslot1: 1,\n\tslot2: 2,\n\})" },
-		{ "dsubd"        , "DsubD"        , R"(dict: \{\n(\t('d1': 1|'d2': 2|'d3': 3),\n){3}\})" },
-		{ "ssubs"        , "SsubS"        , R"(slots: \{\n\tslot3: 3,\n\tslot1: 1,\n\tslot2: 2,\n\})" },
-		{ "dsubs"        , "DsubS"        , R"(slots: \{\n\tslot1: 1,\n\tslot2: 2,\n\}\ndict: \{\n\t'd3': 3,\n\})" },
-		{ "ssubd"        , "SsubD"        , R"(slots: \{\n\tslot3: 3,\n\}\ndict: \{\n(\t('d1': 1|'d2': 2),\n){2}\})" },
-		{ "ssubds"       , "SsubDS"       , R"(slots: \{\n\tslot3: 5,\n\tslot1: 3,\n\tslot2: 4,\n\}\ndict: \{\n(\t('d1': 1|'d2': 2),\n){2}\})" },
-		{ "negDictOffset", "NegDictOffset", R"(tuple repr: \(1, 2, 3\)\ndict: \{\n\t'attr': 'test',\n\})" },
+		{ "d"            , "D"                  , R"(dict: \{\n\t'(d1': 1,\n\t'd2': 2,|d2': 2,\n\t'd1': 1,)\n\})" },
+		{ "s"            , "S"                  , R"(slots: \{\n\tslot1: 1,\n\tslot2: 2,\n\})" },
+		{ "dsubd"        , "DsubD"              , R"(dict: \{\n(\t('d1': 1|'d2': 2|'d3': 3),\n){3}\})" },
+		{ "ssubs"        , "SsubS"              , R"(slots: \{\n\tslot3: 3,\n\tslot1: 1,\n\tslot2: 2,\n\})" },
+		{ "dsubs"        , "DsubS"              , R"(slots: \{\n\tslot1: 1,\n\tslot2: 2,\n\}\ndict: \{\n\t'd3': 3,\n\})" },
+		{ "ssubd"        , "SsubD"              , R"(slots: \{\n\tslot3: 3,\n\}\ndict: \{\n(\t('d1': 1|'d2': 2),\n){2}\})" },
+		{ "ssubds"       , "SsubDS"             , R"(slots: \{\n\tslot3: 5,\n\tslot1: 3,\n\tslot2: 4,\n\}\ndict: \{\n(\t('d1': 1|'d2': 2),\n){2}\})" },
+		{ "negDictOffset", "NegDictOffset"      , R"(tuple repr: \(1, 2, 3\)\ndict: \{\n\t'attr': 'test',\n\})" },
+		{ "manDictRes"   , "ManagedDictResolved", R"(dict: \{(\n\t'a\d+': \d+,){32}\n\})" },
 	};
 
 	for (auto& objExp : expectations) {

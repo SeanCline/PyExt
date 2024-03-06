@@ -87,8 +87,8 @@ namespace PyExt::Remote {
 	}
 
 
-	PyManagedDict::PyManagedDict(RemoteType::Offset keysPtr, RemoteType::Offset valuesPtrPtr)
-		: keysPtr(keysPtr), valuesPtrPtr(valuesPtrPtr)
+	PyManagedDict::PyManagedDict(RemoteType::Offset keysPtr, RemoteType::Offset valuesPtr)
+		: keysPtr(keysPtr), valuesPtr(valuesPtr)
 	{
 	}
 
@@ -100,14 +100,14 @@ namespace PyExt::Remote {
 		auto keys = make_unique<PyDictKeysObject>(keysPtr);
 		auto table = keys->getEntriesTable();
 		auto tableSize = keys->getEntriesTableSize();
-		auto valuesPtr = ExtRemoteTyped("(PyObject***)@$extin", valuesPtrPtr).Dereference().GetPtr();
+		auto nextValue = valuesPtr;
 		auto ptrSize = utils::getPointerSize();
 
-		for (auto i = 0; i < tableSize; ++i, valuesPtr += ptrSize) {
+		for (auto i = 0; i < tableSize; ++i, nextValue += ptrSize) {
 			auto dictEntry = table.ArrayElement(i);
 
 			auto keyPtr = dictEntry.Field("me_key").GetPtr();
-			auto valuePtr = ExtRemoteTyped("(PyObject**)@$extin", valuesPtr).Dereference().GetPtr();
+			auto valuePtr = ExtRemoteTyped("(PyObject**)@$extin", nextValue).Dereference().GetPtr();
 
 			if (keyPtr == 0 || valuePtr == 0) //< The hash bucket might be empty.
 				continue;

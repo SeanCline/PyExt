@@ -29,14 +29,14 @@ namespace PyExt::Remote {
 	{
 
 	public: // Construction/Destruction.
-		explicit PyManagedDict(RemoteType::Offset keysPtr, RemoteType::Offset valuesPtrPtr);
+		explicit PyManagedDict(RemoteType::Offset keysPtr, RemoteType::Offset valuesPtr);
 
 	public: // Members.
 		auto pairValues() const->std::vector<std::pair<std::unique_ptr<PyObject>, std::unique_ptr<PyObject>>> override;
 
 	private:
 		RemoteType::Offset keysPtr;
-		RemoteType::Offset valuesPtrPtr;
+		RemoteType::Offset valuesPtr;
 
 	};
 

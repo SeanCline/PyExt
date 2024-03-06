@@ -71,6 +71,20 @@ class NegDictOffset(tuple):
         self.attr = 'test'
 
 
+class ManagedDictResolved(object):
+    """managed dict has two modes:
+    - only values
+    - fully resolved PyDictObject
+
+    We are trying to trigger the second one with this class.
+    """
+    def __init__(self):
+        # Observation: The more attributes an object has, the more likely the dict is not stored
+        # as values only but as PyDictObject, which triggers another branch in the code.
+        for i in range(32):
+            setattr(self, 'a%s' % i, i)
+
+
 d = D(1, 2)
 s = S(1, 2)
 dsubd = DsubD(1, 2, 3)
@@ -79,4 +93,5 @@ dsubs = DsubS(1, 2, 3)
 ssubd = SsubD(1, 2, 3)
 ssubds = SsubDS(1, 2, 3, 4, 5)
 negDictOffset = NegDictOffset((1, 2, 3))
+manDictRes = ManagedDictResolved()
 win32debug.dump_process("object_details.dmp")
