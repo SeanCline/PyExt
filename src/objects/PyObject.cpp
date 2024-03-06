@@ -65,9 +65,16 @@ namespace PyExt::Remote {
 	{
 		if (type().isManagedDict()) {
 			// Python >= 3.11, see PyObject_GenericGetDict
+			auto pointerSize = utils::getPointerSize();
+			auto valuesPtrPtr = offset() - 4 * pointerSize;
+			auto valuesPtr = ExtRemoteTyped("(PyObject***)@$extin", valuesPtrPtr).Dereference().GetPtr();
+			if (valuesPtr == 0) {
+				auto dictPtr = ExtRemoteTyped("(PyDictObject**)@$extin", valuesPtrPtr + pointerSize).Dereference().GetPtr();
+				return dictPtr ? make_unique<PyDictObject>(dictPtr) : nullptr;
+			}
 			auto ht = ExtRemoteTyped("PyHeapTypeObject", type().offset(), true);
 			auto cachedKeys = ht.Field("ht_cached_keys");
-			return make_unique<PyManagedDict>(cachedKeys.GetPtr(), offset() - 4 * utils::getPointerSize());
+			return make_unique<PyManagedDict>(cachedKeys.GetPtr(), valuesPtr);
 		}
 
 		// see https://docs.python.org/3.10/c-api/typeobj.html#c.PyTypeObject.tp_dictoffset
