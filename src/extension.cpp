@@ -99,7 +99,7 @@ namespace PyExt {
 
 		auto repr = pyObj->repr(true);
 		if (!repr.empty())
-			printDml("\tRepr: %s\n", repr.c_str());
+			printDml("\tRepr: %s\n", repr);
 
 		auto details = pyObj->details();
 		if (!details.empty())
@@ -115,7 +115,7 @@ namespace PyExt {
 		auto frame = make_unique<PyInterpreterFrame>(RemoteType(offset, "_PyInterpreterFrame"));
 
 		auto details = frame->details();
-		printDml("\tDetails:\n%s\n", details.c_str());
+		printDml("\tDetails:\n%s\n", details);
 	}
 
 
