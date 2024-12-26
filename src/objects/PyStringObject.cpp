@@ -34,6 +34,9 @@ namespace PyExt::Remote {
 		// String and Bytes objects in Python can embed \0's so we read `len` bytes from the debuggee
 		// instead of stopping at the first \0.
 		const auto len = stringLength();
+		if (len == 0)
+			return ""s;
+
 		string buffer(utils::lossless_cast<size_t>(len), '\0');
 		auto sval = remoteType().Field("ob_sval");
 		sval.Dereference().ReadBuffer(buffer.data(), utils::lossless_cast<ULONG>(buffer.size()));

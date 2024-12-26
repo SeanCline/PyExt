@@ -35,6 +35,9 @@ namespace utils {
 	template <typename ElemType>
 	auto readArray(/*const*/ ExtRemoteTyped& remoteArray, std::uint64_t numElements) -> std::vector<ElemType>
 	{
+		if (numElements == 0)
+			return { };
+
 		auto remoteData = remoteArray.Dereference();
 		const auto remoteSize = remoteData.GetTypeSize();
 		if (remoteSize != sizeof(ElemType)) {
