@@ -17,6 +17,9 @@ namespace PyExt::Remote {
 		auto isNegative() const -> bool;
 		auto repr(bool pretty = true) const -> std::string override;
 
+	private:
+		const bool isBool;
+
 	};
 
 }
