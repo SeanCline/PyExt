@@ -75,7 +75,7 @@ namespace PyExt::Remote {
 			if (typeObj.isPython2()) {
 				return make_unique<PyBoolObject>(remoteAddress);
 			} else {
-				return make_unique<PyLongObject>(remoteAddress);
+				return make_unique<PyLongObject>(remoteAddress, true);
 			}
 		} else if (typeName == "complex") {
 			return make_unique<PyComplexObject>(remoteAddress);

@@ -12,8 +12,8 @@ using namespace std;
 
 namespace PyExt::Remote {
 
-	PyLongObject::PyLongObject(Offset objectAddress)
-		: PyVarObject(objectAddress, "PyLongObject")
+	PyLongObject::PyLongObject(Offset objectAddress, const bool isBool)
+		: PyVarObject(objectAddress, "PyLongObject"), isBool(isBool)
 	{
 	}
 
@@ -27,6 +27,12 @@ namespace PyExt::Remote {
 	auto PyLongObject::repr(bool /*pretty*/) const -> string
 	{
 		auto digits = remoteType().Field("ob_digit");
+		if (isBool) {
+			auto digit = digits.ArrayElement(0);
+			const auto value = utils::readIntegral<uint64_t>(digit);
+			return value == 1 ? "True"s : "False"s;
+		}
+
 		const auto bytesPerDigit = digits.ArrayElement(0).GetTypeSize();
 
 		// Set up our constants based on how CPython was compiled.
