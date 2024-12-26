@@ -191,7 +191,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 
 
 		const auto actualValue = bool_true_obj.repr();
-		REQUIRE((actualValue == "True" || actualValue == "1"));
+		REQUIRE(actualValue == "True");
 		REQUIRE(bool_true_obj.details() == "");
 	}
 
@@ -202,7 +202,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 		REQUIRE(bool_false_obj.type().name() == "bool");
 
 		const auto actualValue = bool_false_obj.repr();
-		REQUIRE((actualValue == "False" || actualValue == "0"));
+		REQUIRE(actualValue == "False");
 		REQUIRE(bool_false_obj.details() == "");
 	}
 
