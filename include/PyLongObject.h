@@ -11,7 +11,7 @@ namespace PyExt::Remote {
 	{
 
 	public: // Construction/Destruction.
-		explicit PyLongObject(Offset objectAddress);
+		explicit PyLongObject(Offset objectAddress, const bool isBool = false);
 
 	public: // Members.
 		auto isNegative() const -> bool;
