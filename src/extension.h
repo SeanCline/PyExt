@@ -25,10 +25,15 @@ namespace PyExt {
 		auto KnownStructObjectHandler(_In_ PCSTR TypeName, _In_ ULONG Flags, _In_ ULONG64 Offset) -> void;
 
 	private: // Helper methods.
+		static const size_t chunkSize = 16000;
+
+		/// Prints a DML text, splitting it into chunks if needed.
+		auto printDml(const char* format, const std::string& content) -> void;
+
 		/// Evaluates an expression as a pointer and returns the result as an offset in the debuggee's address space.
 		auto evalOffset(const std::string& arg) -> UINT64;
 
-		/// Prints an error message to the user  when Python symbols cannot be loaded.
+		/// Prints an error message to the user when Python symbols cannot be loaded.
 		auto ensureSymbolsLoaded() -> void;
 	};
 
