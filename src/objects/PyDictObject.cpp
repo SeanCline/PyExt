@@ -10,6 +10,7 @@
 #include <sstream>
 #include <iomanip>
 #include <stdexcept>
+#include <optional>
 #include <utility>
 using namespace std;
 
@@ -134,6 +135,16 @@ namespace PyExt::Remote {
 		auto table = getEntriesTable(remoteType());
 		const auto tableSize = getEntriesTableSize(remoteType());
 		const bool isCombined = getIsCombined(remoteType());
+
+		optional<ExtRemoteTyped> valuesArray;
+		if (!isCombined) {
+			valuesArray = remoteType().Field("ma_values");
+
+			// Since Python 3.11 values are stored in `values` of `ma_values`.
+			if (valuesArray->HasField("values"))
+				valuesArray = valuesArray->Field("values");
+		}
+
 		for (SSize i = 0; i < tableSize; ++i) {
 			auto dictEntry = table.ArrayElement(i);
 
@@ -142,7 +153,7 @@ namespace PyExt::Remote {
 			if (isCombined) {
 				valuePtr = dictEntry.Field("me_value").GetPtr();
 			} else {
-				valuePtr = remoteType().Field("ma_values").ArrayElement(i).GetPtr();
+				valuePtr = valuesArray->ArrayElement(i).GetPtr();
 			}
 
 			if (keyPtr == 0 || valuePtr == 0) //< The hash bucket might be empty.
