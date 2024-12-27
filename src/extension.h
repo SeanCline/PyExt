@@ -28,7 +28,7 @@ namespace PyExt {
 		static const size_t chunkSize = 16000;
 
 		/// Prints a DML text, splitting it into chunks if needed.
-		auto printDml(const char* format, const std::string& content) -> void;
+		auto printDml(const std::string& content) -> void;
 
 		/// Evaluates an expression as a pointer and returns the result as an offset in the debuggee's address space.
 		auto evalOffset(const std::string& arg) -> UINT64;

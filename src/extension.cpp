@@ -63,21 +63,20 @@ namespace PyExt {
 	}
 
 
-	auto EXT_CLASS::printDml(const char* format, const string& content) -> void
+	auto EXT_CLASS::printDml(const string& content) -> void
 	{
 		// There is a limit for single output. It seems impossible to know the exact value
 		// of the limit in advance, so we take the value from the documentation.
 		// https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/dbgeng/nf-dbgeng-idebugcontrol4-controlledoutputvalistwide#remarks
 
 		if (content.size() <= chunkSize) {
-			Dml(format, content.c_str());
-			return;
+			Dml("%s", content.c_str());
+		} else {
+			for (size_t chunkOffset = 0; chunkOffset < content.size(); chunkOffset += chunkSize) {
+				Dml("%s", content.substr(chunkOffset, chunkSize).c_str());
+			}
 		}
-
-		for (size_t chunkOffset = 0; chunkOffset < content.size(); chunkOffset += chunkSize) {
-			Dml(format, content.substr(chunkOffset, chunkSize).c_str());
-			format = "%s";
-		}
+		Out("\n");
 	}
 
 
@@ -98,12 +97,16 @@ namespace PyExt {
 			Out("\tSize: %d\n", pyVarObj->size());
 
 		auto repr = pyObj->repr(true);
-		if (!repr.empty())
-			printDml("\tRepr: %s\n", repr);
+		if (!repr.empty()) {
+			Out("\tRepr: ");
+			printDml(repr);
+		}
 
 		auto details = pyObj->details();
-		if (!details.empty())
-			printDml("\tDetails:\n%s\n", details);
+		if (!details.empty()) {
+			Out("\tDetails:\n");
+			printDml(details);
+		}
 	}
 
 
@@ -115,7 +118,8 @@ namespace PyExt {
 		auto frame = make_unique<PyInterpreterFrame>(RemoteType(offset, "_PyInterpreterFrame"));
 
 		auto details = frame->details();
-		printDml("\tDetails:\n%s\n", details);
+		Out("\tDetails:\n");
+		printDml(details);
 	}
 
 
