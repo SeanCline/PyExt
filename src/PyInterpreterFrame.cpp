@@ -68,6 +68,11 @@ namespace PyExt::Remote {
 		if (previous.GetPtr() == 0)
 			return { };
 
+		auto ownerRaw = previous.Field("owner");
+		auto owner = utils::readIntegral<int8_t>(ownerRaw);
+		if (owner == 3)  // FRAME_OWNED_BY_CSTACK
+			return { };
+
 		return make_unique<PyInterpreterFrame>(RemoteType(previous));
 	}
 
