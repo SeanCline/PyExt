@@ -7,6 +7,7 @@ unicode_obj = u"TestUnicode"  # Python 2: unicode, Python 3: str
 byte_array_object = bytearray(b'TestBytearray123')
 int_obj = int(1)
 long_obj = 123456789012345678901234567890123456789012345678901234567890
+all_long_obj = (0, -123456, 123456, 987654321987654321987654321, -987654321987654321987654321)
 float_obj = 3.1415
 complex_obj = complex(1.5, -2.25)
 bool_true_obj = True
