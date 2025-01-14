@@ -81,23 +81,9 @@ namespace PyExt::Remote {
 	}
 
 
-	auto PyThreadState::recursion_depth() const -> long
-	{
-		auto field = remoteType().Field("recursion_depth");
-		return utils::readIntegral<long>(field);
-	}
-
-
 	auto PyThreadState::tracing() const -> long
 	{
 		auto field = remoteType().Field("tracing");
-		return utils::readIntegral<long>(field);
-	}
-
-
-	auto PyThreadState::use_tracing() const -> long
-	{
-		auto field = remoteType().Field("use_tracing");
 		return utils::readIntegral<long>(field);
 	}
 

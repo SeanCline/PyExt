@@ -39,9 +39,6 @@ namespace PyExt::Remote {
 	public: // Members of the remote type.
 		auto next() const -> std::unique_ptr<PyInterpreterState>;
 		auto tstate_head() const -> std::unique_ptr<PyThreadState>;
-		auto modules() const -> std::unique_ptr<PyDictObject>;
-		auto sysdict() const -> std::unique_ptr<PyDictObject>;
-		auto builtins() const -> std::unique_ptr<PyDictObject>;
 
 	public: // Utility functions around the members.
 		/// Returns a range of all the threads in this interpreter.

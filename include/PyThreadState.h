@@ -38,9 +38,7 @@ namespace PyExt::Remote {
 		auto next() const -> std::unique_ptr<PyThreadState>;
 		auto frame() const -> std::unique_ptr<PyFrameObject>;
 		auto cframe() const -> std::unique_ptr<PyCFrame>;
-		auto recursion_depth() const -> long;
 		auto tracing() const -> long;
-		auto use_tracing() const -> long;
 		auto thread_id() const -> long;
 
 	public: // Utility functions around the members.

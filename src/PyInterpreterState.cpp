@@ -115,24 +115,6 @@ namespace PyExt::Remote {
 	}
 
 
-	auto PyInterpreterState::modules() const -> std::unique_ptr<PyDictObject>
-	{
-		return utils::fieldAsPyObject<PyDictObject>(remoteType(), "modules");
-	}
-
-
-	auto PyInterpreterState::sysdict() const -> std::unique_ptr<PyDictObject>
-	{
-		return utils::fieldAsPyObject<PyDictObject>(remoteType(), "sysdict");
-	}
-
-
-	auto PyInterpreterState::builtins() const -> std::unique_ptr<PyDictObject>
-	{
-		return utils::fieldAsPyObject<PyDictObject>(remoteType(), "builtins");
-	}
-
-
 	auto PyInterpreterState::allThreadStates() const -> std::vector<PyThreadState>
 	{
 		vector<PyThreadState> states;
