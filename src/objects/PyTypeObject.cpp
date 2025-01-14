@@ -81,10 +81,18 @@ namespace PyExt::Remote {
 		auto ptr = tp_members.GetPtr();
 		if (ptr != 0) {
 			auto isKnownType = false;
-			try {
+			utils::ignoreExtensionError([&] {
 				tp_members = ExtRemoteTyped("PyMemberDef", ptr, true);  // necessary for Python >= 3.8
 				isKnownType = true;
-			} catch (ExtException&) {
+			});
+			if (isKnownType) {
+				for (int i = 0; ; ++i) {
+					auto elem = tp_members.ArrayElement(i);
+					if (elem.Field("name").GetPtr() == 0)
+						break;
+					members.push_back(make_unique<PyMemberDefAuto>(elem.GetPointerTo().GetPtr()));
+				}
+			} else {
 				// The symbol "PyMemberDef" is not available in Python 3.11.
 				// (In Python 3.12 it is available again...)
 				auto ptrSize = utils::getPointerSize();
@@ -92,14 +100,6 @@ namespace PyExt::Remote {
 				while (ExtRemoteTyped("(void**)@$extin", ptr).Dereference().GetPtr() != 0) {
 					members.push_back(make_unique<PyMemberDefManual>(ptr));
 					ptr += memberDefSize;
-				}
-			}
-			if (isKnownType) {
-				for (int i = 0; ; ++i) {
-					auto elem = tp_members.ArrayElement(i);
-					if (elem.Field("name").GetPtr() == 0)
-						break;
-					members.push_back(make_unique<PyMemberDefAuto>(elem.GetPointerTo().GetPtr()));
 				}
 			}
 		}
