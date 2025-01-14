@@ -157,7 +157,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 		auto& tuple_obj = dynamic_cast<PyTupleObject&>(findValueByKey(localPairs, "all_long_obj"));
 		auto value = tuple_obj.repr(false);
 		std::regex chars_to_remove("[\\s()]+");
-		value = std::regex_replace(repr, chars_to_remove, "");
+		value = std::regex_replace(value, chars_to_remove, "");
 		REQUIRE(value == expectedValue);
 	}
 
