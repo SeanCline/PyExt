@@ -56,12 +56,6 @@ namespace PyExt::Remote {
 	}
 
 
-	auto PyInterpreterFrame::builtins() const -> unique_ptr<PyDictObject>
-	{
-		return utils::fieldAsPyObject<PyDictObject>(remoteType(), "f_builtins");
-	}
-
-
 	auto PyInterpreterFrame::code() const -> unique_ptr<PyCodeObject>
 	{
 		return utils::fieldAsPyObject<PyCodeObject>(remoteType(), "f_code");

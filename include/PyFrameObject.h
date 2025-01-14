@@ -23,7 +23,6 @@ namespace PyExt::Remote {
 		auto locals() const -> std::unique_ptr<PyDictObject> override;
 		auto localsplus() const -> std::vector<std::pair<std::string, std::unique_ptr<PyObject>>> override;
 		auto globals() const -> std::unique_ptr<PyDictObject> override;
-		auto builtins() const -> std::unique_ptr<PyDictObject> override;
 		auto code() const -> std::unique_ptr<PyCodeObject> override;
 		auto previous() const->std::unique_ptr<PyFrame> override;
 		auto back() const -> std::unique_ptr<PyFrameObject>;
