@@ -55,6 +55,18 @@ namespace utils {
 		return buffer;
 	}
 
+
+	template<typename T>
+	auto ignoreExtensionError(T&& function) -> void
+	{
+		ExtCaptureOutputA ignoreOut;
+		ignoreOut.Start();
+		try {
+			function();
+		} catch (ExtException&) { }
+	}
+
+
 	auto getPointerSize() -> int;
 	auto escapeDml(const std::string& str) -> std::string;
 	auto link(const std::string& text, const std::string& cmd, const std::string& alt = ""s) -> std::string;

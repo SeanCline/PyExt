@@ -56,12 +56,6 @@ namespace PyExt::Remote {
 	}
 
 
-	auto PyInterpreterFrame::builtins() const -> unique_ptr<PyDictObject>
-	{
-		return utils::fieldAsPyObject<PyDictObject>(remoteType(), "f_builtins");
-	}
-
-
 	auto PyInterpreterFrame::code() const -> unique_ptr<PyCodeObject>
 	{
 		return utils::fieldAsPyObject<PyCodeObject>(remoteType(), "f_code");
@@ -72,6 +66,11 @@ namespace PyExt::Remote {
 	{
 		auto previous = remoteType().Field("previous");
 		if (previous.GetPtr() == 0)
+			return { };
+
+		auto ownerRaw = previous.Field("owner");
+		auto owner = utils::readIntegral<int8_t>(ownerRaw);
+		if (owner == 3)  // FRAME_OWNED_BY_CSTACK
 			return { };
 
 		return make_unique<PyInterpreterFrame>(RemoteType(previous));

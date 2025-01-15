@@ -145,9 +145,20 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 		auto& long_obj = dynamic_cast<PyLongObject&>(findValueByKey(localPairs, "long_obj"));
 		const auto typeName = long_obj.type().name();
 		REQUIRE((typeName == "int" || typeName == "long"));
-		REQUIRE(!long_obj.isNegative());
 		REQUIRE(long_obj.repr() == expectedValue);
 		REQUIRE(long_obj.details() == "");
+	}
+
+
+	SECTION("Value of all_long_obj.")
+	{
+		const string expectedValue = "0,-123456,123456,987654321987654321987654321,-987654321987654321987654321";
+
+		auto& tuple_obj = dynamic_cast<PyTupleObject&>(findValueByKey(localPairs, "all_long_obj"));
+		auto value = tuple_obj.repr(false);
+		std::regex chars_to_remove("[\\s()]+");
+		value = std::regex_replace(value, chars_to_remove, "");
+		REQUIRE(value == expectedValue);
 	}
 
 

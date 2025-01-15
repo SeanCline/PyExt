@@ -12,6 +12,7 @@
 #include <sstream>
 #include <algorithm>
 #include <iterator>
+#include <optional>
 using namespace std;
 
 namespace PyExt::Remote {
@@ -66,12 +67,32 @@ namespace PyExt::Remote {
 		if (type().isManagedDict()) {
 			// Python >= 3.11, see PyObject_GenericGetDict
 			auto pointerSize = utils::getPointerSize();
-			auto valuesPtrPtr = offset() - 4 * pointerSize;
-			auto valuesPtr = ExtRemoteTyped("(PyObject***)@$extin", valuesPtrPtr).Dereference().GetPtr();
-			if (valuesPtr == 0) {
-				auto dictPtr = ExtRemoteTyped("(PyDictObject**)@$extin", valuesPtrPtr + pointerSize).Dereference().GetPtr();
-				return dictPtr ? make_unique<PyDictObject>(dictPtr) : nullptr;
+			Offset valuesPtr;
+			optional<ExtRemoteTyped> dictOrValues;
+
+			utils::ignoreExtensionError([&] {
+				// Python 3.12
+				auto dictOrValuesPtr = offset() - 3 * pointerSize;
+				dictOrValues = ExtRemoteTyped("PyDictOrValues", dictOrValuesPtr, true);
+			});
+
+			if (dictOrValues) {
+				valuesPtr = dictOrValues->Field("values").GetPtr();
+				if (valuesPtr & 1) {
+					valuesPtr += 1;
+				} else {
+					auto dictPtr = dictOrValues->Field("dict").GetPtr();
+					return dictPtr ? make_unique<PyDictObject>(dictPtr) : nullptr;
+				}
+			} else {
+				auto valuesPtrPtr = offset() - 4 * pointerSize;
+				valuesPtr = ExtRemoteTyped("(PyObject***)@$extin", valuesPtrPtr).Dereference().GetPtr();
+				if (valuesPtr == 0) {
+					auto dictPtr = ExtRemoteTyped("(PyDictObject**)@$extin", valuesPtrPtr + pointerSize).Dereference().GetPtr();
+					return dictPtr ? make_unique<PyDictObject>(dictPtr) : nullptr;
+				}
 			}
+
 			auto ht = ExtRemoteTyped("PyHeapTypeObject", type().offset(), true);
 			auto cachedKeys = ht.Field("ht_cached_keys");
 			return make_unique<PyManagedDict>(cachedKeys.GetPtr(), valuesPtr);

@@ -1,5 +1,7 @@
 #include "PyLongObject.h"
 
+#include "PyVarObject.h"
+
 #include "../ExtHelpers.h"
 
 #include <engextcpp.hpp>
@@ -13,27 +15,45 @@ using namespace std;
 namespace PyExt::Remote {
 
 	PyLongObject::PyLongObject(Offset objectAddress, const bool isBool)
-		: PyVarObject(objectAddress, "PyLongObject"), isBool(isBool)
+		: PyObject(objectAddress, "PyLongObject"), isBool(isBool)
 	{
-	}
-
-
-	auto PyLongObject::isNegative() const -> bool
-	{
-		return size() < 0;
 	}
 
 
 	auto PyLongObject::repr(bool /*pretty*/) const -> string
 	{
-		auto digits = remoteType().Field("ob_digit");
-		if (isBool) {
-			auto digit = digits.ArrayElement(0);
-			const auto value = utils::readIntegral<uint64_t>(digit);
-			return value == 1 ? "True"s : "False"s;
+		ExtRemoteTyped digits;
+		SSize digitCount;
+		SSize sign;
+		auto isCompact = false;
+
+		if (remoteType().HasField("long_value")) {
+			// Python 3.12+
+			auto longValue = remoteType().Field("long_value");
+			digits = longValue.Field("ob_digit");
+
+			auto tagRaw = longValue.Field("lv_tag");
+			auto tag = utils::readIntegral<uint64_t>(tagRaw);
+			digitCount = tag >> 3;  // _PyLong_NON_SIZE_BITS
+			sign = 1 - (tag & 3);  // _PyLong_SIGN_MASK
+			isCompact = tag < (2 << 3);  // _PyLong_NON_SIZE_BITS
+		} else {
+			digits = remoteType().Field("ob_digit");
+			auto varObject = PyVarObject(offset());
+			sign = varObject.size();
+			digitCount = abs(sign);
 		}
 
-		const auto bytesPerDigit = digits.ArrayElement(0).GetTypeSize();
+		auto firstDigit = digits.ArrayElement(0);
+		auto firstDigitValue = utils::readIntegral<uint64_t>(firstDigit);
+
+		if (isBool)
+			return firstDigitValue == 1 ? "True"s : "False"s;
+
+		if (isCompact)
+			return to_string(sign * (SSize)firstDigitValue);
+
+		const auto bytesPerDigit = firstDigit.GetTypeSize();
 
 		// Set up our constants based on how CPython was compiled.
 		// See: https://github.com/python/cpython/blob/master/Include/longintrepr.h
@@ -54,8 +74,7 @@ namespace PyExt::Remote {
 
 		// Convert from BASE to DECIMAL_BASE and store the result in `buff`.
 		vector<uint64_t> buff;
-		const auto numDigits = abs(size());
-		for (int64_t i = numDigits - 1; i >= 0; --i) {
+		for (int64_t i = digitCount - 1; i >= 0; --i) {
 			auto hiElement = digits.ArrayElement(i);
 			auto hi = utils::readIntegral<uint64_t>(hiElement);
 			for (auto& buffDigit : buff) {
@@ -92,7 +111,7 @@ namespace PyExt::Remote {
 		} while (rem != 0);
 
 		// Append a negative sign if needed.
-		if (isNegative())
+		if (sign < 0)
 			out.push_back('-');
 
 		reverse(out.begin(), out.end());
