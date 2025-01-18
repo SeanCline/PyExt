@@ -13,37 +13,6 @@ using namespace std;
 
 namespace PyExt::Remote {
 
-	PyCFrame::PyCFrame(const RemoteType& remoteType)
-		: RemoteType(remoteType)
-	{
-	}
-
-
-	PyCFrame::~PyCFrame()
-	{
-	}
-
-
-	auto PyCFrame::current_frame() const -> std::unique_ptr<PyInterpreterFrame>
-	{
-		auto cframe = remoteType().Field("current_frame");
-		if (cframe.GetPtr() == 0)
-			return { };
-
-		return make_unique<PyInterpreterFrame>(RemoteType(cframe));
-	}
-
-
-	auto PyCFrame::previous() const -> std::unique_ptr<PyCFrame>
-	{
-		auto previous = remoteType().Field("previous");
-		if (previous.GetPtr() == 0)
-			return { };
-
-		return make_unique<PyCFrame>(RemoteType(previous));
-	}
-
-
 	PyThreadState::PyThreadState(const RemoteType& remoteType)
 		: RemoteType(remoteType)
 	{
@@ -65,19 +34,24 @@ namespace PyExt::Remote {
 	}
 
 
-	auto PyThreadState::frame() const -> std::unique_ptr<PyFrameObject>
+	auto PyThreadState::currentFrame() const -> std::unique_ptr<PyFrame>
 	{
-		return utils::fieldAsPyObject<PyFrameObject>(remoteType(), "frame");
-	}
+		auto frameObject = utils::fieldAsPyObject<PyFrameObject>(remoteType(), "frame");
+		if (frameObject != nullptr)
+			return frameObject;  // Python < 3.11
 
+		auto frameContainer = remoteType();  // Python 3.13+
+		if (remoteType().HasField("cframe")) {
+			// Python 3.11, 3.12
+			frameContainer = remoteType().Field("cframe");
+			if (frameContainer.GetPtr() == 0)
+				return { };
+		}
 
-	auto PyThreadState::cframe() const -> std::unique_ptr<PyCFrame>
-	{
-		auto cframe = remoteType().Field("cframe");
-		if (cframe.GetPtr() == 0)
+		auto frame = frameContainer.Field("current_frame");
+		if (frame.GetPtr() == 0)
 			return { };
-
-		return make_unique<PyCFrame>(RemoteType(cframe));
+		return make_unique<PyInterpreterFrame>(RemoteType(frame));
 	}
 
 
@@ -99,10 +73,7 @@ namespace PyExt::Remote {
 	{
 		vector<shared_ptr<PyFrame>> frames;
 		shared_ptr<PyFrame> f;
-		f = frame();
-		if (f == nullptr) {
-			f = cframe()->current_frame();
-		}
+		f = currentFrame();
 		for (; f != nullptr; f = f->previous()) {
 			frames.push_back(f);
 		}

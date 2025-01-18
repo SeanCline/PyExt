@@ -58,6 +58,9 @@ namespace PyExt::Remote {
 
 	auto PyInterpreterFrame::code() const -> unique_ptr<PyCodeObject>
 	{
+		auto code = utils::fieldAsPyObject<PyCodeObject>(remoteType(), "f_executable");
+		if (code != nullptr)
+			return code;  // Python 3.13+
 		return utils::fieldAsPyObject<PyCodeObject>(remoteType(), "f_code");
 	}
 
@@ -79,8 +82,10 @@ namespace PyExt::Remote {
 
 	auto PyInterpreterFrame::prevInstruction() const -> int
 	{
-		auto prevInstr = remoteType().Field("prev_instr");
-		return utils::readIntegral<int>(prevInstr);
+		auto instrPtr = remoteType().HasField("instr_ptr")
+			? remoteType().Field("instr_ptr")  // Python 3.13+
+			: remoteType().Field("prev_instr");
+		return utils::readIntegral<int>(instrPtr);
 	}
 
 
