@@ -70,5 +70,6 @@ namespace utils {
 	auto getPointerSize() -> int;
 	auto escapeDml(const std::string& str) -> std::string;
 	auto link(const std::string& text, const std::string& cmd, const std::string& alt = ""s) -> std::string;
+	auto getFullSymbolName(const std::string& symbolName) -> std::string;
 
 }

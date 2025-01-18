@@ -43,4 +43,12 @@ namespace utils {
 		return oss.str();
 	}
 
+
+	auto getFullSymbolName(const string& symbolName) -> string
+	{
+		ExtBuffer<char> buffer;
+		g_Ext->FindFirstModule("python???", &buffer, 0);
+		return buffer.GetBuffer() + "!"s + symbolName;
+	}
+
 }

@@ -65,7 +65,7 @@ namespace PyExt::Remote {
 	}
 
 
-	auto PyFunctionObject::dict() const -> unique_ptr<PyDictObject>
+	auto PyFunctionObject::dict() const -> unique_ptr<PyDict>
 	{
 		return utils::fieldAsPyObject<PyDictObject>(remoteType(), "func_dict");
 	}
