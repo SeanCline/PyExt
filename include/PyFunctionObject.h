@@ -29,7 +29,7 @@ namespace PyExt::Remote {
 		auto closure() const -> std::unique_ptr<PyTupleObject>;
 		auto doc() const -> std::unique_ptr<PyObject>;
 		auto name() const -> std::unique_ptr<PyStringValue>;
-		auto dict() const -> std::unique_ptr<PyDictObject>;
+		auto dict() const -> std::unique_ptr<PyDict> override;
 		auto weakreflist() const -> std::unique_ptr<PyListObject>;
 		auto module() const -> std::unique_ptr<PyObject>;
 		auto annotations() const -> std::unique_ptr<PyDictObject>;

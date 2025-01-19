@@ -39,7 +39,8 @@ namespace PyExt::Remote {
 		auto refCount() const -> SSize;
 		auto type() const -> PyTypeObject;
 		auto slots() const -> std::vector<std::pair<std::string, std::unique_ptr<PyObject>>>;
-		auto dict() const -> std::unique_ptr<PyDict>;
+		auto managedDict() const -> std::unique_ptr<PyDict>;
+		virtual auto dict() const -> std::unique_ptr<PyDict>;
 		virtual auto repr(bool pretty = true) const -> std::string;
 		virtual auto details() const -> std::string;
 

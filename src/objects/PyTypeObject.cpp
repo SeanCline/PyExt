@@ -117,6 +117,29 @@ namespace PyExt::Remote {
 	}
 
 
+	auto PyTypeObject::getStaticBuiltinIndex() const -> SSize
+	{
+		auto type = remoteType();
+		auto flagsRaw = type.Field("tp_flags");
+		auto flags = utils::readIntegral<unsigned long>(flagsRaw);
+		if (flags & (1 << 1)) {  // _Py_TPFLAGS_STATIC_BUILTIN
+			// Python >= 3.12
+			auto subclassesRaw = type.Field("tp_subclasses");
+			auto subclasses = utils::readIntegral<SSize>(subclassesRaw);
+			return subclasses - 1;
+		}
+		return -1;
+	}
+
+
+	auto PyTypeObject::hasInlineValues() const -> bool
+	{
+		auto flagsRaw = remoteType().Field("tp_flags");
+		auto flags = utils::readIntegral<unsigned long>(flagsRaw);
+		return flags & (1 << 2);  // Py_TPFLAGS_INLINE_VALUES
+	}
+
+
 	auto PyTypeObject::dictOffset() const -> SSize
 	{
 		auto dictOffset = remoteType().Field("tp_dictoffset");
@@ -135,6 +158,23 @@ namespace PyExt::Remote {
 	auto PyTypeObject::isPython2() const -> bool
 	{
 		return !remoteType().HasField("ob_base");
+	}
+
+
+	auto PyTypeObject::dict() const -> unique_ptr<PyDict>
+	{
+		Offset dictAddr;
+		auto builtinIndex = getStaticBuiltinIndex();
+		if (builtinIndex != -1) {
+			auto builtins = ExtRemoteTyped("_PyRuntime.interpreters.main->types.builtins");  // TODO: Support multiple interpreters
+			if (builtins.HasField("initialized"))  // Python >= 3.13
+				builtins = builtins.Field("initialized");
+			auto builtinState = builtins.ArrayElement(builtinIndex);
+			dictAddr = builtinState.Field("tp_dict").GetPtr();
+		} else {
+			dictAddr = remoteType().Field("tp_dict").GetPtr();
+		}
+		return make_unique<PyDictObject>(dictAddr);
 	}
 
 

@@ -62,14 +62,30 @@ namespace PyExt::Remote {
 	}
 
 
-	auto PyObject::dict() const -> unique_ptr<PyDict>
+	auto PyObject::managedDict() const -> unique_ptr<PyDict>
 	{
-		if (type().isManagedDict()) {
-			// Python >= 3.11, see PyObject_GenericGetDict
-			auto pointerSize = utils::getPointerSize();
-			Offset valuesPtr;
-			optional<ExtRemoteTyped> dictOrValues;
+		// Python >= 3.11, see PyObject_GenericGetDict
+		if (!type().isManagedDict())
+			return { };
 
+		auto pointerSize = utils::getPointerSize();
+
+		Offset dictPtr = 0;
+		utils::ignoreExtensionError([&] {
+			// Python >= 3.13
+			auto managedDictPtr = offset() - 3 * pointerSize;
+			dictPtr = ExtRemoteTyped("PyManagedDictPointer", managedDictPtr, true).Field("dict").GetPtr();
+		});
+		if (dictPtr)
+			return make_unique<PyDictObject>(dictPtr);
+
+		Offset valuesPtr;
+		if (type().hasInlineValues()) {
+			// Python >= 3.13
+			auto dictValues = ExtRemoteTyped("(_dictvalues*)((PyObject*)(@$extin)+1)", offset());
+			valuesPtr = dictValues.Field("values").GetPtr();
+		} else {
+			optional<ExtRemoteTyped> dictOrValues;
 			utils::ignoreExtensionError([&] {
 				// Python 3.12
 				auto dictOrValuesPtr = offset() - 3 * pointerSize;
@@ -92,11 +108,19 @@ namespace PyExt::Remote {
 					return dictPtr ? make_unique<PyDictObject>(dictPtr) : nullptr;
 				}
 			}
-
-			auto ht = ExtRemoteTyped("PyHeapTypeObject", type().offset(), true);
-			auto cachedKeys = ht.Field("ht_cached_keys");
-			return make_unique<PyManagedDict>(cachedKeys.GetPtr(), valuesPtr);
 		}
+
+		auto ht = ExtRemoteTyped("PyHeapTypeObject", type().offset(), true);
+		auto cachedKeys = ht.Field("ht_cached_keys");
+		return make_unique<PyManagedDict>(cachedKeys.GetPtr(), valuesPtr);
+	}
+
+
+	auto PyObject::dict() const -> unique_ptr<PyDict>
+	{
+		auto managedDict_ = managedDict();
+		if (managedDict_ != nullptr)
+			return managedDict_;
 
 		// see https://docs.python.org/3.10/c-api/typeobj.html#c.PyTypeObject.tp_dictoffset
 		auto dictOffset_ = type().dictOffset();

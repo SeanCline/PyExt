@@ -139,10 +139,12 @@ namespace PyExt::Remote {
 		optional<ExtRemoteTyped> valuesArray;
 		if (!isCombined) {
 			valuesArray = remoteType().Field("ma_values");
-
-			// Since Python 3.11 values are stored in `values` of `ma_values`.
-			if (valuesArray->HasField("values"))
+			utils::ignoreExtensionError([&] {
+				// Python >= 3.11
+				// Find full symbol name because there may be a name collision leading to truncated type info.
+				valuesArray = ExtRemoteTyped(utils::getFullSymbolName("_dictvalues").c_str(), valuesArray->GetPtr(), true);
 				valuesArray = valuesArray->Field("values");
+			});				
 		}
 
 		for (SSize i = 0; i < tableSize; ++i) {
