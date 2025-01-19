@@ -108,13 +108,7 @@ namespace PyExt {
 				if (!threadState.has_value())
 					throw runtime_error("Thread does not contain any Python frames.");
 
-				frame = threadState->frame();
-
-				if (frame == nullptr) {
-					auto cframe = threadState->cframe();
-					frame = cframe->current_frame();
-				}
-
+				frame = threadState->currentFrame();
 			} else {
 				// Print info about the user-provided PyFrameObject as a header.
 				auto frameOffset = evalOffset(GetUnnamedArgStr(0));

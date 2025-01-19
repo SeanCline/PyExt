@@ -13,19 +13,6 @@ namespace PyExt::Remote {
 	class PyFrameObject;
 	class PyInterpreterFrame;
 
-	/// Python 3.11 and later
-	/// @see https://github.com/python/cpython/blob/master/Include/pystate.h
-	class PYEXT_PUBLIC PyCFrame : public RemoteType
-	{
-	public:
-		explicit PyCFrame(const RemoteType& remoteType);
-		~PyCFrame();
-
-	public: // Members of the remote type.
-		auto current_frame() const -> std::unique_ptr<PyInterpreterFrame>;
-		auto previous() const -> std::unique_ptr<PyCFrame>;
-	};
-
 	/// Represents a PyInterpreterState instance in the debuggee's address space.
 	/// @see https://github.com/python/cpython/blob/master/Include/pystate.h
 	class PYEXT_PUBLIC PyThreadState : private RemoteType
@@ -36,8 +23,7 @@ namespace PyExt::Remote {
 
 	public: // Members of the remote type.
 		auto next() const -> std::unique_ptr<PyThreadState>;
-		auto frame() const -> std::unique_ptr<PyFrameObject>;
-		auto cframe() const -> std::unique_ptr<PyCFrame>;
+		auto currentFrame() const -> std::unique_ptr<PyFrame>;
 		auto tracing() const -> long;
 		auto thread_id() const -> long;
 
