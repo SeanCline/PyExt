@@ -119,6 +119,8 @@ namespace PyExt::Remote {
 
 	auto PyTypeObject::getStaticBuiltinIndex() const -> SSize
 	{
+		if (isPython2())
+			return -1;
 		auto type = remoteType();
 		auto flagsRaw = type.Field("tp_flags");
 		auto flags = utils::readIntegral<unsigned long>(flagsRaw);
@@ -134,6 +136,8 @@ namespace PyExt::Remote {
 
 	auto PyTypeObject::hasInlineValues() const -> bool
 	{
+		if (isPython2())
+			return false;
 		auto flagsRaw = remoteType().Field("tp_flags");
 		auto flags = utils::readIntegral<unsigned long>(flagsRaw);
 		return flags & (1 << 2);  // Py_TPFLAGS_INLINE_VALUES
