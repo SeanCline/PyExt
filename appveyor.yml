@@ -6,10 +6,10 @@ shallow_clone: true
 
 install:
   - choco install -y windows-sdk-10-version-1903-windbg
-  - choco install -y --params "Include_symbols=1" python310
-  - choco install -y --params "Include_symbols=1" python311
-  - choco install -y --params "Include_symbols=1" python312
-  - choco install -y --params "Include_symbols=1" python313
+  - choco install -y --no-progress --params "Include_symbols=1" python310
+  - choco install -y --no-progress --params "Include_symbols=1" python311
+  - choco install -y --no-progress --params "Include_symbols=1" python312
+  - choco install -y --no-progress --params "Include_symbols=1" python313
 
 platform:
   - Win32
