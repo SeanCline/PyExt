@@ -9,6 +9,7 @@ install:
   - choco install -y --params "Include_symbols=1" python310
   - choco install -y --params "Include_symbols=1" python311
   - choco install -y --params "Include_symbols=1" python312
+  - choco install -y --params "Include_symbols=1" python313
 
 platform:
   - Win32
