@@ -73,8 +73,17 @@ namespace PyExt::Remote {
 
 		auto ownerRaw = previous.Field("owner");
 		auto owner = utils::readIntegral<int8_t>(ownerRaw);
-		if (owner == 3)  // FRAME_OWNED_BY_CSTACK
-			return { };
+		if (owner == 3)  { // FRAME_OWNED_BY_CSTACK
+			// see https://github.com/python/cpython/blob/3bd942f106aa36c261a2d90104c027026b2a8fb6/Python/traceback.c#L979-L982
+			previous = previous.Field("previous");
+			if (previous.GetPtr() == 0)
+				return { };
+
+			ownerRaw = previous.Field("owner");
+			owner = utils::readIntegral<int8_t>(ownerRaw);
+			if (owner == 3)
+				throw runtime_error("Cannot have more than one shim frame in a row.");
+		}
 
 		return make_unique<PyInterpreterFrame>(RemoteType(previous));
 	}
