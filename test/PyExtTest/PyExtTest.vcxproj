@@ -224,6 +224,7 @@ IF NOT EXIST symsrv.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\syms
     <ClInclude Include="catch_amalgamated.hpp" />
     <ClInclude Include="PythonDumpFile.h" />
     <ClInclude Include="TestConfigData.h" />
+    <ClInclude Include="TestHelpers.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

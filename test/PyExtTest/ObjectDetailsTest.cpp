@@ -2,9 +2,9 @@
 
 #include "PythonDumpFile.h"
 #include "TestConfigData.h"
+#include "TestHelpers.h"
 
 #include <globals.h>
-#include <PyStringValue.h>
 #include <PyFrameObject.h>
 #include <PyCodeObject.h>
 #include <PyTypeObject.h>
@@ -14,25 +14,8 @@ using namespace PyExt::Remote;
 #include <utils/ScopeExit.h>
 #include <vector>
 #include <string>
-#include <algorithm>
-#include <iterator>
 #include <regex>
 using namespace std;
-
-namespace {
-	/// Finds a value in the given dict for a given key.
-	template <typename RangeT>
-	auto findValueByKey(RangeT& pairRange, const string& key) -> PyObject& {
-		auto it = find_if(begin(pairRange), end(pairRange), [&](const auto& keyValuePair) {
-			const auto* keyObj = dynamic_cast<PyStringValue*>(keyValuePair.first.get());
-			return keyObj != nullptr && keyObj->stringValue() == key;
-		});
-
-		if (it == end(pairRange))
-			throw runtime_error("Value not found for key=" + key);
-		return *it->second;
-	}
-}
 
 
 TEST_CASE("object_details.py has a stack frame with expected locals.", "[integration][object_details]")
@@ -74,7 +57,7 @@ TEST_CASE("object_details.py has a stack frame with expected locals.", "[integra
 
 		SECTION("Details of " + name + " object")
 		{	
-			auto& obj = findValueByKey(localPairs, name);
+			auto& obj = TestHelpers::findValueByKey(localPairs, name);
 			REQUIRE(obj.type().name() == expectedType);
 			std::regex expectedRegex(expectedDetails);
 			REQUIRE(regex_match(obj.details(), expectedRegex));

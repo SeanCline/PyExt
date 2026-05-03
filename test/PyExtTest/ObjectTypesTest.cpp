@@ -2,6 +2,7 @@
 
 #include "PythonDumpFile.h"
 #include "TestConfigData.h"
+#include "TestHelpers.h"
 
 #include <globals.h>
 #include <PyStringValue.h>
@@ -23,25 +24,8 @@ using namespace PyExt::Remote;
 #include <vector>
 #include <string>
 #include <complex>
-#include <algorithm>
-#include <iterator>
 #include <regex>
 using namespace std;
-
-namespace {
-	/// Finds a value in the given dict for a given key.
-	template <typename RangeT>
-	auto findValueByKey(RangeT& pairRange, const string& key) -> PyObject& {
-		auto it = find_if(begin(pairRange), end(pairRange), [&](const auto& keyValuePair) {
-			const auto* keyObj = dynamic_cast<PyStringValue*>(keyValuePair.first.get());
-			return keyObj != nullptr && keyObj->stringValue() == key;
-		});
-
-		if (it == end(pairRange))
-			throw runtime_error("Value not found for key=" + key);
-		return *it->second;
-	}
-}
 
 
 TEST_CASE("object_types.py has a stack frame with expected locals.", "[integration][object_types]")
@@ -67,7 +51,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 	{
 		const string expectedValue = "TestString123";
 
-		auto& string_obj = findValueByKey(localPairs, "string_obj");
+		auto& string_obj = TestHelpers::findValueByKey(localPairs, "string_obj");
 		REQUIRE(string_obj.type().name() == "str");
 		REQUIRE(string_obj.repr().find(expectedValue) != string::npos);
 		REQUIRE(string_obj.details() == "");
@@ -83,7 +67,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 		for (int i = 0; i < 100; ++i)
 			expectedValue += "TestString123";
 
-		auto& big_string_obj = findValueByKey(localPairs, "big_string_obj");
+		auto& big_string_obj = TestHelpers::findValueByKey(localPairs, "big_string_obj");
 		REQUIRE(big_string_obj.type().name() == "str");
 		REQUIRE(big_string_obj.repr().find(expectedValue) != string::npos);
 		REQUIRE(big_string_obj.details() == "");
@@ -97,7 +81,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 	{
 		const string expectedValue = "TestBytes123";
 
-		auto& bytes_obj = findValueByKey(localPairs, "bytes_obj");
+		auto& bytes_obj = TestHelpers::findValueByKey(localPairs, "bytes_obj");
 		auto typeName = bytes_obj.type().name();
 		REQUIRE((typeName == "str" || typeName == "bytes"));
 		REQUIRE(bytes_obj.repr().find(expectedValue) != string::npos);
@@ -112,7 +96,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 	{
 		const string expectedValue = "TestBytearray123";
 
-		auto& byte_array_object = findValueByKey(localPairs, "byte_array_object");
+		auto& byte_array_object = TestHelpers::findValueByKey(localPairs, "byte_array_object");
 		REQUIRE(byte_array_object.type().name() == "bytearray");
 		REQUIRE(byte_array_object.repr() == "bytearray(b'"+ expectedValue + "')");
 		REQUIRE(byte_array_object.details() == "");
@@ -126,7 +110,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 	{
 		const int expectedValue = 1;
 
-		auto& int_obj = findValueByKey(localPairs, "int_obj");
+		auto& int_obj = TestHelpers::findValueByKey(localPairs, "int_obj");
 		REQUIRE(int_obj.type().name() == "int");
 		REQUIRE(int_obj.repr() == to_string(expectedValue));
 		REQUIRE(int_obj.details() == "");
@@ -142,7 +126,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 	{
 		const string expectedValue = "123456789012345678901234567890123456789012345678901234567890";
 
-		auto& long_obj = dynamic_cast<PyLongObject&>(findValueByKey(localPairs, "long_obj"));
+		auto& long_obj = dynamic_cast<PyLongObject&>(TestHelpers::findValueByKey(localPairs, "long_obj"));
 		const auto typeName = long_obj.type().name();
 		REQUIRE((typeName == "int" || typeName == "long"));
 		REQUIRE(long_obj.repr() == expectedValue);
@@ -154,7 +138,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 	{
 		const string expectedValue = "0,-123456,123456,987654321987654321987654321,-987654321987654321987654321";
 
-		auto& tuple_obj = dynamic_cast<PyTupleObject&>(findValueByKey(localPairs, "all_long_obj"));
+		auto& tuple_obj = dynamic_cast<PyTupleObject&>(TestHelpers::findValueByKey(localPairs, "all_long_obj"));
 		auto value = tuple_obj.repr(false);
 		std::regex chars_to_remove("[\\s()]+");
 		value = std::regex_replace(value, chars_to_remove, "");
@@ -166,7 +150,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 	{
 		const double expectedValue = 3.1415;
 
-		auto& float_obj = dynamic_cast<PyFloatObject&>(findValueByKey(localPairs, "float_obj"));
+		auto& float_obj = dynamic_cast<PyFloatObject&>(TestHelpers::findValueByKey(localPairs, "float_obj"));
 		REQUIRE(float_obj.type().name() == "float");
 		REQUIRE(float_obj.repr().find(to_string(expectedValue)) == 0);
 		REQUIRE(float_obj.details() == "");
@@ -180,7 +164,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 	{
 		const complex<double> expectedValue{1.5, -2.25};
 
-		auto& complex_obj = dynamic_cast<PyComplexObject&>(findValueByKey(localPairs, "complex_obj"));
+		auto& complex_obj = dynamic_cast<PyComplexObject&>(TestHelpers::findValueByKey(localPairs, "complex_obj"));
 		REQUIRE(complex_obj.type().name() == "complex");
 
 		// Comparing floats can be error prone. If this fails, it might need some wiggle room in the compare.
@@ -197,7 +181,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 
 	SECTION("Value of bool_true_obj.")
 	{
-		auto& bool_true_obj = findValueByKey(localPairs, "bool_true_obj");
+		auto& bool_true_obj = TestHelpers::findValueByKey(localPairs, "bool_true_obj");
 		REQUIRE(bool_true_obj.type().name() == "bool");
 
 
@@ -209,7 +193,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 
 	SECTION("Value of bool_false_obj.")
 	{
-		auto& bool_false_obj = findValueByKey(localPairs, "bool_false_obj");
+		auto& bool_false_obj = TestHelpers::findValueByKey(localPairs, "bool_false_obj");
 		REQUIRE(bool_false_obj.type().name() == "bool");
 
 		const auto actualValue = bool_false_obj.repr();
@@ -220,7 +204,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 
 	SECTION("Value of none_obj.")
 	{
-		auto& none_obj = findValueByKey(localPairs, "none_obj");
+		auto& none_obj = TestHelpers::findValueByKey(localPairs, "none_obj");
 		REQUIRE(none_obj.type().name() == "NoneType");
 		REQUIRE(none_obj.repr() == "None");
 		REQUIRE(none_obj.details() == "");
@@ -229,7 +213,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 
 	SECTION("Value of type_obj.")
 	{
-		auto& type_obj = dynamic_cast<PyTypeObject&>(findValueByKey(localPairs, "type_obj"));
+		auto& type_obj = dynamic_cast<PyTypeObject&>(TestHelpers::findValueByKey(localPairs, "type_obj"));
 		REQUIRE(type_obj.type().name() == "type");
 		REQUIRE(type_obj.name() == "dict");
 		REQUIRE(type_obj.repr(false) == "<class 'dict'>");
@@ -243,7 +227,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 
 	SECTION("Value of not_implemented_obj.")
 	{
-		auto& not_implemented_obj = findValueByKey(localPairs, "not_implemented_obj");
+		auto& not_implemented_obj = TestHelpers::findValueByKey(localPairs, "not_implemented_obj");
 		REQUIRE(not_implemented_obj.type().name() == "NotImplementedType");
 		REQUIRE(not_implemented_obj.repr() == "NotImplemented");
 		REQUIRE(not_implemented_obj.details() == "");
@@ -252,7 +236,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 
 	SECTION("Value of func_obj.")
 	{
-		auto& func_obj = dynamic_cast<PyFunctionObject&>(findValueByKey(localPairs, "func_obj"));
+		auto& func_obj = dynamic_cast<PyFunctionObject&>(TestHelpers::findValueByKey(localPairs, "func_obj"));
 		REQUIRE(func_obj.type().name() == "function");
 		REQUIRE(func_obj.repr(false) == "<function test_function>");
 		// Expected to be similar to: "<link cmd="!pyobj 0n140729205561440">&lt;function test_function&gt;</link>"
@@ -271,7 +255,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 
 	SECTION("Value of list_obj.")
 	{
-		auto& list_obj = dynamic_cast<PyListObject&>(findValueByKey(localPairs, "list_obj"));
+		auto& list_obj = dynamic_cast<PyListObject&>(TestHelpers::findValueByKey(localPairs, "list_obj"));
 		REQUIRE(list_obj.type().name() == "list");
 		REQUIRE(list_obj.numItems() == 3);
 
@@ -292,7 +276,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 
 	SECTION("Value of tuple_obj.")
 	{
-		auto& tuple_obj = dynamic_cast<PyTupleObject&>(findValueByKey(localPairs, "tuple_obj"));
+		auto& tuple_obj = dynamic_cast<PyTupleObject&>(TestHelpers::findValueByKey(localPairs, "tuple_obj"));
 		REQUIRE(tuple_obj.type().name() == "tuple");
 		REQUIRE(tuple_obj.numItems() == 3);
 
@@ -313,7 +297,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 
 	SECTION("Value of set_obj.")
 	{
-		auto& set_obj = dynamic_cast<PySetObject&>(findValueByKey(localPairs, "set_obj"));
+		auto& set_obj = dynamic_cast<PySetObject&>(TestHelpers::findValueByKey(localPairs, "set_obj"));
 		REQUIRE(set_obj.type().name() == "set");
 		REQUIRE(set_obj.numItems() == 3);
 		REQUIRE(set_obj.listValue().size() == 3);
@@ -328,7 +312,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 
 	SECTION("Value of dict_obj.")
 	{
-		auto& dict_obj = dynamic_cast<PyDictObject&>(findValueByKey(localPairs, "dict_obj"));
+		auto& dict_obj = dynamic_cast<PyDictObject&>(TestHelpers::findValueByKey(localPairs, "dict_obj"));
 		REQUIRE(dict_obj.type().name() == "dict");
 
 		// Individual elements.
