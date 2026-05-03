@@ -4,6 +4,7 @@
 #include <type_traits>
 #include <vector>
 #include <string>
+#include <string_view>
 #include <limits>
 using namespace std::literals::string_literals;
 
@@ -68,8 +69,8 @@ namespace utils {
 
 
 	auto getPointerSize() -> int;
-	auto escapeDml(const std::string& str) -> std::string;
-	auto link(const std::string& text, const std::string& cmd, const std::string& alt = ""s) -> std::string;
-	auto getFullSymbolName(const std::string& symbolName) -> std::string;
+	auto escapeDml(std::string_view str) -> std::string;
+	auto link(std::string_view text, std::string_view cmd, std::string_view alt = {}) -> std::string;
+	auto getFullSymbolName(std::string_view symbolName) -> std::string;
 
 }

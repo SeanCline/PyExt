@@ -1,6 +1,7 @@
 #include "ExtHelpers.h"
 
 #include <string>
+#include <string_view>
 #include <sstream>
 using namespace std;
 
@@ -15,7 +16,7 @@ namespace utils {
 	}
 
 
-	auto escapeDml(const string& str) -> string
+	auto escapeDml(string_view str) -> string
 	{
 		std::string buffer;
 		buffer.reserve(str.size());
@@ -33,7 +34,7 @@ namespace utils {
 	}
 
 
-	auto link(const string& text, const string& cmd, const string& alt) -> string
+	auto link(string_view text, string_view cmd, string_view alt) -> string
 	{
 		ostringstream oss;
 		oss << "<link cmd=\"" << escapeDml(cmd) << "\"";
@@ -44,11 +45,14 @@ namespace utils {
 	}
 
 
-	auto getFullSymbolName(const string& symbolName) -> string
+	auto getFullSymbolName(string_view symbolName) -> string
 	{
 		ExtBuffer<char> buffer;
 		g_Ext->FindFirstModule("python???", &buffer, 0);
-		return buffer.GetBuffer() + "!"s + symbolName;
+		string result(buffer.GetBuffer());
+		result += '!';
+		result += symbolName;
+		return result;
 	}
 
 }
