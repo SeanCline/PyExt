@@ -1,4 +1,4 @@
-#include "Catch.hpp"
+#include "catch_amalgamated.hpp"
 
 #include "PythonDumpFile.h"
 #include "TestConfigData.h"

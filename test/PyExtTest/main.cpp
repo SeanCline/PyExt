@@ -1,5 +1,4 @@
-#define CATCH_CONFIG_RUNNER
-#include "catch.hpp"
+#include "catch_amalgamated.hpp"
 
 #include "TestConfigData.h"
 
@@ -8,7 +7,7 @@
 #pragma warning( disable : 4838 )
 #pragma warning( disable : 5040 )
 #include <engextcpp.hpp>
-#pragma warning( pop ) 
+#pragma warning( pop )
 
 // Provide a pretty-printer for the ExtException used by EngExtCpp.
 CATCH_TRANSLATE_EXCEPTION(ExtException& ex)
@@ -18,44 +17,38 @@ CATCH_TRANSLATE_EXCEPTION(ExtException& ex)
 
 
 // Provide our own main as explained here:
-// https://github.com/catchorg/Catch2/blob/master/docs/own-main.md
-// This lets us parse a couple extra command line arguments.
+// https://github.com/catchorg/Catch2/blob/devel/docs/own-main.md
+// This lets us parse a couple extra command line arguments before forwarding to Catch.
 int main(int argc, char* argv[])
 {
 	auto& configData = TestConfigData::instance();
 
-	// Add our own command line argments.
-	using namespace Catch::clara;
+	// Consume our custom args and collect the rest for Catch.
+	std::vector<const char*> catchArgs;
+	catchArgs.push_back(argv[0]);
+
+	for (int i = 1; i < argc; ) {
+		std::string_view arg(argv[i]);
+		if (arg == "--object-types-dump-file" && i + 1 < argc) {
+			configData.objectTypesDumpFileName = argv[i + 1];
+			i += 2;
+		} else if (arg == "--fibonacci-dump-file" && i + 1 < argc) {
+			configData.fibonacciDumpFileName = argv[i + 1];
+			i += 2;
+		} else if (arg == "--object-details-dump-file" && i + 1 < argc) {
+			configData.objectDetailsDumpFileName = argv[i + 1];
+			i += 2;
+		} else if (arg == "--localsplus-dump-file" && i + 1 < argc) {
+			configData.localsplusDumpFileName = argv[i + 1];
+			i += 2;
+		} else if (arg == "--symbol-path" && i + 1 < argc) {
+			configData.symbolPath = argv[i + 1];
+			i += 2;
+		} else {
+			catchArgs.push_back(argv[i++]);
+		}
+	}
+
 	Catch::Session session;
-	auto cli = session.cli();
-
-	cli |= Opt(configData.objectTypesDumpFileName, "objectTypesDumpFileName")
-		["--object-types-dump-file"]
-		("The dump file to run tests object - types test against.");
-
-	cli |= Opt(configData.fibonacciDumpFileName, "fibonaciiDumpFileName")
-		["--fibonacci-dump-file"]
-		("The dump file to run tests fibonacci tests against.");
-
-	cli |= Opt(configData.objectDetailsDumpFileName, "objectDetailsDumpFileName")
-			["--object-details-dump-file"]
-		("The dump file to run tests object - details test against.");
-
-	cli |= Opt(configData.localsplusDumpFileName, "localsplusDumpFileName")
-			["--localsplus-dump-file"]
-		("The dump file to run tests localsplus tests against.");
-
-	cli |= Opt(configData.symbolPath, "symbolPath")
-		["--symbol-path"]
-		("Location to look for Python symbols. (PDB files)");
-
-	// Send our command line changes back into Catch.
-	session.cli(cli);
-
-	int returnCode = session.applyCommandLine(argc, argv);
-	if (returnCode != 0) // Indicates a command line error
-		return returnCode;
-
-	// Run the tests!
-	return session.run();
+	return session.run(static_cast<int>(catchArgs.size()), catchArgs.data());
 }
