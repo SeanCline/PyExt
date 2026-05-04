@@ -39,7 +39,7 @@ Example usage:
         File ".\fibonacci_test.py", line 18, in recursive_fib
         File ".\fibonacci_test.py", line 28, in <module>
 
-Use `~*e!pystack` to display the Python stack for all threads.
+Use `!pystack -all` or `~*e!pystack` to display the Python stack for all threads.
 
 !pyobj
 ------

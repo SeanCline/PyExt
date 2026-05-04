@@ -30,10 +30,16 @@ struct TestConfigData {
 		return localsplusDumpFileName.empty() ? "localsplus_test.dmp" : localsplusDumpFileName;
 	}
 
+	std::string pystackAllDumpFileName;
+	auto pystackAllDumpFileNameOrDefault() const -> std::string
+	{
+		return pystackAllDumpFileName.empty() ? "pystack_all_test.dmp" : pystackAllDumpFileName;
+	}
+
 	std::string symbolPath;
 	auto symbolPathOrDefault() const -> std::string
 	{
 		return symbolPath.empty() ? "srv*c:\\symbols\\*http://pythonsymbols.sdcline.com/symbols/" : symbolPath;
 	}
-		
+
 };

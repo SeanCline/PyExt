@@ -90,15 +90,51 @@ namespace {
 
 namespace PyExt {
 
-	EXT_COMMAND(pystack, "Prints the Python stack for the current thread, or starting at a provided PyFrameObject", "{;s,o;PyFrameObject address}")
+	EXT_COMMAND(pystack,
+		"Prints the Python stack for the current thread, or starting at a provided PyFrameObject."
+		" Use -all to enumerate all Python threads.",
+		"{all;b;;Print the Python stack for all Python threads.}"
+		"{;s,o;PyFrameObject address}")
 	{
 		ensureSymbolsLoaded();
 
-		try {
-			unique_ptr<PyFrame> frame;
+		// Prints the frame chain starting at `topFrame`, consuming the unique_ptr.
+		auto printStack = [this](unique_ptr<PyFrame> frame) {
+			for (; frame != nullptr; frame = frame->previous()) {
+				Dml("\t%s\n", frameToString(*frame).c_str());
+				Dml("\t\t%s\n", frameToCommandString(*frame).c_str());
+			}
+		};
 
-			// Either start at the user-provided PyFrameObject, or find the top frame of the current thread, if one exists.
-			if (m_NumUnnamedArgs < 1) {
+		try {
+			if (HasArg("all")) {
+				for (auto&& istate : PyInterpreterState::allInterpreterStates()) {
+					for (auto&& tstate : istate.allThreadStates()) {
+						Out("Python Thread 0n%s:\n", to_string(tstate.thread_id()).c_str());
+						try {
+							auto frame = tstate.currentFrame();
+							if (frame == nullptr)
+								Out("\t<no Python frames>\n");
+							else
+								printStack(move(frame));
+						} catch (exception& ex) {
+							Warn("\t%s\n", ex.what());
+						}
+						Out("\n");
+					}
+				}
+			}
+
+			if (m_NumUnnamedArgs >= 1) {
+				// Print info about the user-provided PyFrameObject as a header.
+				auto frameOffset = evalOffset(GetUnnamedArgStr(0));
+				Out("Stack trace starting at (PyFrameObject*)(%y):\n", frameOffset);
+
+				auto frame = make_unique<PyFrameObject>(frameOffset);
+				if (frame == nullptr)
+					throw runtime_error("Could not find PyFrameObject or PyInterpreterFrame.");
+				printStack(move(frame));
+			} else if (!HasArg("all")) {
 				// Print the thread header.
 				auto threadHeader = "Thread " + to_string(getCurrentThreadId(m_System)) + ":";
 				Out("%s\n", threadHeader.c_str());
@@ -108,25 +144,10 @@ namespace PyExt {
 				if (!threadState.has_value())
 					throw runtime_error("Thread does not contain any Python frames.");
 
-				frame = threadState->currentFrame();
-			} else {
-				// Print info about the user-provided PyFrameObject as a header.
-				auto frameOffset = evalOffset(GetUnnamedArgStr(0));
-				Out("Stack trace starting at (PyFrameObject*)(%y):\n", frameOffset);
-
-				frame = make_unique<PyFrameObject>(frameOffset);
-			}
-
-			if (frame == nullptr)
-				throw runtime_error("Could not find PyFrameObject or PyInterpreterFrame.");
-
-			// Print each frame.
-			for (; frame != nullptr; frame = frame->previous()) {
-				auto frameStr = frameToString(*frame);
-				Dml("\t%s\n", frameStr.c_str());
-
-				auto frameCommandStr = frameToCommandString(*frame);
-				Dml("\t\t%s\n", frameCommandStr.c_str());
+				auto frame = threadState->currentFrame();
+				if (frame == nullptr)
+					throw runtime_error("Could not find PyFrameObject or PyInterpreterFrame.");
+				printStack(move(frame));
 			}
 		} catch (exception& ex) {
 			Warn("\t%s\n", ex.what());

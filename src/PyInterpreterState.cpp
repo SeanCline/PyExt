@@ -8,8 +8,8 @@
 #include <engextcpp.hpp>
 
 #include <cstdint>
+#include <generator>
 #include <memory>
-#include <vector>
 #include <optional>
 using namespace std;
 
@@ -62,13 +62,11 @@ namespace PyExt::Remote {
 	}
 
 
-	auto PyInterpreterState::allInterpreterStates() -> std::vector<PyInterpreterState>
+	auto PyInterpreterState::allInterpreterStates() -> std::generator<PyInterpreterState>
 	{
-		vector<PyInterpreterState> states;
 		for (auto state = makeAutoInterpreterState(); state != nullptr; state = state->next()) {
-			states.push_back(*state);
+			co_yield *state;
 		}
-		return states;
 	}
 
 
@@ -115,13 +113,11 @@ namespace PyExt::Remote {
 	}
 
 
-	auto PyInterpreterState::allThreadStates() const -> std::vector<PyThreadState>
+	auto PyInterpreterState::allThreadStates() const -> std::generator<PyThreadState>
 	{
-		vector<PyThreadState> states;
 		for (auto state = tstate_head(); state != nullptr; state = state->next()) {
-			states.push_back(*state);
+			co_yield *state;
 		}
-		return states;
 	}
 
 }

@@ -11,6 +11,7 @@ using namespace PyExt::Remote;
 using Microsoft::WRL::ComPtr;
 
 #include <cstdlib>
+#include <optional>
 #include <stdexcept>
 #include <string>
 using namespace std;
@@ -39,11 +40,18 @@ PythonDumpFile::~PythonDumpFile()
 auto PythonDumpFile::getMainThreadFrames() const -> std::vector<std::shared_ptr<PyExt::Remote::PyFrame>>
 {
 	auto interpState = PyInterpreterState::makeAutoInterpreterState();
-	auto threads = interpState->allThreadStates();
-	if (threads.empty())
+
+	// CPython prepends new threads to the head of the tstate linked list, so
+	// the main thread (created first) is always the last one we iterate to.
+	std::optional<PyThreadState> lastThread;
+	for (auto&& tstate : interpState->allThreadStates()) {
+		lastThread = tstate;
+	}
+
+	if (!lastThread.has_value())
 		throw std::runtime_error("No threads in process.");
 
-	return threads.back().allFrames();
+	return lastThread->allFrames();
 }
 
 

@@ -95,7 +95,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <DiagnosticsFormat>Caret</DiagnosticsFormat>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <PreprocessorDefinitions>NOMINMAX</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -206,6 +206,7 @@ IF NOT EXIST symsrv.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\syms
       <PreprocessorDefinitions>CATCH_AMALGAMATED_CUSTOM_MAIN;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="FibonacciTest.cpp" />
+    <ClCompile Include="PystackAllTest.cpp" />
     <ClCompile Include="LocalsplusTest.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ObjectDetailsTest.cpp" />

@@ -4,8 +4,8 @@
 #include "pyextpublic.h"
 
 #include <cstdint>
+#include <generator>
 #include <memory>
-#include <vector>
 #include <optional>
 
 class ExtRemoteTyped;
@@ -27,7 +27,7 @@ namespace PyExt::Remote {
 		static auto makeAutoInterpreterState() -> std::unique_ptr<PyInterpreterState>;
 
 		/// Returns a range of all interpreter states in the process, starting with the autoInterpreterState.
-		static auto allInterpreterStates() -> std::vector<PyInterpreterState>; //< TODO: Return generator<PyInterpreterState>
+		static auto allInterpreterStates() -> std::generator<PyInterpreterState>;
 
 		/// Returns the PyThreadState associated with a thread id or None if no such thread exists.
 		static auto findThreadStateBySystemThreadId(std::uint64_t systemThreadId) -> std::optional<PyThreadState>;
@@ -42,7 +42,7 @@ namespace PyExt::Remote {
 
 	public: // Utility functions around the members.
 		/// Returns a range of all the threads in this interpreter.
-		auto allThreadStates() const -> std::vector<PyThreadState>; //< TODO: Return generator<PyThreadState>
+		auto allThreadStates() const -> std::generator<PyThreadState>;
 
 	private:
 #pragma warning (push)
