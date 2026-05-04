@@ -29,7 +29,7 @@ namespace PyExt::Remote {
 	auto PyTupleObject::at(SSize index) const -> unique_ptr<PyObject>
 	{
 		if (index < 0 || index >= numItems())
-			throw out_of_range("PyListObject::at index out of range.");
+			throw out_of_range("PyTupleObject::at index out of range.");
 
 		auto obj = remoteType();
 		auto itemPtr = obj.Field("ob_item").ArrayElement(index).GetPtr();

@@ -31,6 +31,7 @@ namespace utils {
 		{
 			f_ = std::move(other.f_);
 			other.reset();
+			return *this;
 		}
 
 		void set(Invokable&& f)

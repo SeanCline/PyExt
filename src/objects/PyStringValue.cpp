@@ -8,9 +8,10 @@ namespace {
 	constexpr auto hexAlphabet = "0123456789ABCDEF";
 
 	auto charToHex(char c) -> string {
+		auto uc = static_cast<unsigned char>(c);
 		string s(2, '\0');
-		s[0] = hexAlphabet[(c & 0x0F)];
-		s[1] = hexAlphabet[(c >> 4) & 0x0F];
+		s[0] = hexAlphabet[uc & 0x0F];
+		s[1] = hexAlphabet[(uc >> 4) & 0x0F];
 		return s;
 	}
 

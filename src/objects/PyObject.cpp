@@ -54,7 +54,7 @@ namespace PyExt::Remote {
 					auto objPtr = ExtRemoteTyped("(PyObject**)@$extin", offset() + memberDef->offset());
 					auto addr = objPtr.Dereference().GetPtr();
 					auto value = addr ? make(objPtr.Dereference().GetPtr()) : nullptr;
-					slots.push_back(make_pair(memberDef->name(), move(value)));
+					slots.emplace_back(memberDef->name(), move(value));
 				}
 			}
 		}
@@ -182,9 +182,7 @@ namespace PyExt::Remote {
 			else
 				empty = false;
 			oss << "slots: {" << elementSeparator;
-			for (auto const& pairValue : slots()) {
-				auto const& name = pairValue.first;
-				auto const& value = pairValue.second;
+			for (auto const& [name, value] : slots()) {
 				if (value != nullptr)
 					oss << indentation << name << ": " << value->repr(true) << ',' << elementSeparator;
 			}

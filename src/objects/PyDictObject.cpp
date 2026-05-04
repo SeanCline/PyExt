@@ -77,9 +77,7 @@ namespace PyExt::Remote {
 		ostringstream oss;
 		oss << '{' << elementSeparator;
 
-		for (auto& pairValue : pairValues()) { //< TODO: Structured bindings. for (auto&& [key, value] : pairValues) {
-			auto& key = pairValue.first;
-			auto& value = pairValue.second;
+		for (auto& [key, value] : pairValues()) {
 			oss << indentation << key->repr(pretty) << ": " << value->repr(pretty) << ',' << elementSeparator;
 		}
 
@@ -115,7 +113,7 @@ namespace PyExt::Remote {
 
 			auto key = PyObject::make(keyPtr);
 			auto value = PyObject::make(valuePtr);
-			pairs.push_back(make_pair(move(key), move(value)));
+			pairs.emplace_back(move(key), move(value));
 		}
 
 		return pairs;
@@ -163,7 +161,7 @@ namespace PyExt::Remote {
 
 			auto key = PyObject::make(keyPtr);
 			auto value = PyObject::make(valuePtr);
-			pairs.push_back(make_pair(move(key), move(value)));
+			pairs.emplace_back(move(key), move(value));
 		}
 
 		return pairs;

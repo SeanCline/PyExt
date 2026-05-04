@@ -37,7 +37,7 @@ namespace {
 			obj = obj.Field("_base");
 		}
 
-		return obj.HasField("fieldName.c_str()");
+		return obj.HasField(fieldName.c_str());
 	}
 }
 
@@ -140,57 +140,55 @@ namespace PyExt::Remote {
 		if (length == 0)
 			return { };
 
+		// Python <=3.11 had a wstr member that could point directly to the string data.
 		if (hasField(remoteType(), "wstr")) {
-			// Python <=3.11 had a wstr member in _base that could point directly to the string data.
 			auto wstrField = getField(remoteType(), "wstr");
 			if (wstrField.GetPtr() != 0) {
 				auto buffer = utils::readArray<wchar_t>(wstrField, length);
-
 				if (isAscii()) {
 					return { begin(buffer), end(buffer) };
-				}
-				else {
+				} else {
 					return wstring_to_string({ begin(buffer), end(buffer) });
 				}
 			}
-		} else {
-			Offset dataPtr = 0;
-			if (isCompact()) {
-				dataPtr = offset() + remoteType().Dereference().GetTypeSize();
-			} else {
-				dataPtr = remoteType().Field("data").Field("any").GetPtr();
-			}
+			// wstr == NULL: fall through to the compact-data path below.
+		}
 
-			switch (kind()) {
-			case Kind::Wchar:
-			{
-				ExtRemoteTyped data("wchar_t", dataPtr, true);
-				auto buffer = utils::readArray<wchar_t>(data, length);
-				return { begin(buffer), end(buffer) };
-			} break;
-			case Kind::OneByte:
-			{
-				ExtRemoteTyped data("Py_UCS1", dataPtr, true);
-				auto buffer = utils::readArray<char>(data, length);
-				return utf8_to_string({ begin(buffer), end(buffer) });
-			} break;
-			case Kind::TwoByte:
-			{
-				ExtRemoteTyped data("Py_UCS2", dataPtr, true);
-				auto buffer = utils::readArray<char16_t>(data, length);
-				return utf16_to_string({ begin(buffer), end(buffer) });
-			} break;
-			case Kind::FourByte:
-			{
-				ExtRemoteTyped data("Py_UCS4", dataPtr, true);
-				auto buffer = utils::readArray<char32_t>(data, length);
-				return utf16_to_string({ begin(buffer), end(buffer) });
-			} break;
-			default:
-			{
-				throw runtime_error("Unexpected `kind` when decoding string value.");
-			} break;
-			}
+		// Python 3.12+, or Python <=3.11 with wstr == NULL: read from the inline data pointer.
+		Offset dataPtr = 0;
+		if (isCompact()) {
+			dataPtr = offset() + remoteType().Dereference().GetTypeSize();
+		} else {
+			dataPtr = remoteType().Field("data").Field("any").GetPtr();
+		}
+
+		switch (kind()) {
+		case Kind::Wchar:
+		{
+			ExtRemoteTyped data("wchar_t", dataPtr, true);
+			auto buffer = utils::readArray<wchar_t>(data, length);
+			return { begin(buffer), end(buffer) };
+		}
+		case Kind::OneByte:
+		{
+			ExtRemoteTyped data("Py_UCS1", dataPtr, true);
+			auto buffer = utils::readArray<char>(data, length);
+			return utf8_to_string({ begin(buffer), end(buffer) });
+		}
+		case Kind::TwoByte:
+		{
+			ExtRemoteTyped data("Py_UCS2", dataPtr, true);
+			auto buffer = utils::readArray<char16_t>(data, length);
+			return utf16_to_string({ begin(buffer), end(buffer) });
+		}
+		case Kind::FourByte:
+		{
+			ExtRemoteTyped data("Py_UCS4", dataPtr, true);
+			auto buffer = utils::readArray<char32_t>(data, length);
+			return utf32_to_string({ begin(buffer), end(buffer) });
+		}
+		default:
+			throw runtime_error("Unexpected `kind` when decoding string value.");
 		}
 	}
 
