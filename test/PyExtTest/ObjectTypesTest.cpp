@@ -38,7 +38,9 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 
 	auto frames = dump.getMainThreadFrames();
 	auto bottomFrame = frames.back();
-	REQUIRE(bottomFrame->code()->name() == "<module>");
+	auto bottomCode = bottomFrame->code();
+	REQUIRE(bottomCode != nullptr);
+	REQUIRE(bottomCode->name() == "<module>");
 
 	auto locals = bottomFrame->locals();
 	REQUIRE(locals != nullptr);

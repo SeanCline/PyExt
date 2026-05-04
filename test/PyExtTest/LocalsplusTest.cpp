@@ -75,8 +75,10 @@ TEST_CASE("localsplus_test.py has the expected frames with localsplus.", "[integ
 		SECTION("Localsplus for frame in method " + name + "().")
 		{
 			auto frame = std::find_if(begin(frames), end(frames), [&name](auto frame) {
-				return frame->code()->name() == name;
+				auto c = frame->code();
+				return c != nullptr && c->name() == name;
 				});
+			REQUIRE(frame != frames.end());
 
 			std::regex expectedRegex(details);
 			REQUIRE(regex_match((*frame)->details(), expectedRegex));

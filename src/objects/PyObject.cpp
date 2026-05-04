@@ -70,6 +70,9 @@ namespace PyExt::Remote {
 
 		auto pointerSize = utils::getPointerSize();
 
+		// Py_TPFLAGS_MANAGED_DICT implies Py_TPFLAGS_PREHEADER, so the allocator
+		// always provisions the pre-header region (including the dict pointer at
+		// -3*pointerSize) for any type that passes the isManagedDict() guard above.
 		Offset dictPtr = 0;
 		utils::ignoreExtensionError([&] {
 			// Python >= 3.13
@@ -81,8 +84,12 @@ namespace PyExt::Remote {
 
 		Offset valuesPtr;
 		if (type().hasInlineValues()) {
-			// Python >= 3.13
-			auto dictValues = ExtRemoteTyped("(_dictvalues*)((PyObject*)(@$extin)+1)", offset());
+			// Python >= 3.13: inline values live at offset + tp_basicsize, immediately
+			// after any __slots__ storage. Adjust the @$extin base so the expression
+			// "((PyObject*)(@$extin)+1)" evaluates to offset() + basicSize.
+			auto basicSize = static_cast<Offset>(type().basicSize());
+			auto adjustedBase = offset() + basicSize - static_cast<Offset>(2 * pointerSize);
+			auto dictValues = ExtRemoteTyped("(_dictvalues*)((PyObject*)(@$extin)+1)", adjustedBase);
 			valuesPtr = dictValues.Field("values").GetPtr();
 		} else {
 			optional<ExtRemoteTyped> dictOrValues;

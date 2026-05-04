@@ -5,6 +5,7 @@
 #include "PyCodeObject.h"
 #include "PyDictObject.h"
 #include "PyFrameObject.h"
+#include "PyFunctionObject.h"
 
 #include "fieldAsPyObject.h"
 #include "ExtHelpers.h"
@@ -43,7 +44,10 @@ namespace PyExt::Remote {
 		auto pyObjAddrs = readOffsetArray(f_localsplus, numLocalsplus);
 		vector<pair<string, unique_ptr<PyObject>>> localsplus(numLocalsplus);
 		for (size_t i = 0; i < numLocalsplus; ++i) {
-			auto addr = pyObjAddrs.at(i);
+			// Mask the _PyStackRef ownership tag bit (bit 0). Python objects are
+			// pointer-aligned so bit 0 is always 0 in a valid address; if it is
+			// set the reference is a deferred/immortal ref in Python 3.14+.
+			auto addr = pyObjAddrs.at(i) & ~(Offset)1;
 			auto objPtr = addr ? PyObject::make(addr) : nullptr;
 			localsplus[i] = make_pair(names.at(i), move(objPtr));
 		}
@@ -58,9 +62,41 @@ namespace PyExt::Remote {
 
 	auto PyInterpreterFrame::code() const -> unique_ptr<PyCodeObject>
 	{
-		auto code = utils::fieldAsPyObject<PyCodeObject>(remoteType(), "f_executable");
-		if (code != nullptr)
-			return code;  // Python 3.13+
+		// In Python 3.14 f_executable and f_funcobj are _PyStackRef (a union with
+		// a single 'bits' member). DbgEng's GetUlong64() may return 0 on union-
+		// typed fields, so we read .bits directly as a plain integer when present.
+		// For PyObject* fields (Python 3.11-3.13) HasField("bits") is false and we
+		// fall back to GetPtr(). Bit 0 (deferred-ref ownership tag) is masked either way.
+		auto readRef = [](ExtRemoteTyped field) -> Offset {
+			if (field.HasField("bits")) {
+				auto bitsField = field.Field("bits");
+				return utils::readIntegral<Offset>(bitsField) & ~(Offset)1;
+			}
+			return field.GetPtr() & ~(Offset)1;
+		};
+
+		// Try f_executable (Python 3.11+).
+		if (remoteType().HasField("f_executable")) {
+			auto addr = readRef(remoteType().Field("f_executable"));
+			if (addr != 0) {
+				auto objPtr = PyObject::make(addr);
+				if (auto codePtr = dynamic_cast<PyCodeObject*>(objPtr.get())) {
+					objPtr.release();
+					return unique_ptr<PyCodeObject>(codePtr);
+				}
+			}
+		}
+		// Next, try f_funcobj. Checked unconditionally so it fires even
+		// when f_executable is absent from the PDB or holds Py_None.
+		if (remoteType().HasField("f_funcobj")) {
+			auto funcAddr = readRef(remoteType().Field("f_funcobj"));
+			if (funcAddr != 0) {
+				auto funcObjPtr = PyObject::make(funcAddr);
+				if (auto funcPtr = dynamic_cast<PyFunctionObject*>(funcObjPtr.get()))
+					return funcPtr->code();
+			}
+		}
+		// Pre-3.11 fallback.
 		return utils::fieldAsPyObject<PyCodeObject>(remoteType(), "f_code");
 	}
 
@@ -101,8 +137,8 @@ namespace PyExt::Remote {
 	auto PyInterpreterFrame::currentLineNumber() const -> int
 	{
 		auto codeObject = code();
-
-		// Do a lookup into the code object's line number table (co_linetable).
+		if (codeObject == nullptr)
+			return 0;
 		return codeObject->lineNumberFromPrevInstruction(prevInstruction());
 	}
 }

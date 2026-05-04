@@ -28,7 +28,9 @@ TEST_CASE("object_details.py has a stack frame with expected locals.", "[integra
 
 	auto frames = dump.getMainThreadFrames();
 	auto bottomFrame = frames.back();
-	REQUIRE(bottomFrame->code()->name() == "<module>");
+	auto bottomCode = bottomFrame->code();
+	REQUIRE(bottomCode != nullptr);
+	REQUIRE(bottomCode->name() == "<module>");
 
 	auto locals = bottomFrame->locals();
 	REQUIRE(locals != nullptr);

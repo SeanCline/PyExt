@@ -124,6 +124,10 @@ namespace PyExt::Remote {
 	auto PyCodeObject::lineNumberFromPrevInstruction(int instruction) const -> int
 	{
 		// Python 3.11 and above, see Objects/locations.md
+		// co_code_adaptive was removed in Python 3.14+; fall back to firstLineNumber.
+		if (!remoteType().HasField("co_code_adaptive"))
+			return firstLineNumber();
+
 		auto codeAdaptivePtr = remoteType().Field("co_code_adaptive").GetPointerTo();
 		auto firstInstruction = utils::readIntegral<int>(codeAdaptivePtr);
 		instruction -= firstInstruction;

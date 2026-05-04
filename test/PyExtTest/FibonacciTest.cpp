@@ -49,7 +49,8 @@ TEST_CASE("fibonacci_test.py has the expected line numbers.", "[integration][fib
 	SECTION("The next several frames are in function recursive_fib.")
 	{
 		auto numFibFrames = std::count_if(begin(frames), end(frames), [](auto frame) {
-			return frame->code()->name() == "recursive_fib" && frame->currentLineNumber() == 24;
+			auto c = frame->code();
+			return c != nullptr && c->name() == "recursive_fib" && frame->currentLineNumber() == 24;
 		});
 
 		REQUIRE(numFibFrames > 90);
@@ -58,10 +59,13 @@ TEST_CASE("fibonacci_test.py has the expected line numbers.", "[integration][fib
 	SECTION("The top frame in recursive_fib is the one that triggered the dump.")
 	{
 		auto topFrameInFib = std::find_if(begin(frames), end(frames), [](auto frame) {
-			return frame->code()->name() == "recursive_fib";
+			auto c = frame->code();
+			return c != nullptr && c->name() == "recursive_fib";
 		});
-
+		REQUIRE(topFrameInFib != frames.end());
 		REQUIRE((*topFrameInFib)->currentLineNumber() == 18);
-		REQUIRE((*(topFrameInFib - 1))->code()->name() == "dump_process");
+		auto dumpCode = (*(topFrameInFib - 1))->code();
+		REQUIRE(dumpCode != nullptr);
+		REQUIRE(dumpCode->name() == "dump_process");
 	}
 }
