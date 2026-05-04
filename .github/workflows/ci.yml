@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+    tags: ["v*"]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: windows-2022
+
+    strategy:
+      matrix:
+        platform: [Win32, x64]
+        configuration: [Debug, Release]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Debugging Tools for Windows
+        run: |
+          # TODO: It would be nice if we could use winget install Microsoft.WinDbg` but it doesn't install to $(WindowsSdkDir)\Debuggers
+          # As a workaround, directly download and install the Windows SDK's debugging tools feature.
+          $ProgressPreference = 'SilentlyContinue'
+          Invoke-WebRequest -Uri 'https://go.microsoft.com/fwlink/?linkid=2361308' -OutFile 'winsdksetup.exe'
+          $proc = Start-Process -Wait -PassThru -FilePath '.\winsdksetup.exe' -ArgumentList '/features OptionId.WindowsDesktopDebuggers /quiet /norestart'
+          Remove-Item winsdksetup.exe -ErrorAction SilentlyContinue
+          if ($proc.ExitCode -ne 0) { exit $proc.ExitCode }
+
+      - name: Install Python versions with symbols
+        run: |
+          choco install -y --no-progress python2
+          choco install -y --no-progress --params "Include_symbols=1" python310
+          choco install -y --no-progress --params "Include_symbols=1" python311
+          choco install -y --no-progress --params "Include_symbols=1" python312
+          choco install -y --no-progress --params "Include_symbols=1" python313
+          choco install -y --no-progress --params "Include_symbols=1" python314
+
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build
+        run: |
+          msbuild PyExt.sln `
+            /p:Configuration=${{ matrix.configuration }} `
+            /p:Platform=${{ matrix.platform }} `
+            /m `
+            /v:minimal
+
+      - name: Test
+        working-directory: test/scripts
+        run: |
+          py -3 run_all_tests.py `
+            "${{ github.workspace }}/${{ matrix.platform }}/${{ matrix.configuration }}/PyExtTest.exe"
+
+      - name: Package
+        run: |
+          7z a PyExt-${{ matrix.platform }}-${{ matrix.configuration }}.zip `
+            .\${{ matrix.platform }}\${{ matrix.configuration }}\pyext.dll `
+            .\${{ matrix.platform }}\${{ matrix.configuration }}\pyext.pdb
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PyExt-${{ matrix.platform }}-${{ matrix.configuration }}
+          path: PyExt-${{ matrix.platform }}-${{ matrix.configuration }}.zip
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          prerelease: true
+          files: "**/*.zip"

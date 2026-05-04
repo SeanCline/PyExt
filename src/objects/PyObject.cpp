@@ -97,15 +97,15 @@ namespace PyExt::Remote {
 				if (valuesPtr & 1) {
 					valuesPtr += 1;
 				} else {
-					auto dictPtr = dictOrValues->Field("dict").GetPtr();
-					return dictPtr ? make_unique<PyDictObject>(dictPtr) : nullptr;
+					auto dictFieldPtr = dictOrValues->Field("dict").GetPtr();
+					return dictFieldPtr ? make_unique<PyDictObject>(dictFieldPtr) : nullptr;
 				}
 			} else {
 				auto valuesPtrPtr = offset() - 4 * pointerSize;
 				valuesPtr = ExtRemoteTyped("(PyObject***)@$extin", valuesPtrPtr).Dereference().GetPtr();
 				if (valuesPtr == 0) {
-					auto dictPtr = ExtRemoteTyped("(PyDictObject**)@$extin", valuesPtrPtr + pointerSize).Dereference().GetPtr();
-					return dictPtr ? make_unique<PyDictObject>(dictPtr) : nullptr;
+					auto dictFieldPtr = ExtRemoteTyped("(PyDictObject**)@$extin", valuesPtrPtr + pointerSize).Dereference().GetPtr();
+					return dictFieldPtr ? make_unique<PyDictObject>(dictFieldPtr) : nullptr;
 				}
 			}
 		}

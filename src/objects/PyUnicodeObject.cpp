@@ -91,9 +91,13 @@ namespace PyExt::Remote {
 	auto PyUnicodeObject::isReady() const -> bool
 	{
 		if (!hasField(remoteType(), "state"))
-			return true; //< All strings are "ready" in Python 3.12
+			return true;
 
-		auto readyField = getField(remoteType(), "state").Field("ready");
+		auto stateField = getField(remoteType(), "state");
+		if (!stateField.HasField("ready"))
+			return true; //< ready bit removed from state in Python 3.12+
+
+		auto readyField = stateField.Field("ready");
 		return utils::readIntegral<bool>(readyField);
 	}
 

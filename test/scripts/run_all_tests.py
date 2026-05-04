@@ -1,5 +1,5 @@
 """Runs the PyExtTest project against all installed python instances."""
-import sys, subprocess, python_installations
+import os, sys, subprocess, python_installations
 
 if __name__ == '__main__':
     num_failed_tests = 0
@@ -31,6 +31,6 @@ if __name__ == '__main__':
         # Run the tests against the dump files.
         print("Running tests with python executable:", installation.exec_path, flush=True)
         py_ext_test_exe = sys.argv[1] if len(sys.argv) > 1 else "../../x64/Debug/PyExtTest.exe"
-        num_failed_tests += subprocess.call(py_ext_test_exe)
+        num_failed_tests += subprocess.call([py_ext_test_exe])
 
     sys.exit(num_failed_tests)

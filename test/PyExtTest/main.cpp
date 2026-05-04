@@ -10,7 +10,7 @@
 #pragma warning( pop )
 
 // Provide a pretty-printer for the ExtException used by EngExtCpp.
-CATCH_TRANSLATE_EXCEPTION(ExtException& ex)
+CATCH_TRANSLATE_EXCEPTION(const ExtException& ex)
 {
 	return ex.GetMessage();
 }
