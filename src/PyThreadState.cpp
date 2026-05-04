@@ -49,6 +49,18 @@ namespace PyExt::Remote {
 		}
 
 		auto frame = frameContainer.Field("current_frame");
+
+		// Python 3.14 may set current_frame to an incomplete frame (owner >= 3:
+		// FRAME_OWNED_BY_INTERPRETER = 3 or FRAME_OWNED_BY_CSTACK = 4).  Skip to
+		// the first complete frame, mirroring _PyThreadState_GetFrame / _PyFrame_GetFirstComplete.
+		while (frame.GetPtr() != 0) {
+			auto ownerRaw = frame.Field("owner");
+			auto owner = utils::readIntegral<int8_t>(ownerRaw);
+			if (owner < 3)
+				break;
+			frame = frame.Field("previous");
+		}
+
 		if (frame.GetPtr() == 0)
 			return { };
 		return make_unique<PyInterpreterFrame>(RemoteType(frame));
