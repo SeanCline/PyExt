@@ -7,10 +7,13 @@
 using namespace PyExt::Remote;
 
 #include <DbgEng.h>
+#include <DbgHelp.h>
 #include <wrl/client.h>
 using Microsoft::WRL::ComPtr;
 
 #include <cstdlib>
+#include <format>
+#include <iostream>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -26,9 +29,75 @@ namespace {
 PythonDumpFile::PythonDumpFile(const std::string& dumpFilename)
 {
 	createDebugInterfaces();
-	openDumpFile(dumpFilename);
 	setSymbolPath(TestConfigData::instance().symbolPathOrDefault());
+	openDumpFile(dumpFilename);
+	pSymbols->Reload("/f python*");
 	loadPyExt();
+
+	// Print symbol info once per test run to help diagnose symbol loading failures.
+	static bool symbolInfoPrinted = false;
+	if (!symbolInfoPrinted) {
+		symbolInfoPrinted = true;
+
+		cout << "Symbol path: " << TestConfigData::instance().symbolPathOrDefault() << "\n";
+
+		auto getPdbGuid = [&](ULONG moduleIndex) -> string {
+			DEBUG_MODULE_PARAMETERS params = {};
+			if (FAILED(pSymbols->GetModuleParameters(1, nullptr, moduleIndex, &params)))
+				return "(unavailable)";
+			ComPtr<IDebugAdvanced3> pAdvanced;
+			if (FAILED(pClient.As(&pAdvanced)))
+				return "(unavailable)";
+			IMAGEHLP_MODULEW64 info = {};
+			info.SizeOfStruct = sizeof(info);
+			if (FAILED(pAdvanced->GetSymbolInformation(DEBUG_SYMINFO_IMAGEHLP_MODULEW64,
+			                                           params.Base, 0,
+			                                           &info, sizeof(info), nullptr,
+			                                           nullptr, 0, nullptr)))
+				return "(unavailable)";
+			const GUID& g = info.PdbSig70;
+			return std::format("{:08X}{:04X}{:04X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{}",
+			                   g.Data1, g.Data2, g.Data3,
+			                   g.Data4[0], g.Data4[1], g.Data4[2], g.Data4[3],
+			                   g.Data4[4], g.Data4[5], g.Data4[6], g.Data4[7],
+			                   info.PdbAge);
+		};
+
+		ULONG moduleCount = 0, unloadedCount = 0;
+		if (SUCCEEDED(pSymbols->GetNumberModules(&moduleCount, &unloadedCount))) {
+			for (ULONG i = 0; i < moduleCount; i++) {
+				char modName[MAX_PATH] = {};
+				if (FAILED(pSymbols->GetModuleNameString(DEBUG_MODNAME_MODULE, i, 0, modName, sizeof(modName), nullptr)))
+					continue;
+				if (_strnicmp(modName, "python", 6) != 0)
+					continue;
+
+				char imagePath[MAX_PATH] = {};
+				pSymbols->GetModuleNameString(DEBUG_MODNAME_IMAGE, i, 0, imagePath, sizeof(imagePath), nullptr);
+
+				char symFile[MAX_PATH] = {};
+				pSymbols->GetModuleNameString(DEBUG_MODNAME_SYMBOL_FILE, i, 0, symFile, sizeof(symFile), nullptr);
+
+				string fileVersion = "(unknown)";
+				ComPtr<IDebugSymbols3> pSymbols3;
+				if (SUCCEEDED(pClient.As(&pSymbols3))) {
+					VS_FIXEDFILEINFO vfi = {};
+					if (SUCCEEDED(pSymbols3->GetModuleVersionInformation(i, 0, "\\", &vfi, sizeof(vfi), nullptr))) {
+						fileVersion = to_string(HIWORD(vfi.dwFileVersionMS)) + "." +
+						              to_string(LOWORD(vfi.dwFileVersionMS)) + "." +
+						              to_string(HIWORD(vfi.dwFileVersionLS)) + "." +
+						              to_string(LOWORD(vfi.dwFileVersionLS));
+					}
+				}
+
+				cout << "Python module: " << modName << " (image: " << imagePath << ")\n"
+				     << "  file version: " << fileVersion << "\n"
+				     << "  pdb guid:     " << getPdbGuid(i) << "\n"
+				     << "  symbol file:  " << (symFile[0] ? symFile : "(none)") << "\n";
+			}
+		}
+		cout << flush;
+	}
 }
 
 
@@ -74,9 +143,6 @@ auto PythonDumpFile::setSymbolPath(const string& symbolPath) -> void
 	HRESULT hr = pSymbols->SetSymbolPath(symbolPath.c_str());
 	if (FAILED(hr))
 		throw runtime_error("Failed to SetSymbolPath. hr=" + hresult_to_string(hr));
-
-	pSymbols->Reload("");
-	pSymbols->Reload("/f python*");
 }
 
 
