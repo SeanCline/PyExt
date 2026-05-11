@@ -3,8 +3,9 @@ name: CI
 on:
   push:
     branches: ["**"]
-    tags: ["v*"]
   pull_request:
+  release:
+    types: [created]
 
 jobs:
   build:
@@ -16,11 +17,11 @@ jobs:
         configuration: [Debug, Release]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install Debugging Tools for Windows
         run: |
-          # TODO: It would be nice if we could use winget install Microsoft.WinDbg` but it doesn't install to $(WindowsSdkDir)\Debuggers
+          # TODO: It would be nice if we could use `winget install Microsoft.WinDbg` but it doesn't install to $(WindowsSdkDir)\Debuggers
           # As a workaround, directly download and install the Windows SDK's debugging tools feature.
           $ProgressPreference = 'SilentlyContinue'
           Invoke-WebRequest -Uri 'https://go.microsoft.com/fwlink/?linkid=2361308' -OutFile 'winsdksetup.exe'
@@ -38,7 +39,7 @@ jobs:
           choco install -y --no-progress --params "Include_symbols=1" python314
 
       - name: Add MSBuild to PATH
-        uses: microsoft/setup-msbuild@v2
+        uses: microsoft/setup-msbuild@v3
 
       - name: Build
         run: |
@@ -54,33 +55,40 @@ jobs:
           py -3 run_all_tests.py `
             "${{ github.workspace }}/${{ matrix.platform }}/${{ matrix.configuration }}/PyExtTest.exe"
 
-      - name: Package
-        run: |
-          7z a PyExt-${{ matrix.platform }}-${{ matrix.configuration }}.zip `
-            .\${{ matrix.platform }}\${{ matrix.configuration }}\pyext.dll `
-            .\${{ matrix.platform }}\${{ matrix.configuration }}\pyext.pdb
-
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        if: github.event_name == 'release'
+        uses: actions/upload-artifact@v7
         with:
           name: PyExt-${{ matrix.platform }}-${{ matrix.configuration }}
-          path: PyExt-${{ matrix.platform }}-${{ matrix.configuration }}.zip
+          path: |
+            ${{ matrix.platform }}\${{ matrix.configuration }}\pyext.dll
+            ${{ matrix.platform }}\${{ matrix.configuration }}\pyext.pdb
 
   release:
     needs: build
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: github.event_name == 'release'
 
     permissions:
       contents: write
 
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: actions/download-artifact@v7
         with:
-          draft: true
-          prerelease: true
-          files: "**/*.zip"
+          path: artifacts
+
+      - name: Create release zip
+        run: |
+          for platform in Win32 x64; do
+            for config in Debug Release; do
+              mkdir -p "PyExt/$platform/$config"
+              cp artifacts/PyExt-$platform-$config/* "PyExt/$platform/$config/"
+            done
+          done
+          zip -r PyExt.zip PyExt/
+
+      - name: Attach artifacts to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload ${{ github.event.release.tag_name }} PyExt.zip
