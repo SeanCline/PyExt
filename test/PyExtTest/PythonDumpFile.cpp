@@ -31,8 +31,8 @@ PythonDumpFile::PythonDumpFile(const std::string& dumpFilename)
 	createDebugInterfaces();
 	setSymbolPath(TestConfigData::instance().symbolPathOrDefault());
 	openDumpFile(dumpFilename);
-	pSymbols->Reload("/f python*");
 	loadPyExt();
+	pControl->Execute(DEBUG_OUTCTL_THIS_CLIENT, "!pysymfix", DEBUG_EXECUTE_DEFAULT);
 
 	// Print symbol info once per test run to help diagnose symbol loading failures.
 	static bool symbolInfoPrinted = false;

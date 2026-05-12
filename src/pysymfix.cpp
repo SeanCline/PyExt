@@ -2,6 +2,7 @@
 
 #include <engextcpp.hpp>
 
+#include <filesystem>
 #include <string>
 #include <stdexcept>
 #include <cassert>
@@ -58,14 +59,42 @@ namespace PyExt {
 		auto sympath = getSymbolPath(m_Symbols);
 		Out("Current symbol path: %s\n", sympath.c_str());
 
+		// Check for local PDBs next to each python*.dll and append their directories.
+		ULONG moduleCount = 0, unloadedCount = 0;
+		if (SUCCEEDED(m_Symbols->GetNumberModules(&moduleCount, &unloadedCount))) {
+			for (ULONG i = 0; i < moduleCount; i++) {
+				char modName[MAX_PATH] = {};
+				char imagePath[MAX_PATH] = {};
+				if (FAILED(m_Symbols->GetModuleNames(i, 0,
+				                                     imagePath, sizeof(imagePath), nullptr,
+				                                     modName, sizeof(modName), nullptr,
+				                                     nullptr, 0, nullptr)))
+					continue;
+				if (_strnicmp(modName, "python", 6) != 0)
+					continue;
+
+				auto dir = filesystem::path(imagePath).parent_path();
+				if (!filesystem::exists(dir / (string(modName) + ".pdb")))
+					continue;
+
+				string dirStr = dir.string();
+				if (sympath.find(dirStr) != string::npos)
+					continue;
+
+				Out("Found local PDB in %s, adding to symbol path.\n", dirStr.c_str());
+				sympath = concatenatePaths(sympath, dirStr);
+			}
+		}
+
 		if (sympath.find("pythonsymbols.sdcline.com/symbols") == string::npos) {
 			Out("Adding symbol server to path...\n");
-			const auto newPath = concatenatePaths(sympath, "srv*http://pythonsymbols.sdcline.com/symbols");
-			setSymbolPath(m_Symbols, newPath);
-			Out("New symbol path: %s\n", getSymbolPath(m_Symbols).c_str());
+			sympath = concatenatePaths(sympath, "srv*http://pythonsymbols.sdcline.com/symbols");
 		} else {
 			Out("Python symbol server already in path.\n");
 		}
+
+		setSymbolPath(m_Symbols, sympath);
+		Out("New symbol path: %s\n", getSymbolPath(m_Symbols).c_str());
 
 		Out("Loading symbols...\n");
 		ensureSymbolsLoaded();
