@@ -73,11 +73,13 @@ namespace PyExt::Remote {
 		// Py_TPFLAGS_MANAGED_DICT implies Py_TPFLAGS_PREHEADER, so the allocator
 		// always provisions the pre-header region (including the dict pointer at
 		// -3*pointerSize) for any type that passes the isManagedDict() guard above.
+		bool readManagedDictPointer = false;
 		Offset dictPtr = 0;
 		utils::ignoreExtensionError([&] {
 			// Python >= 3.13
 			auto managedDictPtr = offset() - 3 * pointerSize;
 			dictPtr = ExtRemoteTyped("PyManagedDictPointer", managedDictPtr, true).Field("dict").GetPtr();
+			readManagedDictPointer = true;
 		});
 		if (dictPtr)
 			return make_unique<PyDictObject>(dictPtr);
@@ -91,6 +93,13 @@ namespace PyExt::Remote {
 			auto adjustedBase = offset() + basicSize - static_cast<Offset>(2 * pointerSize);
 			auto dictValues = ExtRemoteTyped("(_dictvalues*)((PyObject*)(@$extin)+1)", adjustedBase);
 			valuesPtr = dictValues.Field("values").GetPtr();
+		} else if (readManagedDictPointer) {
+			// Python >= 3.13 without inline values: the managed dict has not been
+			// materialized yet (dictPtr was 0 above). Do not fall through to the
+			// 3.11/3.12 paths; in 3.13+ the slot at offset - 4*pointerSize is the
+			// MANAGED_WEAKREF_OFFSET, not a values pointer, and reading it as such
+			// produces a bogus PyManagedDict over (ht_cached_keys, weakref).
+			return nullptr;
 		} else {
 			optional<ExtRemoteTyped> dictOrValues;
 			utils::ignoreExtensionError([&] {
