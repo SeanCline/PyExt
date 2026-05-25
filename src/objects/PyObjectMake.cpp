@@ -57,7 +57,7 @@ namespace PyExt::Remote {
 			return make_unique<PyTupleObject>(remoteAddress);
 		} else if (typeName == "set" || typeName == "frozenset") {
 			return make_unique<PySetObject>(remoteAddress);
-		} else if (typeName == "dict") {
+		} else if (typeName == "dict" || typeName == "frozendict") {
 			return make_unique<PyDictObject>(remoteAddress);
 		} else if (typeName == "int") {
 			const auto typeObj = PyObject(remoteAddress).type();
