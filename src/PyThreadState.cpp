@@ -50,9 +50,13 @@ namespace PyExt::Remote {
 
 		auto frame = frameContainer.Field("current_frame");
 
-		// Python 3.14 may set current_frame to an incomplete frame (owner >= 3:
-		// FRAME_OWNED_BY_INTERPRETER = 3 or FRAME_OWNED_BY_CSTACK = 4).  Skip to
-		// the first complete frame, mirroring _PyThreadState_GetFrame / _PyFrame_GetFirstComplete.
+		// Skip over any incomplete frames, mirroring _PyThreadState_GetFrame and _PyFrame_GetFirstComplete.
+		// For now, a frame is "incomplete" when owner >= 3:
+		//   Python 3.13: FRAME_OWNED_BY_CSTACK = 3.
+		//   Python 3.14: FRAME_OWNED_BY_INTERPRETER = 3, FRAME_OWNED_BY_CSTACK = 4.
+		//   Python 3.15: FRAME_OWNED_BY_INTERPRETER = 3 (FRAME_OWNED_BY_CSTACK removed).
+		// In all recent versions, a frame with owner >= 3 is incomplete and should be skipped.
+		// see https://github.com/python/cpython/blob/3bd942f106aa36c261a2d90104c027026b2a8fb6/Python/traceback.c#L979-L982
 		while (frame.GetPtr() != 0) {
 			auto ownerRaw = frame.Field("owner");
 			auto owner = utils::readIntegral<int8_t>(ownerRaw);

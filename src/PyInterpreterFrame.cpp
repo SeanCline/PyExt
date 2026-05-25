@@ -108,7 +108,8 @@ namespace PyExt::Remote {
 		// Skip over any incomplete frames, mirroring CPython's _PyFrame_GetFirstComplete.
 		// Python 3.13: FRAME_OWNED_BY_CSTACK = 3 (shim frames).
 		// Python 3.14: FRAME_OWNED_BY_INTERPRETER = 3, FRAME_OWNED_BY_CSTACK = 4.
-		// In both versions every frame with owner >= 3 is incomplete and should be skipped.
+		// Python 3.15: FRAME_OWNED_BY_INTERPRETER = 3 (CSTACK removed).
+		// In all of these every frame with owner >= 3 is incomplete and should be skipped.
 		// see https://github.com/python/cpython/blob/3bd942f106aa36c261a2d90104c027026b2a8fb6/Python/traceback.c#L979-L982
 		while (previous.GetPtr() != 0) {
 			auto ownerRaw = previous.Field("owner");
