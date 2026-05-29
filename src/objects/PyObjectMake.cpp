@@ -20,80 +20,99 @@
 #include "PyNoneObject.h"
 #include "PyNotImplementedObject.h"
 
+#include <map>
 #include <memory>
+#include <string>
+#include <vector>
 using namespace std;
 
 namespace PyExt::Remote {
 
+	namespace {
+
+		// Each entry knows how to build a concrete PyObject subclass from an address.
+		using Factory = unique_ptr<PyObject>(*)(PyObject::Offset);
+
+
+		template <typename T, typename... Ts>
+		auto makeAs(PyObject::Offset addr, Ts... ts) -> unique_ptr<PyObject>
+		{
+			return make_unique<T>(addr, ts...);
+		}
+
+
+		// Aliases for type names whose factory needs to inspect the Python version.
+		auto makeStr(PyObject::Offset addr) -> unique_ptr<PyObject>
+		{
+			return (PyObject(addr).type().isPython2()) ? makeAs<PyStringObject>(addr) : makeAs<PyUnicodeObject>(addr);
+		}
+
+		auto makeInt(PyObject::Offset addr) -> unique_ptr<PyObject>
+		{
+			return (PyObject(addr).type().isPython2()) ? makeAs<PyIntObject>(addr) : makeAs<PyLongObject>(addr);
+		}
+
+		auto makeBool(PyObject::Offset addr) -> unique_ptr<PyObject>
+		{
+			return (PyObject(addr).type().isPython2()) ? makeAs<PyBoolObject>(addr) : makeAs<PyLongObject>(addr, /*isBool=*/ true);
+		}
+
+
+		// Table of factory functions to construct a Python type by its name.
+		// PyObject::make()and PyTypeObject::builtinTypes() both use this table.
+		const map<string, Factory> factoryTable {
+			{ "NoneType",           &makeAs<PyNoneObject>},
+			{ "NotImplementedType", &makeAs<PyNotImplementedObject>},
+			{ "bool",               &makeBool},
+			{ "bytearray",          &makeAs<PyByteArrayObject>},
+			{ "bytes",              &makeAs<PyBytesObject>},
+			{ "cell",               &makeAs<PyCellObject>},
+			{ "code",               &makeAs<PyCodeObject>},
+			{ "complex",            &makeAs<PyComplexObject>},
+			{ "dict",               &makeAs<PyDictObject>},
+			{ "frozendict",         &makeAs<PyDictObject>}, //< Python 3.15+, shares layout with dict.
+			{ "float",              &makeAs<PyFloatObject>},
+			{ "frame",              &makeAs<PyFrameObject>},
+			{ "function",           &makeAs<PyFunctionObject>},
+			{ "int",                &makeInt},
+			{ "list",               &makeAs<PyListObject>},
+			{ "long",               &makeAs<PyLongObject>}, //< Python 2 only.
+			{ "set",                &makeAs<PySetObject>},
+			{ "frozenset",          &makeAs<PySetObject>}, //< Shares layout with set.
+			{ "str",                &makeStr},
+			{ "tuple",              &makeAs<PyTupleObject>},
+			{ "type",               &makeAs<PyTypeObject>},
+		};
+
+	}
+
+
 	auto PyObject::make(PyObject::Offset remoteAddress) -> unique_ptr<PyObject>
 	{
-		// Get the type of this object.
-		const auto typeObj = PyObject(remoteAddress).type();
-		const auto typeName = typeObj.name();
-
+		const auto typeName = PyObject(remoteAddress).type().name(); //< Get the type of this object.
 		return make(remoteAddress, typeName);
 	}
 
 
 	auto PyObject::make(PyObject::Offset remoteAddress, const std::string& typeName) -> unique_ptr<PyObject>
 	{
-		// TODO: Turn this into a map to factory functions.
-		if (typeName == "type") {
-			return make_unique<PyTypeObject>(remoteAddress);
-		} else if (typeName == "str") {
-			const auto typeObj = PyObject(remoteAddress).type();
-			if (typeObj.isPython2()) {
-				return make_unique<PyStringObject>(remoteAddress);
-			} else {
-				return make_unique<PyUnicodeObject>(remoteAddress);
-			}
-		} else if (typeName == "bytes") {
-			return make_unique<PyBytesObject>(remoteAddress);
-		} else if (typeName == "bytearray") {
-			return make_unique<PyByteArrayObject>(remoteAddress);
-		} else if (typeName == "list") {
-			return make_unique<PyListObject>(remoteAddress);
-		} else if (typeName == "tuple") {
-			return make_unique<PyTupleObject>(remoteAddress);
-		} else if (typeName == "set" || typeName == "frozenset") {
-			return make_unique<PySetObject>(remoteAddress);
-		} else if (typeName == "dict" || typeName == "frozendict") {
-			return make_unique<PyDictObject>(remoteAddress);
-		} else if (typeName == "int") {
-			const auto typeObj = PyObject(remoteAddress).type();
-			if (typeObj.isPython2()) {
-				return make_unique<PyIntObject>(remoteAddress);
-			} else {
-				return make_unique<PyLongObject>(remoteAddress);
-			}
-		} else if (typeName == "long") {
-			return make_unique<PyLongObject>(remoteAddress);
-		} else if (typeName == "float") {
-			return make_unique<PyFloatObject>(remoteAddress);
-		} else if (typeName == "bool") {
-			const auto typeObj = PyObject(remoteAddress).type();
-			if (typeObj.isPython2()) {
-				return make_unique<PyBoolObject>(remoteAddress);
-			} else {
-				return make_unique<PyLongObject>(remoteAddress, true);
-			}
-		} else if (typeName == "complex") {
-			return make_unique<PyComplexObject>(remoteAddress);
-		} else if (typeName == "frame") {
-			return make_unique<PyFrameObject>(remoteAddress);
-		} else if (typeName == "code") {
-			return make_unique<PyCodeObject>(remoteAddress);
-		} else if (typeName == "function") {
-			return make_unique<PyFunctionObject>(remoteAddress);
-		} else if (typeName == "cell") {
-			return make_unique<PyCellObject>(remoteAddress);
-		} else if (typeName == "NoneType") {
-			return make_unique<PyNoneObject>(remoteAddress);
-		} else if (typeName == "NotImplementedType") {
-			return make_unique<PyNotImplementedObject>(remoteAddress);
-		} else {
-			return make_unique<PyObject>(remoteAddress);
-		}
+		auto it = factoryTable.find(typeName);
+		if (it == factoryTable.end())
+			return makeAs<PyObject>(remoteAddress); //< Fallback on PyObject.
+		return it->second(remoteAddress);
+	}
+
+
+	auto PyTypeObject::builtinTypes() -> const std::vector<std::string>&
+	{
+		// Derived from the dispatch table to keep the two lists in sync.
+		static const std::vector<std::string> types = [] { //< Cache the result so we don't have to rebuild the vector.
+			std::vector<std::string> result;
+			for (auto const& [name, factory] : factoryTable)
+				result.push_back(name);
+			return result;
+		}();
+		return types;
 	}
 
 }

@@ -13,6 +13,7 @@ namespace PyExt::Remote {
 	class PYEXT_PUBLIC PyTypeObject : public PyVarObject
 	{
 	public: // Statics.
+		// Defined in PyObjectMake.cpp so it can share the dispatch table used by PyObject::make().
 		static auto builtinTypes() -> const std::vector<std::string>&;
 
 	public: // Construction/Destruction.
