@@ -66,6 +66,27 @@
     <ClCompile Include="objects\PyNotImplementedObject.cpp">
       <Filter>Source Files\objects</Filter>
     </ClCompile>
+    <ClCompile Include="objects\PyEllipsisObject.cpp">
+      <Filter>Source Files\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="objects\PySliceObject.cpp">
+      <Filter>Source Files\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="objects\PyRangeObject.cpp">
+      <Filter>Source Files\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="objects\PySuperObject.cpp">
+      <Filter>Source Files\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="objects\PyWeakrefObject.cpp">
+      <Filter>Source Files\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="objects\PyMemoryViewObject.cpp">
+      <Filter>Source Files\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="objects\PyGenObject.cpp">
+      <Filter>Source Files\objects</Filter>
+    </ClCompile>
     <ClCompile Include="objects\PyObject.cpp">
       <Filter>Source Files\objects</Filter>
     </ClCompile>
@@ -180,6 +201,27 @@
       <Filter>Header Files\objects</Filter>
     </ClInclude>
     <ClInclude Include="..\include\PyNotImplementedObject.h">
+      <Filter>Header Files\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\PyEllipsisObject.h">
+      <Filter>Header Files\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\PySliceObject.h">
+      <Filter>Header Files\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\PyRangeObject.h">
+      <Filter>Header Files\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\PySuperObject.h">
+      <Filter>Header Files\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\PyWeakrefObject.h">
+      <Filter>Header Files\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\PyMemoryViewObject.h">
+      <Filter>Header Files\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\PyGenObject.h">
       <Filter>Header Files\objects</Filter>
     </ClInclude>
     <ClInclude Include="..\include\PyObject.h">

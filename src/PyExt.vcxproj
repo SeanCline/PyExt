@@ -112,6 +112,13 @@
     <ClCompile Include="objects\PyLongObject.cpp" />
     <ClCompile Include="objects\PyNoneObject.cpp" />
     <ClCompile Include="objects\PyNotImplementedObject.cpp" />
+    <ClCompile Include="objects\PyEllipsisObject.cpp" />
+    <ClCompile Include="objects\PySliceObject.cpp" />
+    <ClCompile Include="objects\PyRangeObject.cpp" />
+    <ClCompile Include="objects\PySuperObject.cpp" />
+    <ClCompile Include="objects\PyWeakrefObject.cpp" />
+    <ClCompile Include="objects\PyMemoryViewObject.cpp" />
+    <ClCompile Include="objects\PyGenObject.cpp" />
     <ClCompile Include="objects\PyObject.cpp" />
     <ClCompile Include="objects\PyObjectMake.cpp" />
     <ClCompile Include="objects\PyStringObject.cpp" />
@@ -173,6 +180,13 @@
     <ClInclude Include="..\include\PyLongObject.h" />
     <ClInclude Include="..\include\PyNoneObject.h" />
     <ClInclude Include="..\include\PyNotImplementedObject.h" />
+    <ClInclude Include="..\include\PyEllipsisObject.h" />
+    <ClInclude Include="..\include\PySliceObject.h" />
+    <ClInclude Include="..\include\PyRangeObject.h" />
+    <ClInclude Include="..\include\PySuperObject.h" />
+    <ClInclude Include="..\include\PyWeakrefObject.h" />
+    <ClInclude Include="..\include\PyMemoryViewObject.h" />
+    <ClInclude Include="..\include\PyGenObject.h" />
     <ClInclude Include="..\include\PyObject.h" />
     <ClInclude Include="..\include\PyStringObject.h" />
     <ClInclude Include="..\include\PyTupleObject.h" />

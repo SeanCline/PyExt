@@ -19,6 +19,13 @@
 #include "PyCellObject.h"
 #include "PyNoneObject.h"
 #include "PyNotImplementedObject.h"
+#include "PyEllipsisObject.h"
+#include "PySliceObject.h"
+#include "PyRangeObject.h"
+#include "PySuperObject.h"
+#include "PyWeakrefObject.h"
+#include "PyMemoryViewObject.h"
+#include "PyGenObject.h"
 
 #include <map>
 #include <memory>
@@ -61,27 +68,39 @@ namespace PyExt::Remote {
 		// Table of factory functions to construct a Python type by its name.
 		// PyObject::make()and PyTypeObject::builtinTypes() both use this table.
 		const map<string, Factory> factoryTable {
-			{ "NoneType",           &makeAs<PyNoneObject>},
-			{ "NotImplementedType", &makeAs<PyNotImplementedObject>},
-			{ "bool",               &makeBool},
-			{ "bytearray",          &makeAs<PyByteArrayObject>},
-			{ "bytes",              &makeAs<PyBytesObject>},
-			{ "cell",               &makeAs<PyCellObject>},
-			{ "code",               &makeAs<PyCodeObject>},
-			{ "complex",            &makeAs<PyComplexObject>},
-			{ "dict",               &makeAs<PyDictObject>},
-			{ "frozendict",         &makeAs<PyDictObject>}, //< Python 3.15+, shares layout with dict.
-			{ "float",              &makeAs<PyFloatObject>},
-			{ "frame",              &makeAs<PyFrameObject>},
-			{ "function",           &makeAs<PyFunctionObject>},
-			{ "int",                &makeInt},
-			{ "list",               &makeAs<PyListObject>},
-			{ "long",               &makeAs<PyLongObject>}, //< Python 2 only.
-			{ "set",                &makeAs<PySetObject>},
-			{ "frozenset",          &makeAs<PySetObject>}, //< Shares layout with set.
-			{ "str",                &makeStr},
-			{ "tuple",              &makeAs<PyTupleObject>},
-			{ "type",               &makeAs<PyTypeObject>},
+			{ "NoneType",                    &makeAs<PyNoneObject>},
+			{ "NotImplementedType",          &makeAs<PyNotImplementedObject>},
+			{ "async_generator",             &makeAs<PyAsyncGenObject>},
+			{ "bool",                        &makeBool},
+			{ "bytearray",                   &makeAs<PyByteArrayObject>},
+			{ "bytes",                       &makeAs<PyBytesObject>},
+			{ "cell",                        &makeAs<PyCellObject>},
+			{ "code",                        &makeAs<PyCodeObject>},
+			{ "complex",                     &makeAs<PyComplexObject>},
+			{ "coroutine",                   &makeAs<PyCoroObject>},
+			{ "dict",                        &makeAs<PyDictObject>},
+			{ "ellipsis",                    &makeAs<PyEllipsisObject>},
+			{ "float",                       &makeAs<PyFloatObject>},
+			{ "frame",                       &makeAs<PyFrameObject>},
+			{ "frozendict",                  &makeAs<PyDictObject>}, //< Python 3.15+, shares layout with dict.
+			{ "frozenset",                   &makeAs<PySetObject>}, //< Shares layout with set.
+			{ "function",                    &makeAs<PyFunctionObject>},
+			{ "generator",                   &makeAs<PyGenObject>},
+			{ "int",                         &makeInt},
+			{ "list",                        &makeAs<PyListObject>},
+			{ "long",                        &makeAs<PyLongObject>}, //< Python 2 only.
+			{ "memoryview",                  &makeAs<PyMemoryViewObject>},
+			{ "range",                       &makeAs<PyRangeObject>},
+			{ "set",                         &makeAs<PySetObject>},
+			{ "slice",                       &makeAs<PySliceObject>},
+			{ "str",                         &makeStr},
+			{ "super",                       &makeAs<PySuperObject>},
+			{ "tuple",                       &makeAs<PyTupleObject>},
+			{ "type",                        &makeAs<PyTypeObject>},
+			{ "weakref",                     &makeAs<PyWeakrefObject>}, //< Python <3.9 short name.
+			{ "weakref.CallableProxyType",   &makeAs<PyWeakrefObject>},
+			{ "weakref.ProxyType",           &makeAs<PyWeakrefObject>},
+			{ "weakref.ReferenceType",       &makeAs<PyWeakrefObject>},
 		};
 
 	}

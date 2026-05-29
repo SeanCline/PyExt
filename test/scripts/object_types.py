@@ -34,4 +34,38 @@ dict_obj = {
 	"long_obj": long_obj,
 }
 
+ellipsis_obj = ...
+
+slice_obj = slice(1, 10, 2)
+
+range_obj = range(1, 10, 2)
+
+memoryview_obj = memoryview(bytes_obj)
+
+import weakref
+class _Referent: pass
+_keep_alive = _Referent()
+weakref_obj = weakref.ref(_keep_alive)
+
+class _Base:
+	def foo(self): return "base"
+class _Derived(_Base):
+	def foo(self): return super()
+super_obj = _Derived().foo()
+
+def _gen():
+	yield 1
+	yield 2
+generator_obj = _gen()
+next(generator_obj) # suspend at the first yield so gi_iframe is populated.
+
+async def _coro():
+	return 42
+
+coroutine_obj = _coro()
+
+async def _agen():
+	yield 1
+async_generator_obj = _agen()
+
 win32debug.dump_process("object_types.dmp")
