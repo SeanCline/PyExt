@@ -17,6 +17,7 @@ using namespace PyExt::Remote;
 #include <algorithm>
 #include <iterator>
 #include <regex>
+#include <ios>
 
 TEST_CASE("fibonacci_test.py has the expected line numbers.", "[integration][fibonacci_test]")
 {
@@ -85,4 +86,48 @@ TEST_CASE("fibonacci_test.py has the expected line numbers.", "[integration][fib
 		REQUIRE((interpFramesChecked == 0 || interpFramesChecked == frames.size()));
 	}
 
+	// Python 3.11 changed the co_linetable encoding, which broke our line-number lookup until it was reworked.
+	// Now that the functionality is restored, this test prevents regressions in line number support.
+	SECTION("currentLineNumber does not silently fall back to firstLineNumber.")
+	{
+		auto fibFrame = std::find_if(begin(frames), end(frames), [](auto frame) {
+			auto c = frame->code();
+			return c != nullptr && c->name() == "recursive_fib";
+		});
+		REQUIRE(fibFrame != frames.end());
+
+		auto code = (*fibFrame)->code();
+		REQUIRE(code != nullptr);
+
+		auto currentLine = (*fibFrame)->currentLineNumber();
+		auto firstLine = code->firstLineNumber();
+
+		INFO("currentLineNumber=" << currentLine << ", firstLineNumber=" << firstLine);
+		REQUIRE(currentLine != firstLine);
+		REQUIRE(currentLine > firstLine);
+	}
+
+	// Similar regression guard for the bytecodeStartAddress().
+	SECTION("bytecodeStartAddress returns a full 64-bit address.")
+	{
+		auto fibFrame = std::find_if(begin(frames), end(frames), [](auto frame) {
+			auto c = frame->code();
+			return c != nullptr && c->name() == "recursive_fib";
+		});
+		REQUIRE(fibFrame != frames.end());
+
+		auto code = (*fibFrame)->code();
+		REQUIRE(code != nullptr);
+
+		auto start = code->bytecodeStartAddress();
+		if (start.has_value()) {
+			// The bytecode must live inside the PyCodeObject, so its address is strictly greater than the code object's own address.
+			INFO("bytecodeStartAddress=0x" << std::hex << *start << ", code offset=0x" << std::hex << code->offset());
+			REQUIRE(*start > code->offset());
+		} else {
+			// Python <= 3.10: no co_code_adaptive.
+			// The old lineNumberFromInstructionOffset() path drives line numbers instead.
+			SUCCEED("Skipping: bytecodeStartAddress not supported on this Python version.");
+		}
+	}
 }
