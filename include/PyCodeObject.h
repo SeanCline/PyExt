@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <cstdint>
+#include <optional>
 
 namespace PyExt::Remote {
 
@@ -19,7 +20,10 @@ namespace PyExt::Remote {
 		auto numberOfLocals() const -> int;
 		auto firstLineNumber() const -> int;
 		auto lineNumberFromInstructionOffset(int instruction) const -> int;
-		auto lineNumberFromPrevInstruction(int instruction) const -> int;
+
+		// Converts the address of an instruction to its line number.
+		auto lineNumberFromPrevInstruction(Offset instructionAddress) const -> int;
+
 		auto varNames() const -> std::vector<std::string>;
 		auto freeVars() const -> std::vector<std::string>;
 		auto cellVars() const -> std::vector<std::string>;
@@ -28,6 +32,13 @@ namespace PyExt::Remote {
 		auto name() const -> std::string;
 		auto lineNumberTableOld() const -> std::vector<std::uint8_t>;
 		auto lineNumberTableNew() const -> std::vector<std::uint8_t>;
+
+		// Index (in code units) of the first "complete" instruction. Returns nullopt on versions (<3.12) where `_co_firsttraceable` is not present .
+		auto firstTraceableIndex() const -> std::optional<int>;
+
+		// Address of the first byte of co_code_adaptive, or nullopt on versions where it's not presenst.
+		auto bytecodeStartAddress() const -> std::optional<Offset>;
+
 		auto repr(bool pretty = true) const -> std::string override;
 
 	protected:

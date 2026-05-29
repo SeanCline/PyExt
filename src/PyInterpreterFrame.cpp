@@ -44,10 +44,8 @@ namespace PyExt::Remote {
 		auto pyObjAddrs = readOffsetArray(f_localsplus, numLocalsplus);
 		vector<pair<string, unique_ptr<PyObject>>> localsplus(numLocalsplus);
 		for (size_t i = 0; i < numLocalsplus; ++i) {
-			// Mask the _PyStackRef ownership tag bit (bit 0). Python objects are
-			// pointer-aligned so bit 0 is always 0 in a valid address; if it is
-			// set the reference is a deferred/immortal ref in Python 3.14+.
-			auto addr = pyObjAddrs.at(i) & ~(Offset)1;
+			// Python 3.14+ stuffs the ownership tag in the low bit of pointers. https://huangxt.com/wiki/cpython/tagged-pointer
+			auto addr = pyObjAddrs.at(i) & ~(Offset)1; //< Mask off the ownership bit. TODO: Factor this out to a common function.
 			auto objPtr = addr ? PyObject::make(addr) : nullptr;
 			localsplus[i] = make_pair(names.at(i), move(objPtr));
 		}
@@ -62,17 +60,15 @@ namespace PyExt::Remote {
 
 	auto PyInterpreterFrame::code() const -> unique_ptr<PyCodeObject>
 	{
-		// In Python 3.14 f_executable and f_funcobj are _PyStackRef (a union with
-		// a single 'bits' member). DbgEng's GetUlong64() may return 0 on union-
-		// typed fields, so we read .bits directly as a plain integer when present.
-		// For PyObject* fields (Python 3.11-3.13) HasField("bits") is false and we
-		// fall back to GetPtr(). Bit 0 (deferred-ref ownership tag) is masked either way.
+		// In Python 3.14 f_executable and f_funcobj are _PyStackRef (a union with a single 'bits' member).
+		// Because GetUlong64() returns 0 on unions, we need to read .bits directly.
+		// For PyObject* fields (Python 3.11-3.13) HasField("bits") is false and we fall back to GetPtr().
 		auto readRef = [](ExtRemoteTyped field) -> Offset {
 			if (field.HasField("bits")) {
 				auto bitsField = field.Field("bits");
 				return utils::readIntegral<Offset>(bitsField) & ~(Offset)1;
 			}
-			return field.GetPtr() & ~(Offset)1;
+			return field.GetPtr() & ~(Offset)1; //< Mask off the ownership bit. TODO: Factor this out to a common function.
 		};
 
 		// Try f_executable (Python 3.11+).
@@ -106,15 +102,9 @@ namespace PyExt::Remote {
 		auto previous = remoteType().Field("previous");
 
 		// Skip over any incomplete frames, mirroring CPython's _PyFrame_GetFirstComplete.
-		// Python 3.13: FRAME_OWNED_BY_CSTACK = 3 (shim frames).
-		// Python 3.14: FRAME_OWNED_BY_INTERPRETER = 3, FRAME_OWNED_BY_CSTACK = 4.
-		// Python 3.15: FRAME_OWNED_BY_INTERPRETER = 3 (CSTACK removed).
-		// In all of these every frame with owner >= 3 is incomplete and should be skipped.
-		// see https://github.com/python/cpython/blob/3bd942f106aa36c261a2d90104c027026b2a8fb6/Python/traceback.c#L979-L982
 		while (previous.GetPtr() != 0) {
-			auto ownerRaw = previous.Field("owner");
-			auto owner = utils::readIntegral<int8_t>(ownerRaw);
-			if (owner < 3)
+			PyInterpreterFrame candidate{ RemoteType(previous) };
+			if (!candidate.isIncomplete())
 				break;
 			previous = previous.Field("previous");
 		}
@@ -126,12 +116,55 @@ namespace PyExt::Remote {
 	}
 
 
-	auto PyInterpreterFrame::prevInstruction() const -> int
+	auto PyInterpreterFrame::prevInstruction() const -> RemoteType::Offset
 	{
 		auto instrPtr = remoteType().HasField("instr_ptr")
 			? remoteType().Field("instr_ptr")  // Python 3.13+
 			: remoteType().Field("prev_instr");
-		return utils::readIntegral<int>(instrPtr);
+		return utils::readIntegral<RemoteType::Offset>(instrPtr);
+	}
+
+
+	auto PyInterpreterFrame::isIncomplete() const -> bool
+	{
+		// Mirrors CPython's _PyFrame_IsIncomplete.
+		// Owner constants in 3.14's pycore_interpframe_structs.h are:
+		//   THREAD = 0, GENERATOR = 1, FRAME_OBJECT = 2, INTERPRETER = 3, CSTACK = 4.
+		// Python 3.13 used CSTACK = 3. Python 3.14 inserts a new INTERPRETER = 3 pushing CSTACK to 4.
+		// Comparing owner >= 3 works for both versions' enums.
+		auto ownerRaw = remoteType().Field("owner");
+		auto owner = utils::readIntegral<int8_t>(ownerRaw);
+		if (owner >= 3)
+			return true;
+
+		// Frames owned by a generator are always complete.
+		constexpr auto FRAME_OWNED_BY_GENERATOR = 1;
+		if (owner == FRAME_OWNED_BY_GENERATOR)
+			return false;
+
+		
+		// If we fail to read the fields we expect to be there, assume its an older version of Python where all frames are complete.
+		bool incomplete = false;
+		utils::ignoreExtensionError([&] {
+			auto codeObject = code();
+			if (codeObject == nullptr)
+				return;
+
+			auto firstTraceable = codeObject->firstTraceableIndex();
+			if (!firstTraceable.has_value() || *firstTraceable <= 0)
+				return; //< <3.12, or the function starts traceable immediately.
+
+			auto bytecodeStart = codeObject->bytecodeStartAddress();
+			if (!bytecodeStart.has_value())
+				return; //< This Python version has no bytecodeStart so the frame must be complete.
+
+			// A frame whose `instr_ptr` is below `_co_firsttraceable` hasn't reached a RESUME yet and is incomplete.
+			constexpr auto codeUnitSize = 2; //< _Py_CODEUNIT is a uint16_t (high byte opcode | low byte oparg).
+			auto threshold = *bytecodeStart + static_cast<RemoteType::Offset>(*firstTraceable) * codeUnitSize;
+			if (prevInstruction() < threshold)
+				incomplete = true;
+		});
+		return incomplete;
 	}
 
 

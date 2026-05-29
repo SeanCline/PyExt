@@ -7,6 +7,7 @@
 #include <PyInterpreterState.h>
 #include <PyThreadState.h>
 #include <PyFrameObject.h>
+#include <PyInterpreterFrame.h>
 #include <PyCodeObject.h>
 #include <PyTypeObject.h>
 using namespace PyExt::Remote;
@@ -68,4 +69,20 @@ TEST_CASE("fibonacci_test.py has the expected line numbers.", "[integration][fib
 		REQUIRE(dumpCode != nullptr);
 		REQUIRE(dumpCode->name() == "dump_process");
 	}
+
+	SECTION("isIncomplete returns false for every captured frame.")
+	{
+		// All frames in the fibonacci dump are mid-execution and complete.
+		// (inside recursive_fib or at the module-level call site)
+		size_t interpFramesChecked = 0;
+		for (auto const& frame : frames) {
+			auto* interp = dynamic_cast<PyInterpreterFrame*>(frame.get()); //< Python <=3.11 has a different frame format.
+			if (interp == nullptr)
+				continue;
+			REQUIRE_FALSE(interp->isIncomplete());
+			++interpFramesChecked;
+		}
+		REQUIRE((interpFramesChecked == 0 || interpFramesChecked == frames.size()));
+	}
+
 }

@@ -30,8 +30,12 @@ namespace PyExt::Remote {
 		auto globals() const->std::unique_ptr<PyDictObject> override;
 		auto code() const->std::unique_ptr<PyCodeObject> override;
 		auto previous() const->std::unique_ptr<PyFrame> override;
-		auto prevInstruction() const -> int;
+
+		// Address of the currently-executing instruction: `instr_ptr` (3.13+) or `prev_instr` (<3.12).
+		auto prevInstruction() const -> RemoteType::Offset;
+
 		auto currentLineNumber() const -> int override;
+		auto isIncomplete() const -> bool;
 	};
 
 }

@@ -121,19 +121,19 @@ namespace PyExt::Remote {
 	}
 
 
-	auto PyCodeObject::lineNumberFromPrevInstruction(int instruction) const -> int
+	auto PyCodeObject::lineNumberFromPrevInstruction(Offset instructionAddress) const -> int
 	{
-		// Python 3.11 and above, see Objects/locations.md
-		// co_code_adaptive was removed in Python 3.14+; fall back to firstLineNumber.
-		if (!remoteType().HasField("co_code_adaptive"))
+		// Python 3.11 and above, see Objects/locations.md.
+		// Translate the absolute instruction address into a byte offset within co_code_adaptive,
+		// then walk the location table to map that offset to a source line.
+		// If we can't find co_code_adaptive at all (3.14+), fall back to firstLineNumber.
+		auto bytecodeStart = bytecodeStartAddress();
+		if (!bytecodeStart.has_value())
 			return firstLineNumber();
-
-		auto codeAdaptivePtr = remoteType().Field("co_code_adaptive").GetPointerTo();
-		auto firstInstruction = utils::readIntegral<int>(codeAdaptivePtr);
-		instruction -= firstInstruction;
+		auto byteOffset = static_cast<int64_t>(instructionAddress - *bytecodeStart);
 
 		int line = firstLineNumber();
-		int addr = 0;
+		int64_t addr = 0;
 		auto linetable = lineNumberTableNew();
 		auto last = end(linetable);
 		for (auto it = begin(linetable); it != last;) {
@@ -143,29 +143,28 @@ namespace PyExt::Remote {
 			auto code = (byte >> 3) & 15;
 
 			if (code <= 9) {
-				// short form: 2 bytes, no line delta
-				it++;
+				it++; //< Short form: 2 bytes, no line delta.
 			} else if (code >= 10 && code <= 12) {
-				// one line form: 3 bytes, line delta = code - 10
+				// One line form: 3 bytes, line delta = code - 10
 				it += 2;
 				line += code - 10;
 			} else if (code == 13) {
-				// no column info
-				line += readSvarint(it);  // start line
+				// No column info.
+				line += readSvarint(it); //< Start line.
 			} else if (code == 14) {
-				// long form
-				line += readSvarint(it);  // start line
-				readVarint(it);  // end line
-				readVarint(it);  // start column
-				readVarint(it);  // end column
+				// Long form.
+				line += readSvarint(it); //< Start line.
+				readVarint(it); //< End line.
+				readVarint(it); //< Start column.
+				readVarint(it); //< End column.
 			} else if (code == 15) {
-				// no location
+				// No location.
 			} else {
 				assert(false && "unexpected code in co_linetable.");
 				break; //< For now, just return the line number we've calculated so far.
 			}
 
-			if (addr > instruction)
+			if (addr > byteOffset)
 				break;
 		}
 
@@ -235,6 +234,26 @@ namespace PyExt::Remote {
 
 		auto tableString = codeStr->stringValue();
 		return vector<uint8_t>(begin(tableString), end(tableString));
+	}
+
+
+	auto PyCodeObject::firstTraceableIndex() const -> std::optional<int>
+	{
+		// Field added in Python 3.12.
+		if (!remoteType().HasField("_co_firsttraceable"))
+			return std::nullopt;
+		auto field = remoteType().Field("_co_firsttraceable");
+		return utils::readIntegral<int>(field);
+	}
+
+
+	auto PyCodeObject::bytecodeStartAddress() const -> std::optional<Offset>
+	{
+		// Python 3.11+: bytecode lives in co_code_adaptive at the end of the code object.
+		// Returns nullopt if the field is not exposed by the PDB.
+		if (!remoteType().HasField("co_code_adaptive"))
+			return std::nullopt;
+		return remoteType().Field("co_code_adaptive").GetPointerTo().GetPtr();
 	}
 
 
