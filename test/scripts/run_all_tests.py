@@ -1,5 +1,5 @@
 """Runs the PyExtTest project against all installed python instances."""
-import os, sys, subprocess, python_installations
+import os, re, sys, subprocess, python_installations
 
 if __name__ == '__main__':
     num_failed_tests = 0
@@ -15,7 +15,10 @@ if __name__ == '__main__':
             continue
         
         # Also skip versions before 2.7 since they don't have symbols.
-        version = tuple(int(n) for n in installation.sys_version.split("."))        
+        # Strip non-digits (e.g. the "t" suffix on free-threaded tags like "3.14t")
+        # so version parsing tolerates whatever the registry happens to hold.
+        clean_sys_version = re.sub(r"[^\d.]", "", installation.sys_version)
+        version = tuple(int(n) for n in clean_sys_version.split(".") if n)
         if version < (2, 7):
             print("Skipping (too old)", installation, end="\n\n", flush=True)
             continue
