@@ -27,6 +27,21 @@ TEST_CASE("isFreeThreaded() returns false against a GIL-build dump.", "[integrat
 }
 
 
+TEST_CASE("Pre-header layout on a GIL-build dump.", "[integration][build]")
+{
+	auto dump = PythonDumpFile(TestConfigData::instance().objectTypesDumpFileNameOrDefault());
+
+	PyExt::InitializeGlobalsForTest(dump.pClient.Get());
+	auto cleanup = utils::makeScopeExit(PyExt::UninitializeGlobalsForTest);
+
+	// 64-bit dump: sizeof(_object) is 2*8 on GIL, 4*8 (give or take padding)
+	// on free-threaded. The managed-dict slot sits at -3*ptr on GIL,
+	// -1*ptr on free-threaded.
+	REQUIRE(PyObject::headerSize() == 16);
+	REQUIRE(PyObject::managedDictOffset() == -24);
+}
+
+
 TEST_CASE("Refcount and isImmortal on a GIL-build dump.", "[integration][build]")
 {
 	auto dump = PythonDumpFile(TestConfigData::instance().objectTypesDumpFileNameOrDefault());

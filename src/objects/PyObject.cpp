@@ -54,6 +54,34 @@ namespace PyExt::Remote {
 	}
 
 
+	auto PyObject::headerSize() -> SSize
+	{
+		// `_Py_NoneStruct` is the None singleton, statically typed as PyObject,
+		// so its size is sizeof(struct _object) — which doubles on the
+		// free-threaded build (the extra ob_tid/ob_mutex/ob_ref_local/etc.
+		// fields). Queried each call; the underlying GetTypeSize is metadata
+		// only and stays cheap.
+		try {
+			return static_cast<SSize>(ExtRemoteTyped("_Py_NoneStruct").GetTypeSize());
+		} catch (...) {
+			// Fall back to the GIL-build size if the None singleton symbol is
+			// somehow unavailable — better than returning zero and producing
+			// silently bogus address arithmetic downstream.
+			return 2 * static_cast<SSize>(utils::getPointerSize());
+		}
+	}
+
+
+	auto PyObject::managedDictOffset() -> SSize
+	{
+		auto pointerSize = static_cast<SSize>(utils::getPointerSize());
+		// Pre-header layout (CPython Include/internal/pycore_object.h):
+		//   GIL build:           [-4*ptr weakref] [-3*ptr managed_dict] [obj]
+		//   free-threaded build: [-2*ptr weakref] [-1*ptr managed_dict] [obj]
+		return isFreeThreaded() ? -pointerSize : -3 * pointerSize;
+	}
+
+
 	auto PyObject::isImmortal() const -> bool
 	{
 		if (isFreeThreaded()) {
@@ -107,14 +135,14 @@ namespace PyExt::Remote {
 		auto pointerSize = utils::getPointerSize();
 
 		// Py_TPFLAGS_MANAGED_DICT implies Py_TPFLAGS_PREHEADER, so the allocator
-		// always provisions the pre-header region (including the dict pointer at
-		// -3*pointerSize on the GIL build; -1*pointerSize under Py_GIL_DISABLED,
-		// which is not yet handled here) for any type that passes isManagedDict().
+		// always provisions the pre-header region (including the managed-dict
+		// slot) for any type that passes isManagedDict(). The slot's offset
+		// depends on build mode — see managedDictOffset().
 		bool readManagedDictPointer = false;
 		Offset dictPtr = 0;
 		utils::ignoreExtensionError([&] {
 			// Python >= 3.13
-			auto managedDictPtr = offset() - 3 * pointerSize;
+			auto managedDictPtr = offset() + managedDictOffset();
 			dictPtr = ExtRemoteTyped("PyManagedDictPointer", managedDictPtr, true).Field("dict").GetPtr();
 			readManagedDictPointer = true;
 		});
@@ -125,9 +153,11 @@ namespace PyExt::Remote {
 		if (type().hasInlineValues()) {
 			// Python >= 3.13: inline values live at offset + tp_basicsize, immediately
 			// after any __slots__ storage. Adjust the @$extin base so the expression
-			// "((PyObject*)(@$extin)+1)" evaluates to offset() + basicSize.
+			// "((PyObject*)(@$extin)+1)" — which DbgEng evaluates by adding
+			// sizeof(PyObject) — lands at offset() + basicSize. Use headerSize()
+			// because sizeof(PyObject) doubles on the free-threaded build.
 			auto basicSize = static_cast<Offset>(type().basicSize());
-			auto adjustedBase = offset() + basicSize - static_cast<Offset>(2 * pointerSize);
+			auto adjustedBase = offset() + basicSize - static_cast<Offset>(headerSize());
 			auto dictValues = ExtRemoteTyped("(_dictvalues*)((PyObject*)(@$extin)+1)", adjustedBase);
 			valuesPtr = dictValues.Field("values").GetPtr();
 		} else if (readManagedDictPointer) {
