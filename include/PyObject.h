@@ -37,6 +37,7 @@ namespace PyExt::Remote {
 		using RemoteType::offset;
 		using RemoteType::symbolName;
 		auto refCount() const -> SSize;
+		auto isImmortal() const -> bool;
 		auto type() const -> PyTypeObject;
 		auto slots() const -> std::vector<std::pair<std::string, std::unique_ptr<PyObject>>>;
 		auto managedDict() const -> std::unique_ptr<PyDict>;
