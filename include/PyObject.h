@@ -33,6 +33,17 @@ namespace PyExt::Remote {
 		static auto make(PyObject::Offset remoteAddress, const std::string& typeName) -> std::unique_ptr<PyObject>;
 		using RemoteType::readOffsetArray;
 
+		/// Size of `struct _object` for the loaded build. Doubles on the
+		/// free-threaded build, so callers should use this rather than the
+		/// hard-coded `2 * pointerSize`.
+		static auto headerSize() -> SSize;
+
+		/// Byte offset (negative) from a managed-dict object's `offset()` to
+		/// its `PyManagedDictPointer` slot in the pre-header. Shifts from
+		/// `-3 * pointerSize` (GIL build, Python 3.13+) to `-1 * pointerSize`
+		/// (free-threaded build).
+		static auto managedDictOffset() -> SSize;
+
 	public: // Members.
 		using RemoteType::offset;
 		using RemoteType::symbolName;
