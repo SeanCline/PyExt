@@ -4,6 +4,7 @@
 #include "PyDictObject.h"
 
 #include "fieldAsPyObject.h"
+#include "ExtHelpers.h"
 
 #include <engextcpp.hpp>
 
@@ -117,6 +118,45 @@ namespace PyExt::Remote {
 	{
 		for (auto state = tstate_head(); state != nullptr; state = state->next()) {
 			co_yield *state;
+		}
+	}
+
+
+	auto PyInterpreterState::stackrefEntry(uint64_t index) const -> optional<Offset>
+	{
+		// CPython's free-threaded build keeps a per-interpreter table of live
+		// _PyStackRef-pointed objects. A stackref's `index` field is the slot
+		// number; the slot holds the actual PyObject*. Field name varies
+		// across CPython refactors — try the documented one and a fallback.
+		auto obj = remoteType();
+		const char* tableField = nullptr;
+		if (obj.HasField("open_stackrefs_table"))
+			tableField = "open_stackrefs_table";
+		else if (obj.HasField("stackrefs"))
+			tableField = "stackrefs";
+		else
+			return nullopt;
+
+		try {
+			auto table = obj.Field(tableField);
+
+			auto sizeField = table.Field("size");
+			auto size = utils::readIntegral<int64_t>(sizeField);
+			if (size <= 0 || index >= static_cast<uint64_t>(size))
+				return nullopt;
+
+			auto entriesPtr = table.Field("entries").GetPtr();
+			if (entriesPtr == 0)
+				return nullopt;
+
+			auto ptrSize = static_cast<uint64_t>(utils::getPointerSize());
+			auto entryAddr = entriesPtr + index * ptrSize;
+			auto entry = ExtRemoteTyped("(void**)@$extin", entryAddr).Dereference().GetPtr();
+			if (entry == 0)
+				return nullopt;
+			return entry;
+		} catch (...) {
+			return nullopt;
 		}
 	}
 

@@ -1,11 +1,13 @@
 #include "PyInterpreterFrame.h"
 
 
+#include "PyBuild.h"
 #include "PyObject.h"
 #include "PyCodeObject.h"
 #include "PyDictObject.h"
 #include "PyFrameObject.h"
 #include "PyFunctionObject.h"
+#include "PyInterpreterState.h"
 
 #include "fieldAsPyObject.h"
 #include "ExtHelpers.h"
@@ -13,12 +15,15 @@
 #include <engextcpp.hpp>
 
 #include <memory>
+#include <optional>
 using namespace std;
 
 namespace PyExt::Remote {
 
-	PyInterpreterFrame::PyInterpreterFrame(const RemoteType& remoteType, std::optional<int> tlbcIndex)
-		: RemoteType(remoteType), tlbcIndex_(tlbcIndex)
+	PyInterpreterFrame::PyInterpreterFrame(const RemoteType& remoteType,
+		std::optional<int> tlbcIndex,
+		std::optional<uint64_t> interpStateOffset)
+		: RemoteType(remoteType), tlbcIndex_(tlbcIndex), interpStateOffset_(interpStateOffset)
 	{
 	}
 
@@ -42,13 +47,32 @@ namespace PyExt::Remote {
 
 		auto f_localsplus = remoteType().Field("localsplus");
 		auto pyObjAddrs = readOffsetArray(f_localsplus, numLocalsplus);
+
+		// Pre-resolve the interpreter state once for stackref decoding on FT,
+		// so we don't reconstruct it per slot.
+		optional<PyInterpreterState> interp;
+		if (isFreeThreaded() && interpStateOffset_.has_value()) {
+			try {
+				interp.emplace(RemoteType(*interpStateOffset_, "PyInterpreterState"));
+			} catch (...) {}
+		}
+
 		vector<pair<string, unique_ptr<PyObject>>> localsplus(numLocalsplus);
 		for (size_t i = 0; i < numLocalsplus; ++i) {
-			// GIL build (Python 3.14+) stuffs the ownership tag in the low bit of pointers.
-			// On the free-threaded build a _PyStackRef is an index into the per-interpreter
-			// stackref table, not a tagged pointer, so this masking yields garbage there.
-			// https://huangxt.com/wiki/cpython/tagged-pointer
-			auto addr = pyObjAddrs.at(i) & ~(Offset)1; //< Mask off the ownership bit. TODO: Factor this out to a common function.
+			auto raw = pyObjAddrs.at(i);
+			Offset addr = 0;
+			if (interp.has_value()) {
+				// Free-threaded build: each slot is a _PyStackRef whose `index`
+				// field (a uintptr_t) names a slot in the interpreter's stackref
+				// table. nullopt from the lookup means "no live referent" — we
+				// surface that as a null PyObject, never a guessed address.
+				addr = interp->stackrefEntry(raw).value_or(0);
+			} else {
+				// GIL build (Python 3.14+) stuffs the ownership tag in the low
+				// bit of pointers.
+				// https://huangxt.com/wiki/cpython/tagged-pointer
+				addr = raw & ~(Offset)1; //< Mask off the ownership bit. TODO: Factor this out to a common function.
+			}
 			auto objPtr = addr ? PyObject::make(addr) : nullptr;
 			localsplus[i] = make_pair(names.at(i), move(objPtr));
 		}
@@ -66,10 +90,22 @@ namespace PyExt::Remote {
 		// On the GIL build (Python 3.14+) f_executable and f_funcobj are _PyStackRef,
 		// a union with a single 'bits' member whose low bit is the ownership tag.
 		// Because GetUlong64() returns 0 on unions, we read .bits directly.
-		// For PyObject* fields (Python 3.11-3.13) HasField("bits") is false and we fall
-		// back to GetPtr(). On the free-threaded build _PyStackRef is a 32-bit table
-		// index instead — this masking yields garbage there.
-		auto readRef = [](ExtRemoteTyped field) -> Offset {
+		// For PyObject* fields (Python 3.11-3.13) HasField("bits") is false and we
+		// fall back to GetPtr(). On the free-threaded build _PyStackRef is a struct
+		// with an `index` field naming a slot in the interpreter's stackref table.
+		optional<PyInterpreterState> interp;
+		if (isFreeThreaded() && interpStateOffset_.has_value()) {
+			try {
+				interp.emplace(RemoteType(*interpStateOffset_, "PyInterpreterState"));
+			} catch (...) {}
+		}
+
+		auto readRef = [&](ExtRemoteTyped field) -> Offset {
+			if (interp.has_value() && field.HasField("index")) {
+				auto indexField = field.Field("index");
+				auto idx = utils::readIntegral<uint64_t>(indexField);
+				return interp->stackrefEntry(idx).value_or(0);
+			}
 			if (field.HasField("bits")) {
 				auto bitsField = field.Field("bits");
 				return utils::readIntegral<Offset>(bitsField) & ~(Offset)1;
@@ -108,10 +144,11 @@ namespace PyExt::Remote {
 		auto previous = remoteType().Field("previous");
 
 		// Skip over any incomplete frames, mirroring CPython's _PyFrame_GetFirstComplete.
-		// Propagate tlbcIndex_ — every frame in the chain belongs to the same
-		// thread, so they share the same per-thread bytecode slot.
+		// Propagate both tlbcIndex_ and interpStateOffset_ — every frame in the
+		// chain belongs to the same thread, so they share both the per-thread
+		// bytecode slot and the owning interpreter state.
 		while (previous.GetPtr() != 0) {
-			PyInterpreterFrame candidate{ RemoteType(previous), tlbcIndex_ };
+			PyInterpreterFrame candidate{ RemoteType(previous), tlbcIndex_, interpStateOffset_ };
 			if (!candidate.isIncomplete())
 				break;
 			previous = previous.Field("previous");
@@ -120,7 +157,7 @@ namespace PyExt::Remote {
 		if (previous.GetPtr() == 0)
 			return { };
 
-		return make_unique<PyInterpreterFrame>(RemoteType(previous), tlbcIndex_);
+		return make_unique<PyInterpreterFrame>(RemoteType(previous), tlbcIndex_, interpStateOffset_);
 	}
 
 
