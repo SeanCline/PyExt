@@ -1,5 +1,6 @@
 #include "PyCodeObject.h"
 
+#include "PyBuild.h"
 #include "PyStringValue.h"
 #include "PyTupleObject.h"
 
@@ -121,13 +122,13 @@ namespace PyExt::Remote {
 	}
 
 
-	auto PyCodeObject::lineNumberFromPrevInstruction(Offset instructionAddress) const -> int
+	auto PyCodeObject::lineNumberFromPrevInstruction(Offset instructionAddress, std::optional<int> tlbcIndex) const -> int
 	{
 		// Python 3.11 and above, see Objects/locations.md.
 		// Translate the absolute instruction address into a byte offset within co_code_adaptive,
 		// then walk the location table to map that offset to a source line.
 		// If we can't find co_code_adaptive at all (3.14+), fall back to firstLineNumber.
-		auto bytecodeStart = bytecodeStartAddress();
+		auto bytecodeStart = bytecodeStartAddress(tlbcIndex);
 		if (!bytecodeStart.has_value())
 			return firstLineNumber();
 		auto byteOffset = static_cast<int64_t>(instructionAddress - *bytecodeStart);
@@ -247,9 +248,25 @@ namespace PyExt::Remote {
 	}
 
 
-	auto PyCodeObject::bytecodeStartAddress() const -> std::optional<Offset>
+	auto PyCodeObject::bytecodeStartAddress(std::optional<int> tlbcIndex) const -> std::optional<Offset>
 	{
-		// Python 3.11+: bytecode lives in co_code_adaptive at the end of the code object.
+		// Free-threaded build (Python 3.13+): bytecode is per-thread, reached
+		// through `co_tlbc->entries[tlbc_index]`. The field only exists when
+		// _PyCode_DEF_THREAD_LOCAL_BYTECODE expanded, i.e. on Py_GIL_DISABLED.
+		if (isFreeThreaded() && remoteType().HasField("co_tlbc")) {
+			auto coTlbcPtr = remoteType().Field("co_tlbc").GetPtr();
+			if (coTlbcPtr == 0)
+				return std::nullopt;
+			auto codeArray = ExtRemoteTyped("_PyCodeArray", coTlbcPtr, true);
+			auto entries = codeArray.Field("entries");
+			auto idx = tlbcIndex.value_or(0);
+			auto entry = entries.ArrayElement(idx).GetPtr();
+			if (entry == 0)
+				return std::nullopt;
+			return entry;
+		}
+
+		// GIL build: bytecode lives in co_code_adaptive at the end of the code object.
 		// Returns nullopt if the field is not exposed by the PDB.
 		if (!remoteType().HasField("co_code_adaptive"))
 			return std::nullopt;

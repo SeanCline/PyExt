@@ -4,6 +4,7 @@
 #include "pyextpublic.h"
 
 #include <memory>
+#include <optional>
 
 class ExtRemoteTyped;
 
@@ -26,6 +27,9 @@ namespace PyExt::Remote {
 		auto currentFrame() const -> std::unique_ptr<PyFrame>;
 		auto tracing() const -> long;
 		auto thread_id() const -> long;
+		// Index into PyCodeObject::co_tlbc on the free-threaded build; nullopt
+		// on GIL builds and pre-3.13 free-threaded prototypes that lack the field.
+		auto tlbcIndex() const -> std::optional<int>;
 
 	public: // Utility functions around the members.
 		/// Returns a range of all the frames in this threadState.

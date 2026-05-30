@@ -5,6 +5,7 @@
 #include "pyextpublic.h"
 
 #include <memory>
+#include <optional>
 
 class ExtRemoteTyped;
 
@@ -21,7 +22,11 @@ namespace PyExt::Remote {
 	class PYEXT_PUBLIC PyInterpreterFrame : public RemoteType, public PyFrame
 	{
 	public:
-		explicit PyInterpreterFrame(const RemoteType& remoteType);
+		// tlbcIndex identifies the owning thread's slot in co_tlbc on the
+		// free-threaded build. Frames walked from PyThreadState seed it from
+		// the thread; frames materialized standalone (e.g. !pyinterpreterframe)
+		// leave it nullopt and bytecode lookups fall back to entries[0].
+		explicit PyInterpreterFrame(const RemoteType& remoteType, std::optional<int> tlbcIndex = std::nullopt);
 
 	public: // Members of the remote type.
 		using RemoteType::offset;
@@ -36,6 +41,12 @@ namespace PyExt::Remote {
 
 		auto currentLineNumber() const -> int override;
 		auto isIncomplete() const -> bool;
+
+	private:
+#pragma warning (push)
+#pragma warning (disable: 4251) //< Hide warnings about exporting private symbols.
+		std::optional<int> tlbcIndex_;
+#pragma warning (pop)
 	};
 
 }
