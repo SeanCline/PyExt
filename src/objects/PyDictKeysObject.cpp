@@ -4,6 +4,15 @@
 #include "../ExtHelpers.h"
 
 
+// Free-threaded build audit:
+//   Under Py_GIL_DISABLED, _dictkeysobject inserts `PyMutex dk_mutex` between
+//   dk_version and dk_usable, shifting every field after it. The accesses here
+//   (dk_log2_size, dk_indices, dk_kind, dk_nentries — plus me_key/me_value on
+//   the entries table) all resolve through PDB symbols rather than computed
+//   offsets, so the inserted field changes nothing for our reads. PyExt does
+//   not read dk_version, dk_usable, or dk_mutex on either build, so there's no
+//   guarded code path to add. Re-audit if any of those fields are ever needed.
+
 namespace PyExt::Remote {
 
 	// We use "_dictkeysobject" because "PyDictKeysObject" is not available in Python < 3.11
