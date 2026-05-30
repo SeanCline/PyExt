@@ -1,5 +1,6 @@
 #include "extension.h"
 
+#include "PyBuild.h"
 #include "PyObject.h"
 #include "PyVarObject.h"
 #include "PyTypeObject.h"
@@ -83,6 +84,7 @@ namespace PyExt {
 	EXT_COMMAND(pyobj, "Prints information about a Python object", "{;s;PyObject address}")
 	{
 		ensureSymbolsLoaded();
+		warnIfFreeThreaded();
 
 		auto offset = evalOffset(GetUnnamedArgStr(0));
 		auto pyObj = PyObject::make(offset);
@@ -113,6 +115,7 @@ namespace PyExt {
 	EXT_COMMAND(pyinterpreterframe, "Prints information about a Python interpreter frame", "{;s;Frame address}")
 	{
 		ensureSymbolsLoaded();
+		warnIfFreeThreaded();
 
 		auto offset = evalOffset(GetUnnamedArgStr(0));
 		auto frame = make_unique<PyInterpreterFrame>(RemoteType(offset, "_PyInterpreterFrame"));

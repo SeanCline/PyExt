@@ -72,7 +72,8 @@ namespace PyExt::Remote {
 
 		// Py_TPFLAGS_MANAGED_DICT implies Py_TPFLAGS_PREHEADER, so the allocator
 		// always provisions the pre-header region (including the dict pointer at
-		// -3*pointerSize) for any type that passes the isManagedDict() guard above.
+		// -3*pointerSize on the GIL build; -1*pointerSize under Py_GIL_DISABLED,
+		// which is not yet handled here) for any type that passes isManagedDict().
 		bool readManagedDictPointer = false;
 		Offset dictPtr = 0;
 		utils::ignoreExtensionError([&] {

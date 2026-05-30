@@ -44,7 +44,10 @@ namespace PyExt::Remote {
 		auto pyObjAddrs = readOffsetArray(f_localsplus, numLocalsplus);
 		vector<pair<string, unique_ptr<PyObject>>> localsplus(numLocalsplus);
 		for (size_t i = 0; i < numLocalsplus; ++i) {
-			// Python 3.14+ stuffs the ownership tag in the low bit of pointers. https://huangxt.com/wiki/cpython/tagged-pointer
+			// GIL build (Python 3.14+) stuffs the ownership tag in the low bit of pointers.
+			// On the free-threaded build a _PyStackRef is an index into the per-interpreter
+			// stackref table, not a tagged pointer, so this masking yields garbage there.
+			// https://huangxt.com/wiki/cpython/tagged-pointer
 			auto addr = pyObjAddrs.at(i) & ~(Offset)1; //< Mask off the ownership bit. TODO: Factor this out to a common function.
 			auto objPtr = addr ? PyObject::make(addr) : nullptr;
 			localsplus[i] = make_pair(names.at(i), move(objPtr));
@@ -60,9 +63,12 @@ namespace PyExt::Remote {
 
 	auto PyInterpreterFrame::code() const -> unique_ptr<PyCodeObject>
 	{
-		// In Python 3.14 f_executable and f_funcobj are _PyStackRef (a union with a single 'bits' member).
-		// Because GetUlong64() returns 0 on unions, we need to read .bits directly.
-		// For PyObject* fields (Python 3.11-3.13) HasField("bits") is false and we fall back to GetPtr().
+		// On the GIL build (Python 3.14+) f_executable and f_funcobj are _PyStackRef,
+		// a union with a single 'bits' member whose low bit is the ownership tag.
+		// Because GetUlong64() returns 0 on unions, we read .bits directly.
+		// For PyObject* fields (Python 3.11-3.13) HasField("bits") is false and we fall
+		// back to GetPtr(). On the free-threaded build _PyStackRef is a 32-bit table
+		// index instead — this masking yields garbage there.
 		auto readRef = [](ExtRemoteTyped field) -> Offset {
 			if (field.HasField("bits")) {
 				auto bitsField = field.Field("bits");

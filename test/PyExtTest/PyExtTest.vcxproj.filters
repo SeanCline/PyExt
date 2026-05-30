@@ -21,6 +21,9 @@
     <ClCompile Include="PythonDumpFile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="BuildTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="FibonacciTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
