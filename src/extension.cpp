@@ -90,7 +90,10 @@ namespace PyExt {
 		auto pyObj = PyObject::make(offset);
 
 		Out("%s at address: %y\n", pyObj->symbolName().c_str(), pyObj->offset());
-		Out("\tRefCount: %s\n", to_string(pyObj->refCount()).c_str());
+		auto refCountStr = to_string(pyObj->refCount());
+		if (pyObj->isImmortal())
+			refCountStr += " (immortal)";
+		Out("\tRefCount: %s\n", refCountStr.c_str());
 		Out("\tType: %s\n", pyObj->type().name().c_str());
 
 		// Print the size if its a PyVarObject.

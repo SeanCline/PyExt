@@ -1,5 +1,6 @@
 #include "PyObject.h"
 
+#include "PyBuild.h"
 #include "PyTypeObject.h"
 #include "PyVarObject.h"
 #include "PyDictObject.h"
@@ -8,6 +9,7 @@
 
 #include <engextcpp.hpp>
 
+#include <cstdint>
 #include <string>
 #include <sstream>
 #include <algorithm>
@@ -30,8 +32,42 @@ namespace PyExt::Remote {
 
 	auto PyObject::refCount() const -> SSize
 	{
+		if (isFreeThreaded()) {
+			// PEP 703: refcount is split into a thread-owned uint32 plus an atomic
+			// shared int64. The low _Py_REF_SHARED_SHIFT (=2) bits of ob_ref_shared
+			// are flag/state bits; the rest is the shared count.
+			auto local = baseField("ob_ref_local");
+			auto shared = baseField("ob_ref_shared");
+			auto localVal = utils::readIntegral<uint32_t>(local);
+			auto sharedVal = utils::readIntegral<int64_t>(shared);
+			return static_cast<SSize>(localVal) + static_cast<SSize>(sharedVal >> 2);
+		}
+
 		auto refcnt = baseField("ob_refcnt");
+		// Python 3.14+: ob_refcnt shrank from Py_ssize_t (8 bytes) to uint32_t
+		// (4 bytes), with the high bit signalling immortality. Read it unsigned
+		// so an immortal singleton widens to a large positive number rather than
+		// sign-extending to a giant negative one.
+		if (refcnt.GetTypeSize() == 4)
+			return static_cast<SSize>(utils::readIntegral<uint32_t>(refcnt));
 		return utils::readIntegral<SSize>(refcnt);
+	}
+
+
+	auto PyObject::isImmortal() const -> bool
+	{
+		if (isFreeThreaded()) {
+			// _Py_IMMORTAL_REFCNT_LOCAL == UINT32_MAX.
+			auto local = baseField("ob_ref_local");
+			return utils::readIntegral<uint32_t>(local) == 0xFFFFFFFFu;
+		}
+
+		auto refcnt = baseField("ob_refcnt");
+		// _Py_IsImmortal: top bit of the uint32 ob_refcnt (3.14+). Pre-3.14
+		// ob_refcnt is Py_ssize_t and has no immortality bit at this layout.
+		if (refcnt.GetTypeSize() == 4)
+			return (utils::readIntegral<uint32_t>(refcnt) & 0x80000000u) != 0;
+		return false;
 	}
 
 
