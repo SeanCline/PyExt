@@ -17,8 +17,8 @@ using namespace std;
 
 namespace PyExt::Remote {
 
-	PyInterpreterFrame::PyInterpreterFrame(const RemoteType& remoteType)
-		: RemoteType(remoteType)
+	PyInterpreterFrame::PyInterpreterFrame(const RemoteType& remoteType, std::optional<int> tlbcIndex)
+		: RemoteType(remoteType), tlbcIndex_(tlbcIndex)
 	{
 	}
 
@@ -108,8 +108,10 @@ namespace PyExt::Remote {
 		auto previous = remoteType().Field("previous");
 
 		// Skip over any incomplete frames, mirroring CPython's _PyFrame_GetFirstComplete.
+		// Propagate tlbcIndex_ — every frame in the chain belongs to the same
+		// thread, so they share the same per-thread bytecode slot.
 		while (previous.GetPtr() != 0) {
-			PyInterpreterFrame candidate{ RemoteType(previous) };
+			PyInterpreterFrame candidate{ RemoteType(previous), tlbcIndex_ };
 			if (!candidate.isIncomplete())
 				break;
 			previous = previous.Field("previous");
@@ -118,7 +120,7 @@ namespace PyExt::Remote {
 		if (previous.GetPtr() == 0)
 			return { };
 
-		return make_unique<PyInterpreterFrame>(RemoteType(previous));
+		return make_unique<PyInterpreterFrame>(RemoteType(previous), tlbcIndex_);
 	}
 
 
@@ -160,7 +162,7 @@ namespace PyExt::Remote {
 			if (!firstTraceable.has_value() || *firstTraceable <= 0)
 				return; //< <3.12, or the function starts traceable immediately.
 
-			auto bytecodeStart = codeObject->bytecodeStartAddress();
+			auto bytecodeStart = codeObject->bytecodeStartAddress(tlbcIndex_);
 			if (!bytecodeStart.has_value())
 				return; //< This Python version has no bytecodeStart so the frame must be complete.
 
@@ -179,6 +181,6 @@ namespace PyExt::Remote {
 		auto codeObject = code();
 		if (codeObject == nullptr)
 			return 0;
-		return codeObject->lineNumberFromPrevInstruction(prevInstruction());
+		return codeObject->lineNumberFromPrevInstruction(prevInstruction(), tlbcIndex_);
 	}
 }

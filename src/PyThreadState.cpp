@@ -49,10 +49,11 @@ namespace PyExt::Remote {
 		}
 
 		auto frame = frameContainer.Field("current_frame");
+		auto tlbc = tlbcIndex();
 
 		// Skip over any incomplete frames. Python does this using _PyFrame_GetFirstComplete.
 		while (frame.GetPtr() != 0) {
-			PyInterpreterFrame candidate{ RemoteType(frame) };
+			PyInterpreterFrame candidate{ RemoteType(frame), tlbc };
 			if (!candidate.isIncomplete())
 				break;
 			frame = frame.Field("previous");
@@ -60,7 +61,17 @@ namespace PyExt::Remote {
 
 		if (frame.GetPtr() == 0)
 			return { };
-		return make_unique<PyInterpreterFrame>(RemoteType(frame));
+		return make_unique<PyInterpreterFrame>(RemoteType(frame), tlbc);
+	}
+
+
+	auto PyThreadState::tlbcIndex() const -> std::optional<int>
+	{
+		// Added in Python 3.13 under Py_GIL_DISABLED. Absent on GIL builds.
+		if (!remoteType().HasField("tlbc_index"))
+			return std::nullopt;
+		auto field = remoteType().Field("tlbc_index");
+		return utils::readIntegral<int>(field);
 	}
 
 
