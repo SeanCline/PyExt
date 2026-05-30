@@ -37,6 +37,40 @@ def _create_python_installation(company, tag, tag_key):
     return PythonInstallation(company, name, url, version, sys_version,
         sys_arch, exec_path)
         
+def _find_freethreaded_companions(installations):
+    """For each install, probe for an adjacent free-threaded executable
+    (python<X.Y>t.exe) and synthesize an entry for it.
+
+    The python.org installer registers free-threaded as its own PEP 514 tag
+    so this pass is a no-op for that case. Source-built CPython and uv-installed
+    Python don't touch the registry, though, so this fallback gives the runner
+    a way to find them anyway."""
+    extras = []
+    seen = {os.path.normcase(i.exec_path) for i in installations if i.exec_path}
+    for i in installations:
+        if not i.exec_path or not i.sys_version:
+            continue
+        # Skip if this install is already the free-threaded build.
+        if os.path.basename(i.exec_path).lower().endswith("t.exe"):
+            continue
+        parts = i.sys_version.split(".")
+        if len(parts) < 2:
+            continue
+        candidate = os.path.join(os.path.dirname(i.exec_path),
+            "python{}.{}t.exe".format(parts[0], parts[1]))
+        if os.path.normcase(candidate) in seen or not os.path.isfile(candidate):
+            continue
+        extras.append(PythonInstallation(
+            company=i.company,
+            name=(i.name or "Python") + " (free-threaded)",
+            support_url=i.support_url,
+            version=i.version,
+            sys_version=i.sys_version,
+            sys_arch=i.sys_arch,
+            exec_path=candidate))
+        seen.add(os.path.normcase(candidate))
+    return extras
+
 def get_python_installations():
     """Returns a list of python executables on the machine."""
     installations = set()
@@ -57,6 +91,7 @@ def get_python_installations():
         except FileNotFoundError:
             continue
 
+    installations.update(_find_freethreaded_companions(installations))
     return installations
 
 if __name__ == "__main__":
