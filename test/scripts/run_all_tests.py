@@ -30,6 +30,9 @@ if __name__ == '__main__':
         subprocess.check_call([installation.exec_path, "object_details.py"])
         subprocess.check_call([installation.exec_path, "localsplus_test.py"])
         subprocess.check_call([installation.exec_path, "pystack_all_test.py"])
+        # Free-threaded-only: the script self-skips on GIL builds, so it's
+        # safe to invoke here unconditionally.
+        subprocess.check_call([installation.exec_path, "free_threaded_test.py"])
         
         # Run the tests against the dump files.
         print("Running tests with python executable:", installation.exec_path, flush=True)

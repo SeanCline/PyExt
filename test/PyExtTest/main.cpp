@@ -44,6 +44,9 @@ int main(int argc, char* argv[])
 		} else if (arg == "--pystack-all-dump-file" && i + 1 < argc) {
 			configData.pystackAllDumpFileName = argv[i + 1];
 			i += 2;
+		} else if (arg == "--free-threaded-dump-file" && i + 1 < argc) {
+			configData.freeThreadedDumpFileName = argv[i + 1];
+			i += 2;
 		} else if (arg == "--symbol-path" && i + 1 < argc) {
 			configData.symbolPath = argv[i + 1];
 			i += 2;

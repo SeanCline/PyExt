@@ -11,6 +11,8 @@ The goal of this project is to provide a similar debugging experience in WinDbg/
 
 Currently, the extension is tested against 32bit and 64bit builds of Python versions 2.7, and 3.3 through 3.14.
 
+Free-threaded (PEP 703) builds are partially supported — see `docs/free-threaded.md <docs/free-threaded.md>`_ for the detection mechanism, current feature matrix, and end-to-end workflow.
+
 Installation
 ============
  - Build from source or download binaries from the Releases page
