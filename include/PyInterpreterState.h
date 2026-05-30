@@ -39,6 +39,12 @@ namespace PyExt::Remote {
 	public: // Members of the remote type.
 		auto next() const -> std::unique_ptr<PyInterpreterState>;
 		auto tstate_head() const -> std::unique_ptr<PyThreadState>;
+		// Address of the PyObject at entries[index] of this interpreter's
+		// stackref table (PEP 703 / Py_GIL_DISABLED). Returns nullopt on GIL
+		// builds, on out-of-bounds indices, or if the table is unreachable.
+		auto stackrefEntry(std::uint64_t index) const -> std::optional<Offset>;
+
+		using RemoteType::offset;
 
 	public: // Utility functions around the members.
 		/// Returns a range of all the threads in this interpreter.

@@ -30,6 +30,9 @@ namespace PyExt::Remote {
 		// Index into PyCodeObject::co_tlbc on the free-threaded build; nullopt
 		// on GIL builds and pre-3.13 free-threaded prototypes that lack the field.
 		auto tlbcIndex() const -> std::optional<int>;
+		// Address of the owning PyInterpreterState (the `interp` back-pointer).
+		// Returns nullopt only if the field is missing or null in the dump.
+		auto interpreterStateOffset() const -> std::optional<std::uint64_t>;
 
 	public: // Utility functions around the members.
 		/// Returns a range of all the frames in this threadState.

@@ -23,10 +23,16 @@ namespace PyExt::Remote {
 	{
 	public:
 		// tlbcIndex identifies the owning thread's slot in co_tlbc on the
-		// free-threaded build. Frames walked from PyThreadState seed it from
-		// the thread; frames materialized standalone (e.g. !pyinterpreterframe)
-		// leave it nullopt and bytecode lookups fall back to entries[0].
-		explicit PyInterpreterFrame(const RemoteType& remoteType, std::optional<int> tlbcIndex = std::nullopt);
+		// free-threaded build. interpStateOffset is the address of the
+		// owning PyInterpreterState — needed under FT to resolve
+		// _PyStackRef indices through its stackref table. Frames walked
+		// from PyThreadState seed both; standalone constructions
+		// (!pyinterpreterframe, embedded generator frame) leave them
+		// nullopt and the FT lookups fall back gracefully (entries[0] for
+		// bytecode, no-op for stackref decoding).
+		explicit PyInterpreterFrame(const RemoteType& remoteType,
+			std::optional<int> tlbcIndex = std::nullopt,
+			std::optional<std::uint64_t> interpStateOffset = std::nullopt);
 
 	public: // Members of the remote type.
 		using RemoteType::offset;
@@ -46,6 +52,7 @@ namespace PyExt::Remote {
 #pragma warning (push)
 #pragma warning (disable: 4251) //< Hide warnings about exporting private symbols.
 		std::optional<int> tlbcIndex_;
+		std::optional<std::uint64_t> interpStateOffset_;
 #pragma warning (pop)
 	};
 

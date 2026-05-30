@@ -50,10 +50,11 @@ namespace PyExt::Remote {
 
 		auto frame = frameContainer.Field("current_frame");
 		auto tlbc = tlbcIndex();
+		auto interpAddr = interpreterStateOffset();
 
 		// Skip over any incomplete frames. Python does this using _PyFrame_GetFirstComplete.
 		while (frame.GetPtr() != 0) {
-			PyInterpreterFrame candidate{ RemoteType(frame), tlbc };
+			PyInterpreterFrame candidate{ RemoteType(frame), tlbc, interpAddr };
 			if (!candidate.isIncomplete())
 				break;
 			frame = frame.Field("previous");
@@ -61,7 +62,7 @@ namespace PyExt::Remote {
 
 		if (frame.GetPtr() == 0)
 			return { };
-		return make_unique<PyInterpreterFrame>(RemoteType(frame), tlbc);
+		return make_unique<PyInterpreterFrame>(RemoteType(frame), tlbc, interpAddr);
 	}
 
 
@@ -72,6 +73,17 @@ namespace PyExt::Remote {
 			return std::nullopt;
 		auto field = remoteType().Field("tlbc_index");
 		return utils::readIntegral<int>(field);
+	}
+
+
+	auto PyThreadState::interpreterStateOffset() const -> std::optional<uint64_t>
+	{
+		if (!remoteType().HasField("interp"))
+			return std::nullopt;
+		auto interp = remoteType().Field("interp").GetPtr();
+		if (interp == 0)
+			return std::nullopt;
+		return interp;
 	}
 
 
