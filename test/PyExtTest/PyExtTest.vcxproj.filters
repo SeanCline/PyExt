@@ -27,6 +27,9 @@
     <ClCompile Include="FibonacciTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="FreeThreadedTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="TestConfigData.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

@@ -207,6 +207,7 @@ IF NOT EXIST symsrv.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\syms
     </ClCompile>
     <ClCompile Include="BuildTest.cpp" />
     <ClCompile Include="FibonacciTest.cpp" />
+    <ClCompile Include="FreeThreadedTest.cpp" />
     <ClCompile Include="PystackAllTest.cpp" />
     <ClCompile Include="LocalsplusTest.cpp" />
     <ClCompile Include="main.cpp" />

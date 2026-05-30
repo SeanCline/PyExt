@@ -36,6 +36,12 @@ struct TestConfigData {
 		return pystackAllDumpFileName.empty() ? "pystack_all_test.dmp" : pystackAllDumpFileName;
 	}
 
+	std::string freeThreadedDumpFileName;
+	auto freeThreadedDumpFileNameOrDefault() const -> std::string
+	{
+		return freeThreadedDumpFileName.empty() ? "free_threaded_test.dmp" : freeThreadedDumpFileName;
+	}
+
 	std::string symbolPath;
 	auto symbolPathOrDefault() const -> std::string
 	{
