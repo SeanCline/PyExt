@@ -1,5 +1,6 @@
 #include "extension.h"
 
+#include "PyBuild.h"
 #include "PyFrameObject.h"
 #include "PyInterpreterFrame.h"
 #include "PyDictObject.h"
@@ -97,6 +98,7 @@ namespace PyExt {
 		"{;s,o;PyFrameObject address}")
 	{
 		ensureSymbolsLoaded();
+		warnIfFreeThreaded();
 
 		// Prints the frame chain starting at `topFrame`, consuming the unique_ptr.
 		auto printStack = [this](unique_ptr<PyFrame> frame) {

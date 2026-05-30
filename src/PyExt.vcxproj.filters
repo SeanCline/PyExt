@@ -162,6 +162,9 @@
     <ClCompile Include="PyFrame.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="PyBuild.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="objects\PyDictKeysObject.cpp">
       <Filter>Source Files\objects</Filter>
     </ClCompile>
@@ -267,6 +270,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\globals.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\PyBuild.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\PyTypeObject.h">

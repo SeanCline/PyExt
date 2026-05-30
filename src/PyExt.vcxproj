@@ -130,6 +130,7 @@
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="PyBuild.cpp" />
     <ClCompile Include="PyFrame.cpp" />
     <ClCompile Include="PyInterpreterFrame.cpp" />
     <ClCompile Include="PyInterpreterState.cpp" />
@@ -167,6 +168,7 @@
     <ClInclude Include="extension.h" />
     <ClInclude Include="..\include\globals.h" />
     <ClInclude Include="..\include\PyStringValue.h" />
+    <ClInclude Include="..\include\PyBuild.h" />
     <ClInclude Include="..\include\PyBoolObject.h" />
     <ClInclude Include="..\include\PyByteArrayObject.h" />
     <ClInclude Include="..\include\PyCodeObject.h" />
