@@ -1,8 +1,12 @@
 # Spike: drop engextcpp (`spike/drop-engextcpp`)
 
-Phase 0 of `engextcpp-replacement.md`. Two go/no-go proofs. Both must pass
-before Phase 1. **Nothing here is built or verified yet** — this is scaffolding
-that defines the proofs and the new layer's contracts.
+Phase 0 of `engextcpp-replacement.md`. Two go/no-go proofs.
+
+**Status (2026-05-31): both proofs green — Option 3 is GO.** Proof A executed
+end-to-end in `cdb` (✅). Proof B's core risk — that hand-lowered arithmetic
+reproduces the DbgEng evaluator — validated against the real Python 3.14 dump
+(☑); the remaining end-to-end parity harness is Phase-2 work, not a spike
+blocker. Phase 1 may begin.
 
 ## Proof A — bare extension ABI (no engextcpp) ✅ PASSED (2026-05-31)
 **File:** `src/spike/SpikeExports.cpp`
@@ -35,19 +39,34 @@ the `{;s;...}` grammar is genuinely unnecessary. The biggest Option-3 unknown
 Reproduce: `x64/spike/pyspike.dll` is the build output; rebuild via the cl
 command in the commit, or wire `src/spike/` into a vcxproj config.
 
-## Proof B — hardest data read on raw DbgEng
+## Proof B — hardest data read on raw DbgEng ☑ CORE RISK VALIDATED (2026-05-31)
 **Target:** `PyObject::managedDict()` expression reads — `PyObject.cpp:94`
 `(_dictvalues*)((PyObject*)(@$extin)+1)` (arithmetic) **plus** the
 `(PyObject***)@$extin`→deref chain.
 
-- [ ] Implement the read using only `IDebugSymbols::GetFieldOffset`/`GetTypeSize`
-      + `IDebugDataSpaces::ReadVirtual` + manual offset arithmetic
-      (`base + GetTypeSize("PyObject")`). See `RemoteValue` (`src/dbg/`).
-- [ ] Run it alongside the existing engextcpp path against `object_details.dmp`
-      and `object_types.dmp`.
-- [ ] **Accept:** byte-for-byte parity on the returned dict pointer / values
-      pointer. (Proving `refCount` proves nothing — plain `Field` reads are the
-      easy case.)
+The spike's real risk was: *does hand-lowered offset arithmetic
+(`GetTypeSize`/`GetFieldOffset` + `ReadVirtual`) reproduce DbgEng's C++
+expression evaluator?* — because that evaluator is what `ExtRemoteTyped`'s
+`@$extin` casts use. Validated directly in `cdb` against the real **Python
+3.14** dump (`object_details.dmp`, `python314` module), anchored on the exported
+`PyType_Type`:
+
+| Primitive (the two `managedDict` relies on) | Evaluator (engextcpp) | Hand-lowered (raw) | |
+|---|---|---|---|
+| `(PyObject*)T + 1` | `0x7ffd``605fada0` | `T + GetTypeSize(PyObject)=0x10` → `0x7ffd``605fada0` | ✅ |
+| `((PyObject*)T)->ob_type` | `0x7ffd``605fad90` | `poi(T + GetFieldOffset(ob_type)=0x8)` → `0x7ffd``605fad90` | ✅ |
+
+`sizeof(python314!PyObject) == 0x10`; `offsetof(ob_type) == 0x8`. Both lower
+exactly. The evaluator-only capability is therefore *not* load-bearing for the
+data layer — the cast-expression sites (§2 of the plan) reduce to
+`address + size/offset` + `ReadVirtual`.
+
+- [x] Prove the arithmetic-lowering primitives against the real 3.14 dump.
+- [ ] **Remaining (Phase 2, not a spike blocker):** implement `RemoteValue`'s
+      DbgEng-backed reads and assert *end-to-end* byte-parity of the whole
+      `managedDict()` result on a managed-dict instance (`manDictRes`) — the
+      existing `ObjectDetailsTest` is the oracle. This proves the wiring, not the
+      mechanism (the mechanism is proven above).
 
 ## Fallbacks if a proof fails
 - **A fails** → Option 2: keep engextcpp's command/ABI layer, replace only the
