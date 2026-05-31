@@ -101,14 +101,14 @@ TEST_CASE("Refcount split and immortality on a free-threaded dump.", "[integrati
 
 	SECTION("None local reads as immortal with a positive refcount.")
 	{
-		auto& none = findLocal(locals,"none_local");
+		auto& none = findLocal(locals, "'none_local'");
 		REQUIRE(none.refCount() > 0);
 		REQUIRE(none.isImmortal());
 	}
 
 	SECTION("Fresh list local is mortal with a small refcount.")
 	{
-		auto& lst = findLocal(locals,"list_local");
+		auto& lst = findLocal(locals, "'list_local'");
 		REQUIRE(lst.refCount() > 0);
 		REQUIRE(lst.refCount() < 1000);
 		REQUIRE_FALSE(lst.isImmortal());
@@ -147,7 +147,7 @@ TEST_CASE("Stackref decoding resolves localsplus on a free-threaded dump.", "[in
 
 	SECTION("list_local round-trips through repr().")
 	{
-		auto& lst = dynamic_cast<PyListObject&>(findLocal(locals,"list_local"));
+		auto& lst = dynamic_cast<PyListObject&>(findLocal(locals, "'list_local'"));
 		REQUIRE(lst.type().name() == "list");
 		REQUIRE(lst.numItems() == 3);
 		REQUIRE(lst.repr(false) == "[ 1, 2, 3 ]");
@@ -155,7 +155,7 @@ TEST_CASE("Stackref decoding resolves localsplus on a free-threaded dump.", "[in
 
 	SECTION("dict_local iterates via PyDictKeysObject under Py_GIL_DISABLED.")
 	{
-		auto& d = dynamic_cast<PyDictObject&>(findLocal(locals,"dict_local"));
+		auto& d = dynamic_cast<PyDictObject&>(findLocal(locals, "'dict_local'"));
 		REQUIRE(d.type().name() == "dict");
 		auto pairs = d.pairValues();
 		REQUIRE(pairs.size() == 2);
