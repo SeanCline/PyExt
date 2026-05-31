@@ -4,17 +4,36 @@ Phase 0 of `engextcpp-replacement.md`. Two go/no-go proofs. Both must pass
 before Phase 1. **Nothing here is built or verified yet** — this is scaffolding
 that defines the proofs and the new layer's contracts.
 
-## Proof A — bare extension ABI (no engextcpp)
+## Proof A — bare extension ABI (no engextcpp) ✅ PASSED (2026-05-31)
 **File:** `src/spike/SpikeExports.cpp`
 **Goal:** show we can satisfy the WinDbg export ABI without the framework.
 
-- [ ] Build `SpikeExports.cpp` into a tiny `.dll` (own minimal project/cmd, or a
+- [x] Build `SpikeExports.cpp` into a tiny `.dll` (own minimal project/cmd, or a
       temporary `pyspike` config) exporting `DebugExtensionInitialize` and one
       `!pyspike` command. No `engextcpp.hpp` include.
-- [ ] In WinDbg/CDB: `.load pyspike.dll`, run `!pyspike hello`.
-- [ ] **Accept:** `pyspike: bare-ABI extension alive. args=[hello]` prints.
+- [x] In WinDbg/CDB: `.load pyspike.dll`, run `!pyspike hello`.
+- [x] **Accept:** `pyspike: bare-ABI extension alive. args=[hello]` prints.
 - [ ] *Stretch:* add `KnownStructOutputEx` (names + one-liner) and confirm `dt`
       triggers it (the fiddliest ABI corner — buffer-size protocol).
+
+**Result.** Built with MSVC 14.51 (`cl /std:c++latest /LD`), exports verified
+clean/undecorated (`DebugExtensionInitialize`, `DebugExtensionUninitialize`,
+`pyspike`). Loaded in `cdb.exe` (WinKit 10.0.26100 x64):
+
+```
+> cdb -c ".load pyspike.dll; !pyspike hello from cdb; .unload pyspike; q" cmd.exe /c exit
+pyspike: bare-ABI extension alive. args=[hello from cdb]
+Unloading ...\pyspike.dll extension DLL
+```
+
+Confirms: `.load` accepts a non-engextcpp DLL; the lifecycle + command exports
+dispatch; the command receives the **raw unparsed arg string** (`hello from
+cdb`) as a `PCSTR` — exactly the input our own `ArgParser` (§7.3) consumes, so
+the `{;s;...}` grammar is genuinely unnecessary. The biggest Option-3 unknown
+(owning the export ABI) is retired.
+
+Reproduce: `x64/spike/pyspike.dll` is the build output; rebuild via the cl
+command in the commit, or wire `src/spike/` into a vcxproj config.
 
 ## Proof B — hardest data read on raw DbgEng
 **Target:** `PyObject::managedDict()` expression reads — `PyObject.cpp:94`
