@@ -43,19 +43,24 @@ output, listing the features that may be inaccurate.
 | Managed dict, weakref slot offsets | ✅ | ✅ |
 | Dict iteration (`PyDictKeysObject`) | ✅ | ✅ (audited; layout shift transparent) |
 | Bytecode start via `co_tlbc[tlbcIndex]` | n/a | ✅ (per-thread; falls back to `entries[0]` if thread context is missing) |
-| `localsplus` / `f_executable` via stackref table | n/a | ⚠ best-effort (needs validation against a real dump) |
-| Standalone `!pyinterpreterframe <addr>` on FT | ✅ | ⚠ `localsplus` resolves nothing — no owning thread context |
-| Generator/coroutine embedded frame on FT | ✅ | ⚠ same; embedded frame has no owning-thread context |
+| `localsplus` / `f_executable` decoding | ✅ tagged-pointer mask | ✅ same tagged-pointer mask (CPython 3.14 FT kept `_PyStackRef.bits`) |
+| Standalone `!pyinterpreterframe <addr>` on FT | ✅ | ✅ same as GIL (tagged-pointer path needs no thread context) |
+| Generator/coroutine embedded frame on FT | ✅ | ✅ same — works without thread context |
 
 ## Validated versions
 
-The free-threaded code paths are implemented to match CPython 3.13 / 3.14
-internals (PEP 703 shipped in 3.13, became more prominent in 3.14). No
-free-threaded dump has been exercised end-to-end yet — the GIL paths and
-the build-mode discriminator are tested against a real Python 3.14 dump;
-the free-threaded paths are code-inspected only and tested by the
-`[free-threaded]`-tagged cases in `FreeThreadedTest.cpp`, which **SKIP**
-when no FT dump is present.
+The free-threaded code paths are validated end-to-end against a Python
+3.14.5 free-threaded build (python.org installer, `python3.14t.exe`).
+The `[free-threaded]`-tagged cases in `FreeThreadedTest.cpp` **SKIP**
+when no FT dump is present, so contributors without a free-threaded
+interpreter installed still get a green run.
+
+**Note on PDB availability.** As of this writing, python.org does not
+ship `python314t.pdb` on its public symbol server
+(`pythonsymbols.sdcline.com`). The PDB lives next to the binary in the
+install directory; point the test runner at it via
+`--symbol-path "C:\path\to\Python314;srv*c:\symbols\*http://pythonsymbols.sdcline.com/symbols/"`
+or set up your WinDbg symbol path the same way.
 
 ## Workflow
 
@@ -123,25 +128,36 @@ Thread 0:
 
 ## Known limitations
 
-- **Standalone frame inspection** — `!pyinterpreterframe <addr>` does not
-  know which thread owns the frame, so it cannot resolve `tlbcIndex` (for
-  bytecode start) or the stackref table (for `localsplus`). Bytecode
-  falls back to `co_tlbc->entries[0]`, which is the main thread's copy
-  and correct for the main thread only. `localsplus` decoded standalone
-  comes back empty rather than wrong.
-- **Generator / coroutine embedded frames** — same limitation. They carry
-  no back-pointer to the owning thread, so the decoder treats them like
-  the standalone case.
-- **Stackref table field name** — the implementation probes
-  `PyInterpreterState.open_stackrefs_table` then falls back to
-  `stackrefs`. CPython has renamed this field across refactors; if neither
-  name is exposed by the PDB the decoder returns `nullopt` for every slot
-  and `localsplus` comes back empty.
-- **Spike not run** — the plan flagged a one-day spike to verify the
-  stackref table's `entries` array is reachable from a typical minidump
-  (mimalloc may place it outside captured pages). That spike hasn't been
-  run yet; if it fails, `localsplus` on FT degrades to empty for every
-  frame and we document it as a Level B' rather than B.
+- **Standalone frame inspection on non-main threads** —
+  `!pyinterpreterframe <addr>` does not know which thread owns the
+  frame, so on the free-threaded build it cannot resolve `tlbcIndex`
+  for the per-thread bytecode copy. It falls back to
+  `co_tlbc->entries[0]`, which is the main thread's copy. For frames
+  belonging to the main thread this is exactly right; for other threads
+  the byte offsets within the bytecode may not match, producing
+  approximate line numbers when specializations differ across threads.
+  Walking the same frame from `!pystack` (which goes through
+  `PyThreadState`) does not have this limitation.
+- **Generator / coroutine embedded frames on non-main threads** — same
+  caveat. The embedded `_PyInterpreterFrame` carries no back-pointer to
+  the owning thread, so we fall back to `entries[0]` for bytecode.
+
+### Subsumed by reality
+
+The original plan called out two risks that turned out not to apply on
+the shipped 3.14 free-threaded build:
+
+- *Stackref table reachability* — PEP 703's early sketch used a
+  per-interpreter table indexed by `_PyStackRef.index`. CPython 3.14
+  shipped with `_PyStackRef` as a plain tagged-pointer union (a single
+  `bits` member), so there is no table to walk and the `localsplus`
+  decode is just the same tagged-pointer mask as the GIL build. A
+  fallback path through `PyInterpreterState::stackrefEntry` remains in
+  the code in case a future CPython resurrects the index design; today
+  it never runs.
+- *Spike on entries reachability* — moot for the same reason. The
+  Level B' fallback ("localsplus unavailable on free-threaded") is not
+  needed in 3.14.
 
 ## When something looks wrong
 
@@ -152,11 +168,13 @@ Thread 0:
 2. Refcounts negative or huge → the path probably didn't take the FT
    branch in `PyObject::refCount()`. Confirm `isFreeThreaded()` returns
    true at the prompt with `dx`.
-3. `localsplus` empty → likely the stackref-table lookup failed. Try
-   `dt python3X!PyInterpreterState` and look for either
-   `open_stackrefs_table` or `stackrefs`; if the name on disk doesn't
-   match the two strings the lookup probes, file a one-line note and
-   we'll add the alternate to the fallback chain.
+3. `localsplus` empty → if CPython has reintroduced the `_PyStackRef.index`
+   design, `localsplus()` will route through `stackrefEntry`. Check
+   `dt python3X!_PyStackRef` for an `index` field, and if present check
+   `dt python3X!PyInterpreterState` for the table — the implementation
+   probes `open_stackrefs_table` then `stackrefs`. If the actual field
+   name differs, file a one-line note and we'll add the alternate to the
+   fallback chain.
 4. Wrong line numbers on a non-main thread → bytecode start probably
    fell back to `entries[0]` instead of the owning thread's slot. This
    path only kicks in when frames are walked from `PyThreadState`, so
