@@ -48,13 +48,21 @@ namespace PyExt::Remote {
 		auto f_localsplus = remoteType().Field("localsplus");
 		auto pyObjAddrs = readOffsetArray(f_localsplus, numLocalsplus);
 
-		// Pre-resolve the interpreter state once for stackref decoding on FT,
-		// so we don't reconstruct it per slot.
+		// Decide once per call whether to decode via stackref table or tagged
+		// pointer. On CPython 3.14 free-threaded, _PyStackRef is still a union
+		// with a single `bits` member (low bit = ownership tag) — same shape as
+		// the GIL build. The original PEP 703 sketch used a per-interpreter
+		// stackref table with a `.index` field; if a future CPython resurrects
+		// that shape we route through PyInterpreterState::stackrefEntry, else
+		// we fall through to the existing tagged-pointer mask.
 		optional<PyInterpreterState> interp;
-		if (isFreeThreaded() && interpStateOffset_.has_value()) {
-			try {
-				interp.emplace(RemoteType(*interpStateOffset_, "PyInterpreterState"));
-			} catch (...) {}
+		if (isFreeThreaded() && numLocalsplus > 0 && interpStateOffset_.has_value()) {
+			auto firstSlot = f_localsplus.ArrayElement(0);
+			if (firstSlot.HasField("index")) {
+				try {
+					interp.emplace(RemoteType(*interpStateOffset_, "PyInterpreterState"));
+				} catch (...) {}
+			}
 		}
 
 		vector<pair<string, unique_ptr<PyObject>>> localsplus(numLocalsplus);
@@ -62,14 +70,13 @@ namespace PyExt::Remote {
 			auto raw = pyObjAddrs.at(i);
 			Offset addr = 0;
 			if (interp.has_value()) {
-				// Free-threaded build: each slot is a _PyStackRef whose `index`
-				// field (a uintptr_t) names a slot in the interpreter's stackref
-				// table. nullopt from the lookup means "no live referent" — we
-				// surface that as a null PyObject, never a guessed address.
+				// Future free-threaded build with stackref index lookup.
+				// nullopt from the lookup means "no live referent" — surface that
+				// as a null PyObject, never a guessed address.
 				addr = interp->stackrefEntry(raw).value_or(0);
 			} else {
-				// GIL build (Python 3.14+) stuffs the ownership tag in the low
-				// bit of pointers.
+				// Tagged-pointer path: GIL build (Python 3.14+) and the current
+				// 3.14 free-threaded build both use the low bit as ownership tag.
 				// https://huangxt.com/wiki/cpython/tagged-pointer
 				addr = raw & ~(Offset)1; //< Mask off the ownership bit. TODO: Factor this out to a common function.
 			}
