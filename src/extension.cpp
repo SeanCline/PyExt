@@ -8,6 +8,8 @@
 #include "PyInterpreterState.h"
 using namespace PyExt::Remote;
 
+#include "dbg/OutputSink.h"
+
 #include <engextcpp.hpp>
 
 #include <string>
@@ -69,14 +71,15 @@ namespace PyExt {
 		// of the limit in advance, so we take the value from the documentation.
 		// https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/dbgeng/nf-dbgeng-idebugcontrol4-controlledoutputvalistwide#remarks
 
+		Dbg::ControlOutputSink sink(m_Control);
 		if (content.size() <= chunkSize) {
-			Dml("%s", content.c_str());
+			sink.dml("%s", content.c_str());
 		} else {
 			for (size_t chunkOffset = 0; chunkOffset < content.size(); chunkOffset += chunkSize) {
-				Dml("%s", content.substr(chunkOffset, chunkSize).c_str());
+				sink.dml("%s", content.substr(chunkOffset, chunkSize).c_str());
 			}
 		}
-		Out("\n");
+		sink.out("\n");
 	}
 
 
@@ -84,27 +87,29 @@ namespace PyExt {
 	{
 		ensureSymbolsLoaded();
 
+		Dbg::ControlOutputSink sink(m_Control);
+
 		auto offset = evalOffset(GetUnnamedArgStr(0));
 		auto pyObj = PyObject::make(offset);
 
-		Out("%s at address: %y\n", pyObj->symbolName().c_str(), pyObj->offset());
-		Out("\tRefCount: %s\n", to_string(pyObj->refCount()).c_str());
-		Out("\tType: %s\n", pyObj->type().name().c_str());
+		sink.out("%s at address: %y\n", pyObj->symbolName().c_str(), pyObj->offset());
+		sink.out("\tRefCount: %s\n", to_string(pyObj->refCount()).c_str());
+		sink.out("\tType: %s\n", pyObj->type().name().c_str());
 
 		// Print the size if its a PyVarObject.
 		auto pyVarObj = dynamic_cast<PyVarObject*>(pyObj.get());
 		if (pyVarObj != nullptr)
-			Out("\tSize: %d\n", pyVarObj->size());
+			sink.out("\tSize: %d\n", pyVarObj->size());
 
 		auto repr = pyObj->repr(true);
 		if (!repr.empty()) {
-			Out("\tRepr: ");
+			sink.out("\tRepr: ");
 			printDml(repr);
 		}
 
 		auto details = pyObj->details();
 		if (!details.empty()) {
-			Out("\tDetails:\n");
+			sink.out("\tDetails:\n");
 			printDml(details);
 		}
 	}

@@ -2,17 +2,23 @@
 
 // Output redirection for the engextcpp-free extension (engextcpp-replacement.md
 // §5 / §7.5). Everything that prints today via ExtExtension::Out/Dml/Warn/Err
-// or that suppresses output via ExtCaptureOutputA routes through an OutputSink.
+// routes through an OutputSink instead.
 //
-// Design notes:
-//  - The sink takes already-formatted text. Callers format with std::format
-//    (the project builds with /std:c++latest), replacing the printf-style
-//    Out("%s", x.c_str()) idiom with out(std::format("{}", x)).
-//  - Channels mirror DbgEng's output masks: normal / DML / warning / error.
-//  - Redirection is just swapping the sink — no DbgEng capture object needed.
+// IMPORTANT — byte-for-byte parity (Phase 1 gate):
+// The sink is a *printf passthrough* over the exact same DbgEng formatter
+// engextcpp uses, NOT a std::format wrapper. DbgEng format strings carry
+// engine-specific specifiers (%y = symbol+offset, %p, DML <link> markup) that
+// std::format cannot reproduce. Each method forwards an unchanged format string
+// + va_list to IDebugControl::OutputVaList / ControlledOutputVaList, mirroring
+// engextcpp's ExtExtension::Out/Warn/Err/Dml verbatim:
+//   Out  -> OutputVaList(DEBUG_OUTPUT_NORMAL, fmt, args)
+//   Warn -> OutputVaList(DEBUG_OUTPUT_WARNING, fmt, args)
+//   Err  -> OutputVaList(DEBUG_OUTPUT_ERROR, fmt, args)
+//   Dml  -> ControlledOutputVaList(DEBUG_OUTCTL_AMBIENT_DML, DEBUG_OUTPUT_NORMAL, fmt, args)
+// (m_OutMask is DEBUG_OUTPUT_NORMAL for command output, so NORMAL is exact.)
 
-#include <string>
-#include <string_view>
+#include <cstdarg>
+#include <sal.h> // SAL annotations (_In_z_, _Printf_format_string_)
 
 struct IDebugControl;
 
@@ -22,55 +28,44 @@ namespace PyExt::Dbg {
 	public:
 		virtual ~OutputSink() = default;
 
-		virtual void out(std::string_view text) = 0;   // DEBUG_OUTPUT_NORMAL
-		virtual void dml(std::string_view text) = 0;    // DML-formatted normal output
-		virtual void warn(std::string_view text) = 0;   // DEBUG_OUTPUT_WARNING
-		virtual void err(std::string_view text) = 0;     // DEBUG_OUTPUT_ERROR
+		// printf-style, identical call shape to ExtExtension::Out/Dml/Warn/Err.
+		void out(_In_z_ _Printf_format_string_ const char* fmt, ...);
+		void dml(_In_z_ _Printf_format_string_ const char* fmt, ...);
+		void warn(_In_z_ _Printf_format_string_ const char* fmt, ...);
+		void err(_In_z_ _Printf_format_string_ const char* fmt, ...);
+
+	protected:
+		// Channels a concrete sink implements. Variadic forwarders above call these.
+		virtual void vout(const char* fmt, va_list args) = 0;
+		virtual void vdml(const char* fmt, va_list args) = 0;
+		virtual void vwarn(const char* fmt, va_list args) = 0;
+		virtual void verr(const char* fmt, va_list args) = 0;
 	};
 
 
-	// Default sink: forwards to the live debugger via IDebugControl::Output /
-	// ControlledOutput. Replaces the implicit g_Ext->Out/Dml/Warn/Err path.
-	// (impl in OutputSink.cpp — see Phase 1)
+	// Default sink: forwards to the live debugger via the same VaList calls
+	// engextcpp makes. Construct from the command's IDebugControl (m_Control).
 	class ControlOutputSink final : public OutputSink {
 	public:
-		explicit ControlOutputSink(IDebugControl* control);
-		void out(std::string_view text) override;
-		void dml(std::string_view text) override;
-		void warn(std::string_view text) override;
-		void err(std::string_view text) override;
+		explicit ControlOutputSink(IDebugControl* control) : control_(control) {}
+	protected:
+		void vout(const char* fmt, va_list args) override;
+		void vdml(const char* fmt, va_list args) override;
+		void vwarn(const char* fmt, va_list args) override;
+		void verr(const char* fmt, va_list args) override;
 	private:
 		IDebugControl* control_;
 	};
 
 
-	// Discards everything. Replaces utils::ignoreExtensionError's use of
-	// ExtCaptureOutputA when we only want to suppress noise (e.g.
-	// ensureSymbolsLoaded's probing).
+	// Discards everything. For the "suppress this output" paths (eventually
+	// replacing ExtCaptureOutputA in ensureSymbolsLoaded / ignoreExtensionError).
 	class NullSink final : public OutputSink {
-	public:
-		void out(std::string_view) override {}
-		void dml(std::string_view) override {}
-		void warn(std::string_view) override {}
-		void err(std::string_view) override {}
-	};
-
-
-	// Collects output for assertions. Replaces the need to scrape WinDbg output
-	// in the test harness.
-	class CaptureSink final : public OutputSink {
-	public:
-		void out(std::string_view text) override { normal_ += text; }
-		void dml(std::string_view text) override { normal_ += text; }
-		void warn(std::string_view text) override { warnings_ += text; }
-		void err(std::string_view text) override { errors_ += text; }
-
-		auto text() const -> const std::string& { return normal_; }
-		auto warnings() const -> const std::string& { return warnings_; }
-		auto errors() const -> const std::string& { return errors_; }
-		void clear() { normal_.clear(); warnings_.clear(); errors_.clear(); }
-	private:
-		std::string normal_, warnings_, errors_;
+	protected:
+		void vout(const char*, va_list) override {}
+		void vdml(const char*, va_list) override {}
+		void vwarn(const char*, va_list) override {}
+		void verr(const char*, va_list) override {}
 	};
 
 }

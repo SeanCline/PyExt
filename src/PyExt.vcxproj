@@ -144,6 +144,11 @@
     <ClCompile Include="pysymfix.cpp" />
     <ClCompile Include="PyThreadState.cpp" />
     <ClCompile Include="RemoteType.cpp" />
+    <ClCompile Include="dbg\OutputSink.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <ForcedIncludeFiles>
+      </ForcedIncludeFiles>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(WindowsSdkDir)\Debuggers\inc\engextcpp.cpp">
@@ -199,6 +204,9 @@
     <ClInclude Include="fieldAsPyObject.h" />
     <ClInclude Include="..\include\utils\lossless_cast.h" />
     <ClInclude Include="..\include\utils\ScopeExit.h" />
+    <ClInclude Include="dbg\OutputSink.h" />
+    <ClInclude Include="dbg\DbgEngContext.h" />
+    <ClInclude Include="dbg\RemoteValue.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -395,7 +395,43 @@ cast-expression path is the real risk.
 
 ---
 
-## 10. Migration touch-points (quick reference)
+## 10. Progress log
+
+### Phase 1 — increment 1 (2026-05-31): output sink landed, `pyobj` converted
+- `src/dbg/OutputSink.{h,cpp}` implemented as a **printf-passthrough** over
+  `IDebugControl::OutputVaList`/`ControlledOutputVaList`, mirroring engextcpp's
+  `ExtExtension::Out/Warn/Err/Dml` channel+mask mapping verbatim (NOT a
+  `std::format` wrapper — that would break `%y` symbol resolution, `%p`, and DML
+  `<link>` markup). Wired into `PyExt.vcxproj` with `PrecompiledHeader=NotUsing`.
+- `extension.cpp`: `pyobj` and the shared `printDml` now print through a
+  `ControlOutputSink(m_Control)` instead of inherited `Out`/`Dml`.
+- **Verification — output is the gate, not the suite.** The 756-assertion suite
+  drives the *Remote object model*, not the `EXT_COMMAND` bodies, so it cannot
+  detect output changes. Used a golden-master cdb diff instead:
+  `cdb -z object_details.dmp -y <sym> -c ".load pyext.dll; !pyobj python314!PyType_Type; !pyobj python314!_Py_NoneStruct; q"`
+  and `!pystack -all` on `pystack_all_test.dmp`, before vs after. **Result:
+  byte-identical** (only diff was cdb's own nondeterministic startup-timing
+  line). `%y` symbol+offset output reproduced exactly.
+- Next increments: convert `pystack.cpp`, `pysymfix.cpp`,
+  `pysetautointerpreterstate.cpp`, then replace `ExtCaptureOutputA` suppression
+  in `ensureSymbolsLoaded`/`ignoreExtensionError` with `NullSink` (keep on the
+  same engine until the capture mechanism itself is replaced).
+
+### ⚠ Discovered pre-existing issue (NOT caused by this migration)
+While establishing the suite baseline, found that `ObjectTypesTest.cpp:262`
+(`REQUIRE(list_obj.numItems() == 3)`) **fails and then crashes** (`0xC0000005`)
+nondeterministically against the Python 3.14 dumps — assertion counts vary
+run-to-run (756 once, then 713/706/702/124-alone). Confirmed independent of this
+work: reproduces on clean `spike/drop-engextcpp` HEAD with all Phase-1 changes
+stashed, with the ObjectTypes case run in isolation, and with local-cache-only
+symbols (rules out network/symbol flakiness). Smells like UB (heap corruption /
+uninitialized read) in the list/locals read path on the 3.14 layout — adjacent
+to the correctness items in `plan.md`. **Tracked separately; it gates a clean
+"suite green" signal but does not block engextcpp Phase-1 increments, which are
+verified by golden-master diff + A/B suite parity (clean-HEAD and this branch
+crash identically).**
+
+## 11. Migration touch-points (quick reference)
 
 - **Data seam:** `include/RemoteType.h` already hides `ExtRemoteTyped` behind a
   `shared_ptr` — `RemoteValue` slots in here (Phase 2).
