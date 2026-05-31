@@ -23,6 +23,11 @@ public: // Construction/Destruction.
 public:
 	auto getMainThreadFrames() const -> std::vector<std::shared_ptr<PyExt::Remote::PyFrame>>;
 
+	// Python minor version of the dumped interpreter (e.g. 14 for 3.14), read
+	// from the python module's file version. Returns 0 if it can't be read.
+	// Lets version-sensitive tests gate assertions without new plumbing.
+	auto pythonMinorVersion() const -> int;
+
 public: // Debug interfaces.
 	Microsoft::WRL::ComPtr<IDebugClient> pClient;
 	Microsoft::WRL::ComPtr<IDebugControl> pControl;

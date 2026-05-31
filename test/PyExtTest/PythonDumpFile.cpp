@@ -124,6 +124,33 @@ auto PythonDumpFile::getMainThreadFrames() const -> std::vector<std::shared_ptr<
 }
 
 
+auto PythonDumpFile::pythonMinorVersion() const -> int
+{
+	ComPtr<IDebugSymbols3> pSymbols3;
+	if (FAILED(pClient.As(&pSymbols3)))
+		return 0;
+
+	ULONG moduleCount = 0, unloadedCount = 0;
+	if (FAILED(pSymbols->GetNumberModules(&moduleCount, &unloadedCount)))
+		return 0;
+
+	// Every python module in the dump (python, python3, python3XX) carries the
+	// same interpreter file version, so the first match suffices.
+	for (ULONG i = 0; i < moduleCount; ++i) {
+		char modName[MAX_PATH] = {};
+		if (FAILED(pSymbols->GetModuleNameString(DEBUG_MODNAME_MODULE, i, 0, modName, sizeof(modName), nullptr)))
+			continue;
+		if (_strnicmp(modName, "python", 6) != 0)
+			continue;
+
+		VS_FIXEDFILEINFO vfi = {};
+		if (SUCCEEDED(pSymbols3->GetModuleVersionInformation(i, 0, "\\", &vfi, sizeof(vfi), nullptr)))
+			return LOWORD(vfi.dwFileVersionMS); //< HIWORD is the major (3), LOWORD the minor.
+	}
+	return 0;
+}
+
+
 auto PythonDumpFile::createDebugInterfaces() -> void
 {
 	HRESULT hr = DebugCreate(__uuidof(IDebugClient), reinterpret_cast<void**>(pClient.GetAddressOf()));
