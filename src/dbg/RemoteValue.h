@@ -19,6 +19,8 @@
 // refusing to silently paper over a broken dump (the trap called out in
 // plan.md).
 
+#include "pyextpublic.h"
+
 #include <concepts>
 #include <cstddef>
 #include <cstdint>
@@ -32,12 +34,12 @@ namespace PyExt::Dbg {
 
 	class DbgEngContext;
 
-	class RemoteReadError : public std::runtime_error {
+	class PYEXT_PUBLIC RemoteReadError : public std::runtime_error {
 	public:
 		using std::runtime_error::runtime_error;
 	};
 
-	class RemoteValue {
+	class PYEXT_PUBLIC RemoteValue {
 	public:
 		using Offset = std::uint64_t;
 
@@ -68,11 +70,23 @@ namespace PyExt::Dbg {
 
 		// --- scalar reads (environment-broken -> throw) ---
 
-		// Width-correct integral read (replaces utils::readIntegral): dispatches
-		// on the field's actual size and sign-extends per `T`. Throws on a
-		// size/width mismatch.
+		// Width-correct integral read (replaces utils::readIntegral): reads the
+		// field's actual size in bytes and sign-/zero-extends per `T`.
 		template <std::integral T>
-		auto as() const -> T;
+		auto as() const -> T
+		{
+			const auto sz = typeSize();
+			std::uint64_t raw = readScalarBits(sz); // zero-extended, sz in [1,8]
+			if constexpr (std::is_signed_v<T>) {
+				if (sz < 8) {
+					const std::uint64_t signbit = std::uint64_t{1} << (sz * 8 - 1);
+					if (raw & signbit)
+						raw |= ~((std::uint64_t{1} << (sz * 8)) - 1); // sign-extend
+				}
+				return static_cast<T>(static_cast<std::int64_t>(raw));
+			}
+			return static_cast<T>(raw);
+		}
 
 		// The pointer value held here (replaces GetPtr()). Throws if this isn't
 		// a pointer-sized readable location.
@@ -84,8 +98,17 @@ namespace PyExt::Dbg {
 		// --- raw access (the "raw byte access if necessary" requirement) ---
 
 		auto bytes(std::size_t count) const -> std::vector<std::byte>;
+
+		// Reads numElements*sizeof(Elem) bytes starting at this location.
+		// Replaces utils::readArray. Throws on short read.
 		template <typename Elem>
-		auto array(std::size_t numElements) const -> std::vector<Elem>; // replaces utils::readArray
+		auto array(std::size_t numElements) const -> std::vector<Elem>
+		{
+			std::vector<Elem> buf(numElements);
+			if (numElements != 0)
+				readInto(buf.data(), numElements * sizeof(Elem));
+			return buf;
+		}
 
 		// --- metadata ---
 
@@ -94,9 +117,20 @@ namespace PyExt::Dbg {
 		auto typeSize() const -> std::size_t;
 
 	private:
+		// Internal ctor used by field()/element()/deref() once the module+typeId
+		// are already known (no symbol lookup).
+		RemoteValue(const DbgEngContext& ctx, Offset address, std::uint64_t moduleBase, std::uint32_t typeId);
+
+		// Reads `size` bytes (1..8) at address_ into a zero-extended u64. Throws
+		// RemoteReadError on short read. Used by as<T>()/ptr().
+		auto readScalarBits(std::size_t size) const -> std::uint64_t;
+
+		// Raw ReadVirtual of `count` bytes at address_ into dst. Throws on short read.
+		auto readInto(void* dst, std::size_t count) const -> void;
+
 		const DbgEngContext* ctx_;
 		Offset address_;
-		std::uint32_t moduleBase_; // resolved module + type id live here in the .cpp
+		std::uint64_t moduleBase_;
 		std::uint32_t typeId_;
 	};
 

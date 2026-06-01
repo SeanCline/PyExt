@@ -211,6 +211,7 @@ IF NOT EXIST symsrv.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\syms
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ObjectDetailsTest.cpp" />
     <ClCompile Include="ObjectTypesTest.cpp" />
+    <ClCompile Include="RemoteValueTest.cpp" />
     <ClCompile Include="PythonDumpFile.cpp" />
     <ClCompile Include="ScopeExitTest.cpp" />
     <ClCompile Include="TestConfigData.cpp" />

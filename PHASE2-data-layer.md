@@ -15,6 +15,19 @@ after every step.
 > dump). Phase 2 is the mechanical execution of that, behind the existing
 > `RemoteType` seam.
 
+> 🚨 **HEISENBUG STANDING ORDER.** A pre-existing, resource-pressure-gated,
+> optimization-sensitive crash lives in the `ObjectTypesTest` `list_obj` path on
+> the 3.14 dumps (Debug + ASan mask it; reproduces only in plain Release under
+> memory pressure / certain section orders — measured 5/5 crash under load,
+> 0/10 quiet). It is **not** caused by the engextcpp migration (clean HEAD
+> reproduces it). **If it reappears during any Phase 2 work: STOP. Drop
+> everything and debug it live while it is still failing** — capture a failing
+> `--rng-seed`, attach cdb, `kP` the AV, then `#pragma optimize("",off)`
+> per-TU bisection (`PyDictKeysObject.cpp` → `PyDictObject.cpp` → `PyObject.cpp`
+> → `PyTypeObject.cpp`). A live repro is the only path to root cause; do not let
+> it slip back to quiescent. Suspected class: intermittent/unchecked DbgEng read
+> yielding garbage `ob_size`.
+
 ---
 
 ## 0. Finish Phase 1 first (small, unblocks clean output routing)

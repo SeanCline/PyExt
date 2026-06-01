@@ -9,6 +9,7 @@
 // and can construct a context + a CaptureSink with no singleton involved.
 
 #include "OutputSink.h"
+#include "pyextpublic.h"
 
 #include <cstdint>
 #include <memory>
@@ -24,7 +25,7 @@ struct IDebugSystemObjects;
 
 namespace PyExt::Dbg {
 
-	class DbgEngContext {
+	class PYEXT_PUBLIC DbgEngContext {
 	public:
 		// QIs the client for the interfaces we use; throws if any QI fails.
 		// `sink` defaults to a ControlOutputSink over the queried IDebugControl.
