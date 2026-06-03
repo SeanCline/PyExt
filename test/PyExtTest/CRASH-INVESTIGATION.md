@@ -69,16 +69,58 @@ Both `dbghelp.dll` and `dbgeng.dll` are the same SDK version
 (10.0.26100.8249, copied into the output dir by the PostBuild step) — not a
 version mismatch.
 
-## Not yet pinned
+## Not yet pinned — and why every capture method fought us
 
-The exact corrupting write is not yet identified. Plain TTD clips the
-`__fastfail` (`STATUS_HEAP_CORRUPTION`) a couple of instructions past the
-recorded trace end, so the fault itself is not in the trace and there is no
-corrupted-block address to reverse-trace from. Pinning it needs full PageHeap
-(to fault as an immediate AV at the corrupting access) under TTD with a
-per-iteration watchdog. Leading hypothesis: a bug in, or PyExt's use of,
-`dbghelp`/`dbgeng` symbol resolution during/around a `Reload`. This is the
-`engextcpp`/dbgeng layer the Option-3 initiative is removing.
+The exact corrupting write is not identified. The bug is a
+**TTD-perturbation-sensitive heisenbug**, and the capture techniques are
+mutually exclusive with reproducing it:
+
+- **Reproduces only under TTD** (~1 in 7 recorded runs). Bare runs (0/60),
+  live under cdb (0/30+), and page-heap-live (0/15+) do **not** reproduce —
+  the bug needs TTD's specific timing.
+- **Plain TTD clips the fault.** `STATUS_HEAP_CORRUPTION` fires via
+  `__fastfail`, which bypasses normal exception dispatch; the trace ends ~2
+  instructions before it (last recorded frame: `ntdll!RtlFlsSetValue`, a benign
+  instruction). No corrupted-block address to reverse-trace from.
+- **`!heap -triage` on the trace is a false positive.** It flags one block, but
+  reverse-execution shows that block is dbghelp's per-thread **TLS** data,
+  written legitimately during thread startup (constant from ~10% into the
+  trace). No genuine adjacent-block overrun is visible in the trace.
+- **Full PageHeap under TTD hangs** (guards every dbghelp alloc -> symbol
+  enumeration crawls past the watchdog). **Standard PageHeap under TTD also
+  hangs.** **PageHeap live doesn't reproduce** (changes timing away from the
+  TTD window).
+- **Four standalone DbgEng repros do not reproduce** (see `fh4-repro/`):
+  `IDebugControl::Evaluate`; the `IDebugAdvanced2::Request(EXT_TDOP_SET_FROM_EXPR)`
+  typed-data path `ExtRemoteTyped::Set` uses; that plus a nested
+  `ExtCaptureOutput`-equivalent; and a minimal **extension DLL** loaded in cdb
+  that recreates the `dbgeng -> extension -> dbgeng` reentrancy. All clean
+  10-30 iters under TTD. So the trigger is **not** the bare engine symbol path;
+  it needs the full `PyExtTest` process context.
+
+### Source audit (the actual crash path, before any object reads)
+
+The crash is in `PythonDumpFile` ctor -> `pysymfix` -> `ensureSymbolsLoaded`,
+which runs before any object-type reads. Audited and **clean**:
+`getSymbolPath` buffer sizing, `GetModuleNames` (`MAX_PATH`/`sizeof`),
+`ExtCaptureOutput::Output` (overflow-guarded realloc/memcpy, LIFO nesting),
+`makeAutoInterpreterState`, `RemoteType`, and the object-read buffers
+(`readArray`, unicode, bytearray). No heap overrun found in PyExt code.
+
+> Unrelated real bug spotted: `pysymfix.cpp getSymbolPath()` does
+> `throw runtime_error("..." + hr)` — pointer arithmetic on a string literal
+> (UB), on the `GetSymbolPath` failure path only. Not the crash cause; fix
+> separately (use `std::to_string(hr)`).
+
+### Current best assessment
+
+Not the compiler. Not an obvious PyExt logic bug (audited). A timing-sensitive
+heap corruption on the symbol-(re)load path that only manifests under TTD and
+resists navigable capture. Most likely a latent corruption inside, or in
+PyExt's interaction with, the `dbghelp`/`dbgeng` symbol engine (the
+`engextcpp`/dbgeng layer Option-3 removes), exposed only by TTD's timing.
+Artifacts kept under `fh4-repro/`: the clipped 700 MB TTD trace
+(`ttd/crash/iter7_heap/PyExtTest01.run`) and the four standalone repros.
 
 ## Reproduce
 
