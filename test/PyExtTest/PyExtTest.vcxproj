@@ -73,6 +73,11 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <!-- A/B switch for the FrameHandler4 workaround. Default ON (=/d2FH4- applied).
+       Build with /p:DisableFH4=false to reproduce the FH4 crash. -->
+  <PropertyGroup>
+    <DisableFH4 Condition="'$(DisableFH4)'==''">true</DisableFH4>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
@@ -98,6 +103,17 @@
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <PreprocessorDefinitions>NOMINMAX</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <!-- Disable the FrameHandler4 C++ exception unwinder (use FH3). MSVC 14.51
+           (VS2026) miscompiles the EH cleanup funclets of the large, 19-SECTION
+           ObjectTypesTest TEST_CASE in optimized builds: during the unwind of a
+           thrown exception (e.g. the REQUIRE_THROWS assertions), FH4's
+           CallSettingFrame_LookupContinuationIndex jumps into a bad funclet
+           address and writes to a code page -> access violation. Optimization-
+           sensitive (Debug and ASan builds are clean), so it presents as a
+           flaky/heisenbug crash under load. /d2FH4- is a test-only workaround;
+           it does not affect the shipped pyext.dll. Remove once the toolchain
+           bug is fixed. -->
+      <AdditionalOptions>/d2FH4- %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>$(TargetDir)\pyext.lib;dbgeng.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -124,6 +140,17 @@ IF NOT EXIST symsrv.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\syms
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <PreprocessorDefinitions>NOMINMAX</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <!-- Disable the FrameHandler4 C++ exception unwinder (use FH3). MSVC 14.51
+           (VS2026) miscompiles the EH cleanup funclets of the large, 19-SECTION
+           ObjectTypesTest TEST_CASE in optimized builds: during the unwind of a
+           thrown exception (e.g. the REQUIRE_THROWS assertions), FH4's
+           CallSettingFrame_LookupContinuationIndex jumps into a bad funclet
+           address and writes to a code page -> access violation. Optimization-
+           sensitive (Debug and ASan builds are clean), so it presents as a
+           flaky/heisenbug crash under load. /d2FH4- is a test-only workaround;
+           it does not affect the shipped pyext.dll. Remove once the toolchain
+           bug is fixed. -->
+      <AdditionalOptions>/d2FH4- %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>$(TargetDir)\pyext.lib;dbgeng.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -152,6 +179,17 @@ IF NOT EXIST symsrv.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\syms
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <PreprocessorDefinitions>NOMINMAX</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <!-- Disable the FrameHandler4 C++ exception unwinder (use FH3). MSVC 14.51
+           (VS2026) miscompiles the EH cleanup funclets of the large, 19-SECTION
+           ObjectTypesTest TEST_CASE in optimized builds: during the unwind of a
+           thrown exception (e.g. the REQUIRE_THROWS assertions), FH4's
+           CallSettingFrame_LookupContinuationIndex jumps into a bad funclet
+           address and writes to a code page -> access violation. Optimization-
+           sensitive (Debug and ASan builds are clean), so it presents as a
+           flaky/heisenbug crash under load. /d2FH4- is a test-only workaround;
+           it does not affect the shipped pyext.dll. Remove once the toolchain
+           bug is fixed. -->
+      <AdditionalOptions>/d2FH4- %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -182,6 +220,17 @@ IF NOT EXIST symsrv.dll copy "$(FrameworkSdkDir)Debuggers\$(PlatformTarget)\syms
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <PreprocessorDefinitions>NOMINMAX</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <!-- Disable the FrameHandler4 C++ exception unwinder (use FH3). MSVC 14.51
+           (VS2026) miscompiles the EH cleanup funclets of the large, 19-SECTION
+           ObjectTypesTest TEST_CASE in optimized builds: during the unwind of a
+           thrown exception (e.g. the REQUIRE_THROWS assertions), FH4's
+           CallSettingFrame_LookupContinuationIndex jumps into a bad funclet
+           address and writes to a code page -> access violation. Optimization-
+           sensitive (Debug and ASan builds are clean), so it presents as a
+           flaky/heisenbug crash under load. /d2FH4- is a test-only workaround;
+           it does not affect the shipped pyext.dll. Remove once the toolchain
+           bug is fixed. -->
+      <AdditionalOptions Condition="'$(DisableFH4)'!='false'">/d2FH4- %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
