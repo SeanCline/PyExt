@@ -17,13 +17,13 @@ namespace {
 		ULONG pathSize = 0;
 		HRESULT hr = pSymbols->GetSymbolPath(nullptr, 0, &pathSize);
 		if (FAILED(hr))
-			throw runtime_error("GetSymbolPath failed to get path size with hr=" + hr);
+			throw runtime_error("GetSymbolPath failed to get path size with hr=" + to_string(hr));
 
 		// Now get the buffer.
 		string buff(pathSize, '\0');
 		hr = pSymbols->GetSymbolPath(buff.data(), pathSize, &pathSize);
 		if (FAILED(hr))
-			throw runtime_error("GetSymbolPath failed to get path size with hr=" + hr);
+			throw runtime_error("GetSymbolPath failed to get path size with hr=" + to_string(hr));
 
 		assert(pathSize == buff.size() && "Unexpected symbol path size after second call to GetSymbolPath.");
 		buff.erase(buff.find('\0')); //< Trim off any extra from our string.
@@ -36,7 +36,7 @@ namespace {
 	{
 		HRESULT hr = pSymbols->SetSymbolPath(path.c_str());
 		if (FAILED(hr))
-			throw runtime_error("SetSymbolPath failed with hr=" + hr);
+			throw runtime_error("SetSymbolPath failed with hr=" + to_string(hr));
 	}
 
 	string concatenatePaths(const string& path1, const string& path2, char delim = ';')
