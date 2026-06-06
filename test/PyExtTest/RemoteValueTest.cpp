@@ -29,11 +29,16 @@ TEST_CASE("RemoteValue matches the ExtRemoteTyped object model.", "[integration]
 
 	DbgEngContext ctx(dump.pClient.Get());
 
+	// The dump's Python version varies across the CI matrix (2.7, 3.11, 3.14, ...),
+	// so the module name is resolved dynamically rather than hardcoded.
+	auto pyTypeTypeSym = ctx.qualifyPythonSymbol("PyType_Type");
+	REQUIRE(pyTypeTypeSym.has_value());
+
 	SECTION("pointerSize / evaluate / qualify")
 	{
 		REQUIRE(ctx.pointerSize() == 8);
 
-		auto addr = ctx.evaluateU64("python314!PyType_Type");
+		auto addr = ctx.evaluateU64(*pyTypeTypeSym);
 		REQUIRE(addr.has_value());
 		REQUIRE(*addr != 0);
 
@@ -44,7 +49,7 @@ TEST_CASE("RemoteValue matches the ExtRemoteTyped object model.", "[integration]
 
 	SECTION("scalar + field parity against the object model")
 	{
-		auto addrOpt = ctx.evaluateU64("python314!PyType_Type");
+		auto addrOpt = ctx.evaluateU64(*pyTypeTypeSym);
 		REQUIRE(addrOpt.has_value());
 		const std::uint64_t addr = *addrOpt;
 
@@ -67,7 +72,7 @@ TEST_CASE("RemoteValue matches the ExtRemoteTyped object model.", "[integration]
 
 	SECTION("typeSize via GetTypeSize (the cast-expression-site primitive)")
 	{
-		auto addr = ctx.evaluateU64("python314!PyType_Type");
+		auto addr = ctx.evaluateU64(*pyTypeTypeSym);
 		REQUIRE(addr.has_value());
 		// PyObject header is 2 pointers on a GIL build (proven 0x10 in Phase 0).
 		REQUIRE(RemoteValue(ctx, "PyObject", *addr).typeSize()
@@ -76,7 +81,7 @@ TEST_CASE("RemoteValue matches the ExtRemoteTyped object model.", "[integration]
 
 	SECTION("expected-absent field returns nullopt, does not throw")
 	{
-		auto addr = ctx.evaluateU64("python314!PyType_Type");
+		auto addr = ctx.evaluateU64(*pyTypeTypeSym);
 		REQUIRE(addr.has_value());
 		RemoteValue rv(ctx, "_object", *addr);
 		REQUIRE_FALSE(rv.field("field_that_does_not_exist").has_value());

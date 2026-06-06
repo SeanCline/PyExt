@@ -7,6 +7,7 @@
 #include <windows.h>
 #include <DbgEng.h>
 
+#include <cctype>
 #include <string>
 
 namespace PyExt::Dbg {
@@ -100,10 +101,14 @@ namespace PyExt::Dbg {
 					name, sizeof(name), &nameSize)))
 				continue;
 
-			// Match "python" prefix but not unrelated modules. python3.dll is a thin
-			// forwarder with no useful symbols, so skip the bare "python3".
+			// Match the versioned "pythonNNN" dll that actually carries the symbols
+			// (python311, python314, python313t, python27, ...). Skip the bare
+			// "python" launcher exe (no PyType_Type etc.) and the "python3.dll"
+			// forwarder. This mirrors engextcpp's FindFirstModule("python???"),
+			// which required digits after the prefix.
 			std::string mod(name);
-			if (mod.rfind("python", 0) == 0 && mod != "python3") {
+			if (mod.rfind("python", 0) == 0 && mod != "python3"
+				&& mod.size() > 6 && std::isdigit(static_cast<unsigned char>(mod[6]))) {
 				std::string result = mod;
 				result += '!';
 				result += symbol;
