@@ -2,7 +2,7 @@
 import os, sys, subprocess, python_installations
 
 if __name__ == '__main__':
-    num_failed_tests = 0
+    num_failed_installations = 0
     for installation in python_installations.get_python_installations():
          # Skip versions with no executable.
         if installation.exec_path == None:
@@ -11,7 +11,7 @@ if __name__ == '__main__':
     
         # Only test against official CPython installations.
         if installation.company != "PythonCore":
-            print("Skipping (PythonCore)", installation, end="\n\n", flush=True)
+            print("Skipping (not PythonCore)", installation, end="\n\n", flush=True)
             continue
         
         # Also skip versions before 2.7 since they don't have symbols.
@@ -31,6 +31,8 @@ if __name__ == '__main__':
         # Run the tests against the dump files.
         print("Running tests with python executable:", installation.exec_path, flush=True)
         py_ext_test_exe = sys.argv[1] if len(sys.argv) > 1 else "../../x64/Debug/PyExtTest.exe"
-        num_failed_tests += subprocess.call([py_ext_test_exe])
+        # The exit code only says whether there were failures, not how many.
+        if subprocess.call([py_ext_test_exe]) != 0:
+            num_failed_installations += 1
 
-    sys.exit(num_failed_tests)
+    sys.exit(1 if num_failed_installations else 0)
