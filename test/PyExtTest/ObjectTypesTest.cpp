@@ -18,6 +18,10 @@
 #include <PyListObject.h>
 #include <PyTupleObject.h>
 #include <PySetObject.h>
+#include <PyUnicodeObject.h>
+#include <PyGenObject.h>
+#include <PyWeakrefObject.h>
+#include <PyCellObject.h>
 using namespace PyExt::Remote;
 
 #include <utils/ScopeExit.h>
@@ -154,7 +158,7 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 
 		auto& float_obj = dynamic_cast<PyFloatObject&>(TestHelpers::findValueByKey(localPairs, "float_obj"));
 		REQUIRE(float_obj.type().name() == "float");
-		REQUIRE(float_obj.repr().find(to_string(expectedValue)) == 0);
+		REQUIRE(float_obj.repr() == "3.1415");
 		REQUIRE(float_obj.details() == "");
 
 		// Comparing floats can be error prone. If this fails, it might need some wiggle room in the compare.
@@ -326,5 +330,130 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 		REQUIRE(regex_match(dict_obj.repr(false), expectedRegex));
 		REQUIRE(regex_match(dict_obj.repr(true), expectedRegex));
 		REQUIRE(dict_obj.details() == "");
+	}
+
+
+	SECTION("Value of non-ASCII strings.")
+	{
+		// Each string is stored with a different width per character, and is expected back as UTF-8.
+		vector<pair<string, string>> expectations{
+			{ "unicode_latin1_obj", "caf\xC3\xA9" },
+			{ "unicode_bmp_obj",    "\xE4\xB8\xAD\xE6\x96\x87" },
+			{ "unicode_astral_obj", "smile \xF0\x9F\x98\x80" },
+		};
+
+		for (auto& [name, expectedValue] : expectations) {
+			auto& obj = TestHelpers::findValueByKey(localPairs, name);
+			auto* unicodeObj = dynamic_cast<PyUnicodeObject*>(&obj);
+			if (unicodeObj == nullptr)
+				continue; //< Python 2's `unicode` type isn't supported.
+
+			INFO("Checking " << name);
+			REQUIRE(unicodeObj->stringValue() == expectedValue);
+			REQUIRE(unicodeObj->repr(false) == "'" + expectedValue + "'");
+
+			// The header of these strings is nested differently than it is for ASCII strings.
+			REQUIRE(unicodeObj->refCount() > 0);
+			REQUIRE(unicodeObj->type().name() == "str");
+		}
+	}
+
+
+	SECTION("Value of control_bytes_obj.")
+	{
+		auto& control_bytes_obj = TestHelpers::findValueByKey(localPairs, "control_bytes_obj");
+		REQUIRE(control_bytes_obj.repr(false).find(R"('\x01\x1f\xab')") != string::npos);
+	}
+
+
+	SECTION("Value of floats that don't suit fixed-point notation.")
+	{
+		REQUIRE(TestHelpers::findValueByKey(localPairs, "small_float_obj").repr() == "1.5e-10");
+		REQUIRE(TestHelpers::findValueByKey(localPairs, "whole_float_obj").repr() == "2.0");
+	}
+
+
+	SECTION("Value of single_tuple_obj.")
+	{
+		REQUIRE(TestHelpers::findValueByKey(localPairs, "single_tuple_obj").repr(false) == "(1,)");
+	}
+
+
+	SECTION("Value of empty and frozen sets.")
+	{
+		REQUIRE(TestHelpers::findValueByKey(localPairs, "empty_set_obj").repr(false) == "set()");
+
+		std::regex expectedRegex(R"(frozenset\(\{\s*1,\s*\}\))");
+		REQUIRE(regex_match(TestHelpers::findValueByKey(localPairs, "frozenset_obj").repr(false), expectedRegex));
+	}
+
+
+	SECTION("Reference count of an immortal object.")
+	{
+		// Python 3.12+ gives None a sentinel reference count with its high bits set,
+		// which must not come back as a negative number.
+		auto& none_obj = TestHelpers::findValueByKey(localPairs, "none_obj");
+		REQUIRE(none_obj.refCount() > 0);
+	}
+
+
+	SECTION("State of generators and coroutines.")
+	{
+		vector<pair<string, string>> expectations{
+			{ "generator_created_obj",  "created" },
+			{ "generator_obj",          "suspended" },
+			{ "generator_finished_obj", "cleared" },
+			{ "coroutine_obj",          "created" },
+		};
+
+		for (auto& [name, expectedState] : expectations) {
+			if (name == "coroutine_obj" && bottomCode->type().isPython2())
+				continue; //< `async def` doesn't exist there, so the script couldn't make one.
+
+			auto& genObj = dynamic_cast<PyGenObjectBase&>(TestHelpers::findValueByKey(localPairs, name));
+			INFO("Checking " << name);
+
+			// The numbering of the states has changed between versions, so every version is worth checking.
+			if (genObj.frameState().has_value()) {
+				REQUIRE(genObj.frameStateString() == expectedState);
+				REQUIRE(genObj.repr(false).find("(" + expectedState + ")>") != string::npos);
+			} else {
+				REQUIRE(genObj.frameStateString() == ""); //< Python <= 3.10 keeps the state elsewhere.
+			}
+		}
+	}
+
+
+	SECTION("Value of weakref_obj.")
+	{
+		auto& weakref_obj = dynamic_cast<PyWeakrefObject&>(TestHelpers::findValueByKey(localPairs, "weakref_obj"));
+
+		std::regex expectedRegex(R"(<\S+ to <Referent object>>)");
+		REQUIRE(regex_match(weakref_obj.repr(false), expectedRegex));
+
+		// The angle brackets must be escaped or the debugger takes them to be DML tags and prints nothing.
+		expectedRegex = R"(&lt;\S+ to <link cmd="!pyobj 0n\d+">&lt;Referent object&gt;</link>&gt;)";
+		REQUIRE(regex_match(weakref_obj.repr(true), expectedRegex));
+	}
+
+
+	SECTION("Value of empty_cell_obj.")
+	{
+		auto& empty_cell_obj = dynamic_cast<PyCellObject&>(TestHelpers::findValueByKey(localPairs, "empty_cell_obj"));
+		REQUIRE(empty_cell_obj.objectReference() == nullptr);
+		REQUIRE(empty_cell_obj.repr(false) == "<cell object>: <empty>");
+	}
+
+
+	SECTION("Value of frame_obj.")
+	{
+		// Python 3.11+ keeps a frame object's state in a separate interpreter frame.
+		auto& frame_obj = dynamic_cast<PyFrameObject&>(TestHelpers::findValueByKey(localPairs, "frame_obj"));
+		auto code = frame_obj.code();
+		REQUIRE(code != nullptr);
+		REQUIRE(code->name() == "<module>");
+		REQUIRE(frame_obj.currentLineNumber() > 0);
+		REQUIRE(frame_obj.globals() != nullptr);
+		REQUIRE_NOTHROW(frame_obj.details());
 	}
 }

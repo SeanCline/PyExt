@@ -3,6 +3,7 @@
 #include "PyObject.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 
 namespace PyExt::Remote {
@@ -21,7 +22,9 @@ namespace PyExt::Remote {
 	public: // Members.
 		auto name() const -> std::unique_ptr<PyStringValue>;
 		auto qualname() const -> std::unique_ptr<PyStringValue>;
-		auto frameState() const -> int;
+		/// The raw `gi_frame_state` value, whose meaning depends on the Python version. nullopt before Python 3.11.
+		auto frameState() const -> std::optional<int>;
+		/// A lowercase name for the state such as "suspended", or empty if the state isn't available.
 		auto frameStateString() const -> std::string;
 		auto frame() const -> std::unique_ptr<PyFrame>;
 		auto repr(bool pretty = true) const -> std::string override;
@@ -31,8 +34,11 @@ namespace PyExt::Remote {
 		explicit PyGenObjectBase(Offset objectAddress, const std::string& symbolName, const std::string& fieldPrefix, const std::string& displayName);
 
 	private:
+#pragma warning (push)
+#pragma warning (disable: 4251) //< Hide warnings about exporting private symbols.
 		std::string fieldPrefix_;
 		std::string displayName_;
+#pragma warning (pop)
 
 		auto prefixedField(const std::string& suffix) const -> std::string;
 	};

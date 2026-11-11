@@ -1,7 +1,7 @@
 #pragma once
 
 #include "PyFrame.h"
-#include "PyVarObject.h"
+#include "PyObject.h"
 #include <string>
 #include <memory>
 
@@ -11,9 +11,10 @@ namespace PyExt::Remote {
 	class PyDictObject;
 	class PyCodeObject;
 	class PyFunctionObject;
+	class PyInterpreterFrame;
 
 	/// Represents a PyFrameObject in the debuggee's address space.
-	class PYEXT_PUBLIC PyFrameObject : public PyVarObject, public PyFrame
+	class PYEXT_PUBLIC PyFrameObject : public PyObject, public PyFrame
 	{
 
 	public: // Construction/Destruction.
@@ -31,6 +32,11 @@ namespace PyExt::Remote {
 		auto currentLineNumber() const -> int override;
 		auto repr(bool pretty = true) const -> std::string override;
 		auto details() const -> std::string override;
+
+	private:
+		/// Python 3.11+ moved the execution state into a _PyInterpreterFrame that the frame object
+		/// merely points to. Returns that frame, or nullptr on versions where the state is still inline.
+		auto interpreterFrame() const -> std::unique_ptr<PyInterpreterFrame>;
 
 	};
 

@@ -6,11 +6,14 @@
 #include "PyInterpreterFrame.h"
 #include "RemoteType.h"
 #include "PyInterpreterState.h"
+#include "ExtHelpers.h"
 using namespace PyExt::Remote;
 
 #include <engextcpp.hpp>
 
+#include <algorithm>
 #include <string>
+#include <string_view>
 #include <memory>
 using namespace std;
 
@@ -53,7 +56,7 @@ namespace PyExt {
 			if (!repr.empty()) {
 				if (repr.size() > m_AppendBufferChars
 					|| (ULONG_PTR)(m_AppendAt - m_AppendBuffer) > m_AppendBufferChars - repr.size()) {
-					auto message = "<Too long to print. Use !pyobj 0n"s + to_string(pyObj->offset());
+					auto message = "<Too long to print. Use !pyobj 0n"s + to_string(pyObj->offset()) + ">";
 					AppendBufferString(message.c_str());
 				} else {
 					AppendBufferString(repr.c_str());
@@ -65,16 +68,29 @@ namespace PyExt {
 
 	auto EXT_CLASS::printDml(const string& content) -> void
 	{
+		// Text read from the debuggee is UTF-8, which the narrow output functions would misread as ANSI.
+		const auto wideContent = utils::utf8ToWide(content);
+		const wstring_view remaining = wideContent;
+
 		// There is a limit for single output. It seems impossible to know the exact value
 		// of the limit in advance, so we take the value from the documentation.
 		// https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/dbgeng/nf-dbgeng-idebugcontrol4-controlledoutputvalistwide#remarks
+		for (size_t chunkOffset = 0; chunkOffset < remaining.size(); ) {
+			auto chunkLength = min(chunkSize, remaining.size() - chunkOffset);
 
-		if (content.size() <= chunkSize) {
-			Dml("%s", content.c_str());
-		} else {
-			for (size_t chunkOffset = 0; chunkOffset < content.size(); chunkOffset += chunkSize) {
-				Dml("%s", content.substr(chunkOffset, chunkSize).c_str());
+			if (chunkOffset + chunkLength < remaining.size()) {
+				// Each chunk is parsed as DML on its own, so a tag or entity must not straddle two of them.
+				// Our DML never contains a raw newline inside of one, which makes line ends safe places to split.
+				auto lastNewline = remaining.substr(chunkOffset, chunkLength).rfind(L'\n');
+				if (lastNewline != wstring_view::npos) {
+					chunkLength = lastNewline + 1;
+				} else if (remaining[chunkOffset + chunkLength - 1] >= 0xD800 && remaining[chunkOffset + chunkLength - 1] <= 0xDBFF) {
+					--chunkLength; //< At least keep a surrogate pair together.
+				}
 			}
+
+			Dml(L"%s", wstring(remaining.substr(chunkOffset, chunkLength)).c_str());
+			chunkOffset += chunkLength;
 		}
 		Out("\n");
 	}
@@ -84,29 +100,31 @@ namespace PyExt {
 	{
 		ensureSymbolsLoaded();
 
-		auto offset = evalOffset(GetUnnamedArgStr(0));
-		auto pyObj = PyObject::make(offset);
+		reportingStdExceptions([&] {
+			auto offset = evalOffset(GetUnnamedArgStr(0));
+			auto pyObj = PyObject::make(offset);
 
-		Out("%s at address: %y\n", pyObj->symbolName().c_str(), pyObj->offset());
-		Out("\tRefCount: %s\n", to_string(pyObj->refCount()).c_str());
-		Out("\tType: %s\n", pyObj->type().name().c_str());
+			Out("%s at address: %y\n", pyObj->symbolName().c_str(), pyObj->offset());
+			Out("\tRefCount: %s%s\n", to_string(pyObj->refCount()).c_str(), pyObj->isImmortal() ? " (immortal)" : "");
+			Out("\tType: %s\n", pyObj->type().name().c_str());
 
-		// Print the size if its a PyVarObject.
-		auto pyVarObj = dynamic_cast<PyVarObject*>(pyObj.get());
-		if (pyVarObj != nullptr)
-			Out("\tSize: %d\n", pyVarObj->size());
+			// Print the size if its a PyVarObject.
+			auto pyVarObj = dynamic_cast<PyVarObject*>(pyObj.get());
+			if (pyVarObj != nullptr)
+				Out("\tSize: %d\n", pyVarObj->size());
 
-		auto repr = pyObj->repr(true);
-		if (!repr.empty()) {
-			Out("\tRepr: ");
-			printDml(repr);
-		}
+			auto repr = pyObj->repr(true);
+			if (!repr.empty()) {
+				Out("\tRepr: ");
+				printDml(repr);
+			}
 
-		auto details = pyObj->details();
-		if (!details.empty()) {
-			Out("\tDetails:\n");
-			printDml(details);
-		}
+			auto details = pyObj->details();
+			if (!details.empty()) {
+				Out("\tDetails:\n");
+				printDml(details);
+			}
+		});
 	}
 
 
@@ -114,12 +132,14 @@ namespace PyExt {
 	{
 		ensureSymbolsLoaded();
 
-		auto offset = evalOffset(GetUnnamedArgStr(0));
-		auto frame = make_unique<PyInterpreterFrame>(RemoteType(offset, "_PyInterpreterFrame"));
+		reportingStdExceptions([&] {
+			auto offset = evalOffset(GetUnnamedArgStr(0));
+			auto frame = make_unique<PyInterpreterFrame>(RemoteType(offset, "_PyInterpreterFrame"));
 
-		auto details = frame->details();
-		Out("\tDetails:\n");
-		printDml(details);
+			auto details = frame->details();
+			Out("\tDetails:\n");
+			printDml(details);
+		});
 	}
 
 

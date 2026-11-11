@@ -2,6 +2,7 @@
 
 #include "PyTypeObject.h"
 #include "../fieldAsPyObject.h"
+#include "../ExtHelpers.h"
 
 #include <string>
 using namespace std;
@@ -34,6 +35,9 @@ namespace PyExt::Remote {
 
 	auto PySuperObject::repr(bool pretty) const -> string
 	{
+		// The class repr is already DML when `pretty` is set, so only the text around it is escaped.
+		auto text = [pretty](const string& str) { return pretty ? utils::escapeDml(str) : str; };
+
 		auto typeRepr = thisClass() ? thisClass()->repr(pretty) : "NULL"s;
 		auto objType = objectType();
 		string objPart;
@@ -41,7 +45,7 @@ namespace PyExt::Remote {
 			objPart = "<" + objType->name() + " object>";
 		else
 			objPart = "NULL";
-		return "<super: " + typeRepr + ", " + objPart + ">";
+		return text("<super: ") + typeRepr + text(", " + objPart + ">");
 	}
 
 }

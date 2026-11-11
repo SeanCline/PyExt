@@ -6,6 +6,7 @@
 #include "PyCodeObject.h"
 #include "PyInterpreterState.h"
 #include "PyThreadState.h"
+#include "PyTypeObject.h"
 using namespace PyExt::Remote;
 
 #include "ExtHelpers.h"
@@ -101,7 +102,8 @@ namespace PyExt {
 		// Prints the frame chain starting at `topFrame`, consuming the unique_ptr.
 		auto printStack = [this](unique_ptr<PyFrame> frame) {
 			for (; frame != nullptr; frame = frame->previous()) {
-				Dml("\t%s\n", frameToString(*frame).c_str());
+				// File and function names can hold non-ASCII text, which needs the wide output functions.
+				Dml(L"\t%s\n", utils::utf8ToWide(frameToString(*frame)).c_str());
 				Dml("\t\t%s\n", frameToCommandString(*frame).c_str());
 			}
 		};
@@ -126,13 +128,23 @@ namespace PyExt {
 			}
 
 			if (m_NumUnnamedArgs >= 1) {
-				// Print info about the user-provided PyFrameObject as a header.
 				auto frameOffset = evalOffset(GetUnnamedArgStr(0));
-				Out("Stack trace starting at (PyFrameObject*)(%y):\n", frameOffset);
 
-				auto frame = make_unique<PyFrameObject>(frameOffset);
-				if (frame == nullptr)
-					throw runtime_error("Could not find PyFrameObject or PyInterpreterFrame.");
+				// The address is a frame object unless it turns out not to be a Python object at all,
+				// in which case it's taken to be one of the bare interpreter frames Python 3.11+ uses.
+				bool isFrameObject = false;
+				utils::ignoreExtensionError([&] {
+					isFrameObject = PyObject(frameOffset).type().name() == "frame";
+				});
+
+				unique_ptr<PyFrame> frame;
+				if (isFrameObject) {
+					Out("Stack trace starting at (PyFrameObject*)(%y):\n", frameOffset);
+					frame = make_unique<PyFrameObject>(frameOffset);
+				} else {
+					Out("Stack trace starting at (_PyInterpreterFrame*)(%y):\n", frameOffset);
+					frame = make_unique<PyInterpreterFrame>(RemoteType(frameOffset, "_PyInterpreterFrame"));
+				}
 				printStack(move(frame));
 			} else if (!HasArg("all")) {
 				// Print the thread header.

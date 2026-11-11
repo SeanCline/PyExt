@@ -40,7 +40,7 @@ namespace PyExt::Remote {
 	auto PyTypeObject::documentation() const -> string
 	{
 		ExtBuffer<char> buff;
-		auto doc = remoteType().Field("ob_type").Field("tp_doc");
+		auto doc = remoteType().Field("tp_doc");
 		if (doc.GetPtr() == 0)
 			return {};
 

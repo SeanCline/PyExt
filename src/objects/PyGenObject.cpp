@@ -9,9 +9,45 @@
 
 #include <engextcpp.hpp>
 
+#include <algorithm>
+#include <cctype>
+#include <optional>
 #include <sstream>
 #include <string>
 using namespace std;
+
+namespace {
+
+	// Returns the lowercased name of a `_framestate` enumerator without its FRAME_ prefix, e.g. "suspended".
+	auto frameStateNameFromSymbols(int state) -> optional<string>
+	{
+		// Hide the wall of text GetSymbolTypeId prints when the enum isn't in the PDB.
+		ExtCaptureOutputA ignoreOut;
+		ignoreOut.Start();
+
+		ULONG typeId = 0;
+		ULONG64 moduleBase = 0;
+		auto& symbols = g_Ext->m_Symbols3;
+		if (FAILED(symbols->GetSymbolTypeId(utils::getFullSymbolName("_framestate").c_str(), &typeId, &moduleBase)))
+			return nullopt;
+
+		// Negative enumerators may be stored sign-extended or as their 32-bit pattern.
+		char name[128] = {};
+		if (FAILED(symbols->GetConstantName(moduleBase, typeId, static_cast<ULONG64>(static_cast<LONG64>(state)), name, sizeof(name), nullptr))
+			&& FAILED(symbols->GetConstantName(moduleBase, typeId, static_cast<ULONG>(state), name, sizeof(name), nullptr)))
+			return nullopt;
+
+		string result = name;
+		const string prefix = "FRAME_";
+		if (result.starts_with(prefix))
+			result.erase(0, prefix.size());
+		if (result.empty())
+			return nullopt;
+		transform(result.begin(), result.end(), result.begin(), [](unsigned char c) { return static_cast<char>(tolower(c)); });
+		return result;
+	}
+
+}
 
 namespace PyExt::Remote {
 
@@ -41,11 +77,12 @@ namespace PyExt::Remote {
 	}
 
 
-	auto PyGenObjectBase::frameState() const -> int
+	auto PyGenObjectBase::frameState() const -> optional<int>
 	{
+		// Before Python 3.11 the state lived on the generator's PyFrameObject instead.
 		auto fieldName = prefixedField("frame_state");
 		if (!remoteType().HasField(fieldName.c_str()))
-			return 0;
+			return nullopt;
 		auto fs = remoteType().Field(fieldName.c_str());
 		return utils::readIntegral<int>(fs);
 	}
@@ -53,17 +90,36 @@ namespace PyExt::Remote {
 
 	auto PyGenObjectBase::frameStateString() const -> string
 	{
-		// Mirrors Include/internal/pycore_frame.h.
-		// Values present from Python 3.11+.
-		switch (frameState()) {
-		case -3: return "created";
-		case -2: return "suspended";
-		case -1: return "suspended_yield_from";
-		case 0:  return "executing";
-		case 1:  return "completed";
-		case 4:  return "cleared";
-		default: return "unknown";
+		auto state = frameState();
+		if (!state.has_value())
+			return { };
+
+		// The values of `enum _framestate` were renumbered in 3.13 and again in 3.15, so the
+		// debuggee's own symbols are the authority on what a value means.
+		if (auto name = frameStateNameFromSymbols(*state); name.has_value())
+			return *name;
+
+		// Fall back on what Include/internal/pycore_frame.h says for the versions we know about.
+		const auto minorVersion = (utils::pythonVersionHex().value_or(0) >> 16) & 0xFF;
+		if (minorVersion == 11 || minorVersion == 12) {
+			switch (*state) {
+			case -2: return "created";
+			case -1: return "suspended";
+			case 0:  return "executing";
+			case 1:  return "completed";
+			case 4:  return "cleared";
+			}
+		} else if (minorVersion == 13 || minorVersion == 14) {
+			switch (*state) {
+			case -3: return "created";
+			case -2: return "suspended";
+			case -1: return "suspended_yield_from";
+			case 0:  return "executing";
+			case 1:  return "completed";
+			case 4:  return "cleared";
+			}
 		}
+		return "unknown state " + to_string(*state);
 	}
 
 
@@ -101,7 +157,9 @@ namespace PyExt::Remote {
 		string repr = "<" + displayName_ + " object";
 		if (!nameStr.empty())
 			repr += " " + nameStr;
-		repr += " (" + frameStateString() + ")>";
+		if (auto state = frameStateString(); !state.empty())
+			repr += " (" + state + ")";
+		repr += ">";
 
 		if (pretty)
 			return utils::link(repr, "!pyobj 0n"s + to_string(offset()));
@@ -114,8 +172,9 @@ namespace PyExt::Remote {
 		ostringstream oss;
 		auto qn = qualname();
 		if (qn != nullptr)
-			oss << "qualname: " << qn->stringValue() << "\n";
-		oss << "state: " << frameStateString() << "\n";
+			oss << "qualname: " << utils::escapeDml(qn->stringValue()) << "\n"; //< Names such as "<genexpr>" would otherwise read as a DML tag.
+		if (auto state = frameStateString(); !state.empty())
+			oss << "state: " << state << "\n";
 
 		auto f = frame();
 		if (f != nullptr)

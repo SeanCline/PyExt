@@ -37,6 +37,8 @@ namespace PyExt::Remote {
 		using RemoteType::offset;
 		using RemoteType::symbolName;
 		auto refCount() const -> SSize;
+		/// True for objects Python 3.12+ never deallocates. Their reference count is a sentinel, not a count.
+		auto isImmortal() const -> bool;
 		auto type() const -> PyTypeObject;
 		auto slots() const -> std::vector<std::pair<std::string, std::unique_ptr<PyObject>>>;
 		auto managedDict() const -> std::unique_ptr<PyDict>;
@@ -47,7 +49,12 @@ namespace PyExt::Remote {
 	protected: // Helpers for more derived classes.
 		/// Returns a field by name in the `ob_base` member.
 		auto baseField(const std::string& fieldName) const -> ExtRemoteTyped;
+		auto hasBaseField(const std::string& fieldName) const -> bool;
 		using RemoteType::remoteType;
+
+	private:
+		/// Returns the innermost base struct that holds `fieldName`, or the last base if none does.
+		auto baseStruct(const std::string& fieldName) const -> ExtRemoteTyped;
 
 	};
 

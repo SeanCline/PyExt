@@ -36,6 +36,10 @@ namespace PyExt::Remote {
 
 		auto currentLineNumber() const -> int override;
 		auto isIncomplete() const -> bool;
+
+	private:
+		/// Which per-thread copy of the bytecode this frame is executing. Always 0 outside of free-threaded builds.
+		auto threadLocalBytecodeIndex() const -> int;
 	};
 
 }

@@ -18,7 +18,8 @@ namespace PyExt::Remote {
 		enum InterningState { NotInterned, InternedMortal, InternedImortal };
 
 		/// PyUnicode_Kind.
-		enum class Kind { Wchar, OneByte, TwoByte, FourByte };
+		/// The values are the size of a code unit in bytes, so there is no 3.
+		enum class Kind { Wchar = 0, OneByte = 1, TwoByte = 2, FourByte = 4 };
 
 	public: // String state.
 		auto interningState() const -> InterningState;

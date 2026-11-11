@@ -103,13 +103,14 @@ namespace PyExt::Remote {
 
 	auto PyInterpreterState::tstate_head() const -> unique_ptr<PyThreadState>
 	{
-		if (remoteType().HasField("tstate_head")) {
-			// Old, pre-3.11 location of tstate_head.
-			return make_unique<PyThreadState>(RemoteType(remoteType().Field("tstate_head")));
-		} else {
-			// New, 3.11+ location of the head thread.
-			return make_unique<PyThreadState>(RemoteType(remoteType().Field("threads").Field("head")));
-		}
+		auto head = remoteType().HasField("tstate_head")
+			? remoteType().Field("tstate_head")              // Old, pre-3.11 location of tstate_head.
+			: remoteType().Field("threads").Field("head");   // New, 3.11+ location of the head thread.
+
+		// An interpreter that is being created or torn down has no threads.
+		if (head.GetPtr() == 0)
+			return { };
+		return make_unique<PyThreadState>(RemoteType(head));
 	}
 
 

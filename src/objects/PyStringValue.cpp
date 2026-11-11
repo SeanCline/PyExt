@@ -5,18 +5,22 @@ using namespace std;
 
 namespace {
 
-	constexpr auto hexAlphabet = "0123456789ABCDEF";
+	constexpr auto hexAlphabet = "0123456789abcdef"; //< Lowercase to match Python's repr().
 
 	auto charToHex(char c) -> string {
 		auto uc = static_cast<unsigned char>(c);
 		string s(2, '\0');
-		s[0] = hexAlphabet[uc & 0x0F];
-		s[1] = hexAlphabet[(uc >> 4) & 0x0F];
+		s[0] = hexAlphabet[(uc >> 4) & 0x0F];
+		s[1] = hexAlphabet[uc & 0x0F];
 		return s;
 	}
 
 
-	auto escapeCharacter(char c) -> string {
+	auto escapeCharacter(char c, bool escapeNonAscii) -> string {
+		// Bytes of a multi-byte UTF-8 sequence pass through so text stays readable.
+		if (!escapeNonAscii && (static_cast<unsigned char>(c) & 0x80) != 0)
+			return { c };
+
 		// Return known escape sequences.
 		switch (c) {
 			default: break;
@@ -45,7 +49,7 @@ namespace {
 
 namespace PyExt::Remote {
 
-	auto PyStringValue::escapeAndQuoteString(const string& in, QuoteType quoteType) -> string
+	auto PyStringValue::escapeAndQuoteString(const string& in, QuoteType quoteType, bool escapeNonAscii) -> string
 	{
 		string out;
 		out.reserve(in.length() + 2);
@@ -57,7 +61,7 @@ namespace PyExt::Remote {
 			{
 				out += c; //< Don't escape the other kind of quote.
 			} else {
-				out += escapeCharacter(c);
+				out += escapeCharacter(c, escapeNonAscii);
 			}
 		}
 		out += (quoteType == QuoteType::Double) ? '"' : '\'';

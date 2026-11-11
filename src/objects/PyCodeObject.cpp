@@ -121,13 +121,13 @@ namespace PyExt::Remote {
 	}
 
 
-	auto PyCodeObject::lineNumberFromPrevInstruction(Offset instructionAddress) const -> int
+	auto PyCodeObject::lineNumberFromPrevInstruction(Offset instructionAddress, int threadLocalBytecodeIndex) const -> int
 	{
 		// Python 3.11 and above, see Objects/locations.md.
 		// Translate the absolute instruction address into a byte offset within co_code_adaptive,
 		// then walk the location table to map that offset to a source line.
 		// If we can't find co_code_adaptive at all (3.14+), fall back to firstLineNumber.
-		auto bytecodeStart = bytecodeStartAddress();
+		auto bytecodeStart = bytecodeStartAddress(threadLocalBytecodeIndex);
 		if (!bytecodeStart.has_value())
 			return firstLineNumber();
 		auto byteOffset = static_cast<int64_t>(instructionAddress - *bytecodeStart);
@@ -247,8 +247,13 @@ namespace PyExt::Remote {
 	}
 
 
-	auto PyCodeObject::bytecodeStartAddress() const -> std::optional<Offset>
+	auto PyCodeObject::bytecodeStartAddress(int threadLocalBytecodeIndex) const -> std::optional<Offset>
 	{
+		if (threadLocalBytecodeIndex > 0 && remoteType().HasField("co_tlbc")) {
+			auto entries = remoteType().Field("co_tlbc").Field("entries");
+			return entries.ArrayElement(threadLocalBytecodeIndex).GetPtr();
+		}
+
 		// Python 3.11+: bytecode lives in co_code_adaptive at the end of the code object.
 		// Returns nullopt if the field is not exposed by the PDB.
 		if (!remoteType().HasField("co_code_adaptive"))

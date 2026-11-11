@@ -1,6 +1,7 @@
 #pragma once
 
 #include <engextcpp.hpp>
+#include <exception>
 #include <string>
 
 
@@ -27,8 +28,20 @@ namespace PyExt {
 	private: // Helper methods.
 		static const size_t chunkSize = 16000;
 
-		/// Prints a DML text, splitting it into chunks if needed.
+		/// Prints UTF-8 encoded DML text followed by a newline, splitting it into chunks if needed.
 		auto printDml(const std::string& content) -> void;
+
+		/// Runs the body of a command, reporting a standard exception thrown by it the same way engextcpp
+		/// reports its own. Left alone, such an exception would escape into the debugger as an unhandled C++ exception.
+		template <typename Body>
+		auto reportingStdExceptions(Body&& body) -> void
+		{
+			try {
+				body();
+			} catch (const std::exception& ex) {
+				ThrowStatus(E_FAIL, "%s", ex.what());
+			}
+		}
 
 		/// Evaluates an expression as a pointer and returns the result as an offset in the debuggee's address space.
 		auto evalOffset(const std::string& arg) -> UINT64;

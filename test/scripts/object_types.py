@@ -78,5 +78,31 @@ try:
 except SyntaxError:
 	pass
 
+generator_created_obj = gen() # Never started.
+generator_finished_obj = gen()
+list(generator_finished_obj) # Run to completion.
+
+# Text stored with one, two, and four bytes per character respectively.
+unicode_latin1_obj = u"caf\xe9"
+unicode_bmp_obj = u"\u4e2d\u6587"
+unicode_astral_obj = u"smile \U0001F600"
+
+control_bytes_obj = b"\x01\x1f\xab"
+small_float_obj = 1.5e-10
+whole_float_obj = 2.0
+single_tuple_obj = (1,)
+empty_set_obj = set()
+frozenset_obj = frozenset([1])
+
+def _make_empty_cell():
+	def inner():
+		return never_assigned
+	if False:
+		never_assigned = None # Makes it a cell variable without ever giving it a value.
+	return inner.__closure__[0]
+empty_cell_obj = _make_empty_cell()
+
+frame_obj = sys._getframe()
+
 # Generate the dump with all of the objects above in the global scope for the test harness to inspect.
 win32debug.dump_process("object_types.dmp")

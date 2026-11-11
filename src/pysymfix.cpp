@@ -23,10 +23,12 @@ namespace {
 		string buff(pathSize, '\0');
 		hr = pSymbols->GetSymbolPath(buff.data(), pathSize, &pathSize);
 		if (FAILED(hr))
-			throw runtime_error("GetSymbolPath failed to get path size with hr=" + to_string(hr));
+			throw runtime_error("GetSymbolPath failed with hr=" + to_string(hr));
 
 		assert(pathSize == buff.size() && "Unexpected symbol path size after second call to GetSymbolPath.");
-		buff.erase(buff.find('\0')); //< Trim off any extra from our string.
+		// Trim off the terminator and anything after it. string::erase throws if handed npos.
+		if (auto terminator = buff.find('\0'); terminator != string::npos)
+			buff.erase(terminator);
 
 		return buff;
 	}

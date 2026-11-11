@@ -15,6 +15,25 @@
 #include <memory>
 using namespace std;
 
+namespace {
+
+	using Offset = PyExt::Remote::RemoteType::Offset;
+
+	// Recovers the object address from the bits of a _PyStackRef, or returns 0 if it doesn't refer to an object.
+	// Python 3.13 (free-threaded) and 3.14+ keep ownership tags in the low bits, and can store a small
+	// integer in place of a pointer. Objects are always at least 4-byte aligned, so masking is also
+	// harmless on the plain PyObject* that older versions store.
+	auto stackRefToAddress(Offset bits) -> Offset
+	{
+		constexpr Offset tagMask = 3; //< Py_TAG_BITS
+		constexpr Offset intTag = 3;  //< Py_INT_TAG
+		if ((bits & tagMask) == intTag)
+			return 0;
+		return bits & ~tagMask;
+	}
+
+}
+
 namespace PyExt::Remote {
 
 	PyInterpreterFrame::PyInterpreterFrame(const RemoteType& remoteType)
@@ -44,8 +63,7 @@ namespace PyExt::Remote {
 		auto pyObjAddrs = readOffsetArray(f_localsplus, numLocalsplus);
 		vector<pair<string, unique_ptr<PyObject>>> localsplus(numLocalsplus);
 		for (size_t i = 0; i < numLocalsplus; ++i) {
-			// Python 3.14+ stuffs the ownership tag in the low bit of pointers. https://huangxt.com/wiki/cpython/tagged-pointer
-			auto addr = pyObjAddrs.at(i) & ~(Offset)1; //< Mask off the ownership bit. TODO: Factor this out to a common function.
+			auto addr = stackRefToAddress(pyObjAddrs.at(i));
 			auto objPtr = addr ? PyObject::make(addr) : nullptr;
 			localsplus[i] = make_pair(names.at(i), move(objPtr));
 		}
@@ -66,9 +84,9 @@ namespace PyExt::Remote {
 		auto readRef = [](ExtRemoteTyped field) -> Offset {
 			if (field.HasField("bits")) {
 				auto bitsField = field.Field("bits");
-				return utils::readIntegral<Offset>(bitsField) & ~(Offset)1;
+				return stackRefToAddress(utils::readIntegral<Offset>(bitsField));
 			}
-			return field.GetPtr() & ~(Offset)1; //< Mask off the ownership bit. TODO: Factor this out to a common function.
+			return stackRefToAddress(field.GetPtr());
 		};
 
 		// Try f_executable (Python 3.11+).
@@ -85,12 +103,18 @@ namespace PyExt::Remote {
 		// Next, try f_funcobj. Checked unconditionally so it fires even
 		// when f_executable is absent from the PDB or holds Py_None.
 		if (remoteType().HasField("f_funcobj")) {
-			auto funcAddr = readRef(remoteType().Field("f_funcobj"));
-			if (funcAddr != 0) {
+			// The interpreter's own entry frames leave f_funcobj uninitialized, so don't let garbage here be fatal.
+			unique_ptr<PyCodeObject> funcCode;
+			utils::ignoreExtensionError([&] {
+				auto funcAddr = readRef(remoteType().Field("f_funcobj"));
+				if (funcAddr == 0)
+					return;
 				auto funcObjPtr = PyObject::make(funcAddr);
 				if (auto funcPtr = dynamic_cast<PyFunctionObject*>(funcObjPtr.get()))
-					return funcPtr->code();
-			}
+					funcCode = funcPtr->code();
+			});
+			if (funcCode != nullptr)
+				return funcCode;
 		}
 		// Pre-3.11 fallback.
 		return utils::fieldAsPyObject<PyCodeObject>(remoteType(), "f_code");
@@ -154,7 +178,7 @@ namespace PyExt::Remote {
 			if (!firstTraceable.has_value() || *firstTraceable <= 0)
 				return; //< <3.12, or the function starts traceable immediately.
 
-			auto bytecodeStart = codeObject->bytecodeStartAddress();
+			auto bytecodeStart = codeObject->bytecodeStartAddress(threadLocalBytecodeIndex());
 			if (!bytecodeStart.has_value())
 				return; //< This Python version has no bytecodeStart so the frame must be complete.
 
@@ -173,6 +197,15 @@ namespace PyExt::Remote {
 		auto codeObject = code();
 		if (codeObject == nullptr)
 			return 0;
-		return codeObject->lineNumberFromPrevInstruction(prevInstruction());
+		return codeObject->lineNumberFromPrevInstruction(prevInstruction(), threadLocalBytecodeIndex());
+	}
+
+
+	auto PyInterpreterFrame::threadLocalBytecodeIndex() const -> int
+	{
+		if (!remoteType().HasField("tlbc_index"))
+			return 0;
+		auto index = remoteType().Field("tlbc_index");
+		return utils::readIntegral<int>(index);
 	}
 }

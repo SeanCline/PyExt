@@ -65,7 +65,8 @@ namespace PyExt::Remote {
 				oss << ", ";
 		}
 
-		oss << ")";
+		// A trailing comma is what distinguishes a one-element tuple from a parenthesized value.
+		oss << (count == 1 ? ",)" : ")");
 		return oss.str();
 	}
 

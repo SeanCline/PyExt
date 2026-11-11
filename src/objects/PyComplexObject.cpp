@@ -3,6 +3,7 @@
 #include <engextcpp.hpp>
 #include <string>
 #include <complex>
+#include <format>
 #include <cmath>
 using namespace std;
 
@@ -24,8 +25,10 @@ namespace PyExt::Remote {
 	auto PyComplexObject::repr(bool /*pretty*/) const -> string
 	{
 		auto c = complexValue();
-		string operation = (c.imag() < 0) ? "-" : "+";
-		return "(" + to_string(c.real()) + operation + to_string(fabs(c.imag())) + "j)";
+		// signbit rather than `< 0` so that a negative zero keeps its sign, as it does in Python.
+		string operation = signbit(c.imag()) ? "-" : "+";
+		// Shortest round-trip formatting. std::to_string would use a fixed six decimals.
+		return "(" + format("{}", c.real()) + operation + format("{}", fabs(c.imag())) + "j)";
 	}
 
 }

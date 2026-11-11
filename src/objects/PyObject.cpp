@@ -30,8 +30,34 @@ namespace PyExt::Remote {
 
 	auto PyObject::refCount() const -> SSize
 	{
+		// Free-threaded builds split the count into a thread-local part and a shared part,
+		// where the low two bits of the shared part are flags.
+		if (hasBaseField("ob_ref_local")) {
+			auto local = baseField("ob_ref_local");
+			auto shared = baseField("ob_ref_shared");
+			return static_cast<SSize>(local.GetUlong()) + (utils::readIntegral<SSize>(shared) >> 2);
+		}
+
+		// 64-bit Python 3.14+ narrowed ob_refcnt to an unsigned 32-bit field, and immortal objects
+		// set its high bits. Reading it as signed would report a large negative count.
 		auto refcnt = baseField("ob_refcnt");
+		if (refcnt.GetTypeSize() == 4 && utils::getPointerSize() == 8)
+			return static_cast<SSize>(refcnt.GetUlong());
 		return utils::readIntegral<SSize>(refcnt);
+	}
+
+
+	auto PyObject::isImmortal() const -> bool
+	{
+		// Mirrors _Py_IsImmortal for each of the layouts Python 3.12+ has used.
+		// Older versions have no immortal objects, and can't plausibly reach these counts.
+		if (hasBaseField("ob_ref_local"))
+			return baseField("ob_ref_local").GetUlong() == 0xFFFFFFFF;
+
+		const auto count = refCount();
+		if (utils::getPointerSize() == 8)
+			return static_cast<int32_t>(static_cast<uint32_t>(count)) < 0;
+		return count >= 0x3FFFFFFF;
 	}
 
 
@@ -71,13 +97,18 @@ namespace PyExt::Remote {
 		auto pointerSize = utils::getPointerSize();
 
 		// Py_TPFLAGS_MANAGED_DICT implies Py_TPFLAGS_PREHEADER, so the allocator
-		// always provisions the pre-header region (including the dict pointer at
-		// -3*pointerSize) for any type that passes the isManagedDict() guard above.
+		// always provisions the pre-header region (including the dict pointer)
+		// for any type that passes the isManagedDict() guard above.
+		// Free-threaded builds keep their GC state inside the object header, so the two GC
+		// pointers that normally sit between the pre-header and the object are absent.
+		const bool isFreeThreaded = hasBaseField("ob_tid");
+		const auto managedDictSlot = offset() - (isFreeThreaded ? 1 : 3) * pointerSize;
+
 		bool readManagedDictPointer = false;
 		Offset dictPtr = 0;
 		utils::ignoreExtensionError([&] {
 			// Python >= 3.13
-			auto managedDictPtr = offset() - 3 * pointerSize;
+			auto managedDictPtr = managedDictSlot;
 			dictPtr = ExtRemoteTyped("PyManagedDictPointer", managedDictPtr, true).Field("dict").GetPtr();
 			readManagedDictPointer = true;
 		});
@@ -87,11 +118,9 @@ namespace PyExt::Remote {
 		Offset valuesPtr;
 		if (type().hasInlineValues()) {
 			// Python >= 3.13: inline values live at offset + tp_basicsize, immediately
-			// after any __slots__ storage. Adjust the @$extin base so the expression
-			// "((PyObject*)(@$extin)+1)" evaluates to offset() + basicSize.
+			// after any __slots__ storage.
 			auto basicSize = static_cast<Offset>(type().basicSize());
-			auto adjustedBase = offset() + basicSize - static_cast<Offset>(2 * pointerSize);
-			auto dictValues = ExtRemoteTyped("(_dictvalues*)((PyObject*)(@$extin)+1)", adjustedBase);
+			auto dictValues = ExtRemoteTyped("(_dictvalues*)@$extin", offset() + basicSize);
 			valuesPtr = dictValues.Field("values").GetPtr();
 		} else if (readManagedDictPointer) {
 			// Python >= 3.13 without inline values: the managed dict has not been
@@ -185,7 +214,7 @@ namespace PyExt::Remote {
 						oss << sectionSeparator;
 					else
 						empty = false;
-					oss << typeName << " repr: " << make(offset(), typeName)->repr();
+					oss << utils::escapeDml(typeName) << " repr: " << make(offset(), typeName)->repr();
 				}
 			}
 		}
@@ -198,9 +227,9 @@ namespace PyExt::Remote {
 			else
 				empty = false;
 			oss << "slots: {" << elementSeparator;
-			for (auto const& [name, value] : slots()) {
+			for (auto const& [name, value] : slots_) {
 				if (value != nullptr)
-					oss << indentation << name << ": " << value->repr(true) << ',' << elementSeparator;
+					oss << indentation << utils::escapeDml(name) << ": " << value->repr(true) << ',' << elementSeparator;
 			}
 			oss << '}';
 		}
@@ -219,17 +248,35 @@ namespace PyExt::Remote {
 	}
 
 
-	auto PyObject::baseField(const string & fieldName) const -> ExtRemoteTyped
+	auto PyObject::baseStruct(const string & fieldName) const -> ExtRemoteTyped
 	{
 		ExtRemoteTyped obj = remoteType();
 
 		// Python3 tucks the base members away in a struct named ob_base.
-		while (obj.HasField("ob_base") && !obj.HasField(fieldName.c_str())) {
-			// Drill down into the ob_base member until we hit the end.
-			obj = obj.Field("ob_base");
+		// The unicode structs nest theirs in a member named _base instead.
+		// Drill down until we find the field or run out of bases.
+		while (!obj.HasField(fieldName.c_str())) {
+			if (obj.HasField("ob_base"))
+				obj = obj.Field("ob_base");
+			else if (obj.HasField("_base"))
+				obj = obj.Field("_base");
+			else
+				break;
 		}
 
-		return obj.Field(fieldName.c_str());
+		return obj;
+	}
+
+
+	auto PyObject::baseField(const string & fieldName) const -> ExtRemoteTyped
+	{
+		return baseStruct(fieldName).Field(fieldName.c_str());
+	}
+
+
+	auto PyObject::hasBaseField(const string & fieldName) const -> bool
+	{
+		return baseStruct(fieldName).HasField(fieldName.c_str());
 	}
 
 }

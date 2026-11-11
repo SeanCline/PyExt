@@ -113,28 +113,39 @@ namespace PyExt::Remote {
 
 
 	namespace {
-		// For now, these are dumb conversions. They will clip anything outside the bounds of a char.
-		// I'm not too concerned with this since the debugger APIs we're calling don't display unicode
-		// particularly well anyway.
-		string wstring_to_string(wstring str)
+
+		// Converts a buffer of fixed-width code units to UTF-8.
+		template <typename CodeUnit>
+		auto codeUnitsToUtf8(const vector<CodeUnit>& codeUnits) -> string
 		{
-			return { begin(str), end(str) }; //< TODO: Convert.
+			string utf8;
+			utf8.reserve(codeUnits.size());
+			for (auto codeUnit : codeUnits)
+				utils::appendUtf8(utf8, static_cast<char32_t>(codeUnit));
+			return utf8;
 		}
 
-		string utf8_to_string(string str)
+
+		// Converts UTF-16 to UTF-8, combining surrogate pairs.
+		auto utf16ToUtf8(const vector<wchar_t>& codeUnits) -> string
 		{
-			return str; //< TODO: Convert.
+			string utf8;
+			utf8.reserve(codeUnits.size());
+			for (size_t i = 0; i < codeUnits.size(); ++i) {
+				char32_t codePoint = codeUnits[i];
+				const bool isHighSurrogate = codePoint >= 0xD800 && codePoint <= 0xDBFF;
+				if (isHighSurrogate && i + 1 < codeUnits.size()) {
+					char32_t low = codeUnits[i + 1];
+					if (low >= 0xDC00 && low <= 0xDFFF) {
+						codePoint = 0x10000 + ((codePoint - 0xD800) << 10) + (low - 0xDC00);
+						++i;
+					}
+				}
+				utils::appendUtf8(utf8, codePoint);
+			}
+			return utf8;
 		}
 
-		string utf16_to_string(u16string str)
-		{
-			return { begin(str), end(str) }; //< TODO: Convert.
-		}
-
-		string utf32_to_string(u32string str)
-		{
-			return { begin(str), end(str) }; //< TODO: Convert.
-		}
 	}
 
 
@@ -144,21 +155,21 @@ namespace PyExt::Remote {
 		if (length == 0)
 			return { };
 
-		// Python <=3.11 had a wstr member that could point directly to the string data.
-		if (hasField(remoteType(), "wstr")) {
+		const auto stringKind = kind();
+
+		// Legacy strings (Python <=3.11) keep their text in `wstr` until they're made ready.
+		// For every other kind `wstr` is only a cache, and its length can differ from `length`
+		// when the text has non-BMP characters, so the canonical data below is preferred.
+		if (stringKind == Kind::Wchar) {
+			if (!hasField(remoteType(), "wstr"))
+				throw runtime_error("Unexpected `kind` when decoding string value.");
+
 			auto wstrField = getField(remoteType(), "wstr");
-			if (wstrField.GetPtr() != 0) {
-				auto buffer = utils::readArray<wchar_t>(wstrField, length);
-				if (isAscii()) {
-					return { begin(buffer), end(buffer) };
-				} else {
-					return wstring_to_string({ begin(buffer), end(buffer) });
-				}
-			}
-			// wstr == NULL: fall through to the compact-data path below.
+			if (wstrField.GetPtr() == 0)
+				return { };
+			return utf16ToUtf8(utils::readArray<wchar_t>(wstrField, length));
 		}
 
-		// Python 3.12+, or Python <=3.11 with wstr == NULL: read from the inline data pointer.
 		Offset dataPtr = 0;
 		if (isCompact()) {
 			dataPtr = offset() + remoteType().Dereference().GetTypeSize();
@@ -166,30 +177,21 @@ namespace PyExt::Remote {
 			dataPtr = remoteType().Field("data").Field("any").GetPtr();
 		}
 
-		switch (kind()) {
-		case Kind::Wchar:
-		{
-			ExtRemoteTyped data("wchar_t", dataPtr, true);
-			auto buffer = utils::readArray<wchar_t>(data, length);
-			return { begin(buffer), end(buffer) };
-		}
+		switch (stringKind) {
 		case Kind::OneByte:
 		{
 			ExtRemoteTyped data("Py_UCS1", dataPtr, true);
-			auto buffer = utils::readArray<char>(data, length);
-			return utf8_to_string({ begin(buffer), end(buffer) });
+			return codeUnitsToUtf8(utils::readArray<uint8_t>(data, length)); //< Latin-1, not UTF-8.
 		}
 		case Kind::TwoByte:
 		{
 			ExtRemoteTyped data("Py_UCS2", dataPtr, true);
-			auto buffer = utils::readArray<char16_t>(data, length);
-			return utf16_to_string({ begin(buffer), end(buffer) });
+			return codeUnitsToUtf8(utils::readArray<char16_t>(data, length));
 		}
 		case Kind::FourByte:
 		{
 			ExtRemoteTyped data("Py_UCS4", dataPtr, true);
-			auto buffer = utils::readArray<char32_t>(data, length);
-			return utf32_to_string({ begin(buffer), end(buffer) });
+			return codeUnitsToUtf8(utils::readArray<char32_t>(data, length));
 		}
 		default:
 			throw runtime_error("Unexpected `kind` when decoding string value.");
@@ -199,7 +201,7 @@ namespace PyExt::Remote {
 
 	auto PyUnicodeObject::repr(bool pretty) const -> string
 	{
-		string repr = isReady() ? escapeAndQuoteString(stringValue()) : "<str object not ready>";
+		string repr = isReady() ? escapeAndQuoteString(stringValue(), QuoteType::Single, /*escapeNonAscii=*/ false) : "<str object not ready>";
 		return pretty ? utils::escapeDml(repr) : repr;
 	}
 

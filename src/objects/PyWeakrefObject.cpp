@@ -2,6 +2,7 @@
 
 #include "PyTypeObject.h"
 #include "../fieldAsPyObject.h"
+#include "../ExtHelpers.h"
 
 #include <string>
 using namespace std;
@@ -31,12 +32,12 @@ namespace PyExt::Remote {
 		// A dead weakref has wr_object replaced with Py_None (not NULL), so a null check
 		// alone isn't enough — match on the referent's type name.
 		auto referentObj = referent();
-		string referentPart;
+		// The referent's repr is already DML when `pretty` is set, so only the text around it is escaped.
+		auto text = [pretty](const string& str) { return pretty ? utils::escapeDml(str) : str; };
+
 		if (referentObj == nullptr || referentObj->type().name() == "NoneType")
-			referentPart = "dead";
-		else
-			referentPart = "to " + referentObj->repr(pretty);
-		return "<" + type().name() + " " + referentPart + ">";
+			return text("<" + type().name() + " dead>");
+		return text("<" + type().name() + " to ") + referentObj->repr(pretty) + text(">");
 	}
 
 }

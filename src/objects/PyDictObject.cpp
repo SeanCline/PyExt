@@ -1,5 +1,6 @@
 #include "PyDictObject.h"
 
+#include "PyTypeObject.h"
 #include "../ExtHelpers.h"
 #include "PyDictKeysObject.h"
 
@@ -170,6 +171,9 @@ namespace PyExt::Remote {
 
 	auto PyDictObject::repr(bool pretty) const -> string
 	{
+		// frozendict (Python 3.15+) shares dict's layout, so the type name is all that tells them apart.
+		if (type().name() == "frozendict")
+			return "frozendict(" + PyDict::repr(pretty) + ")";
 		return PyDict::repr(pretty);
 	}
 

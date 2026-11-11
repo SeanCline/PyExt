@@ -22,7 +22,8 @@ namespace PyExt::Remote {
 		auto lineNumberFromInstructionOffset(int instruction) const -> int;
 
 		// Converts the address of an instruction to its line number.
-		auto lineNumberFromPrevInstruction(Offset instructionAddress) const -> int;
+		// `threadLocalBytecodeIndex` selects which copy of the bytecode the address points into. See bytecodeStartAddress().
+		auto lineNumberFromPrevInstruction(Offset instructionAddress, int threadLocalBytecodeIndex = 0) const -> int;
 
 		auto varNames() const -> std::vector<std::string>;
 		auto freeVars() const -> std::vector<std::string>;
@@ -37,7 +38,9 @@ namespace PyExt::Remote {
 		auto firstTraceableIndex() const -> std::optional<int>;
 
 		// Address of the first byte of co_code_adaptive, or nullopt on versions where it's not presenst.
-		auto bytecodeStartAddress() const -> std::optional<Offset>;
+		// Free-threaded builds give each thread its own copy of the bytecode, and a frame's instruction
+		// pointer points into the copy named by its `tlbc_index`. Index 0 is always co_code_adaptive itself.
+		auto bytecodeStartAddress(int threadLocalBytecodeIndex = 0) const -> std::optional<Offset>;
 
 		auto repr(bool pretty = true) const -> std::string override;
 

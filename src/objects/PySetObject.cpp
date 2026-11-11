@@ -1,5 +1,6 @@
 #include "PySetObject.h"
 
+#include "PyTypeObject.h"
 #include "../ExtHelpers.h"
 
 #include <engextcpp.hpp>
@@ -80,14 +81,26 @@ namespace PyExt::Remote {
 		const auto elementSeparator = (pretty) ? "\n" : " "; //< Use a newline when pretty-print is on.
 		const auto indentation = (pretty) ? "\t" : ""; //< Indent only when pretty is on.
 
+		// Sets and frozensets share a layout, so the type name is all that tells them apart.
+		const bool isFrozen = type().name() == "frozenset";
+		const auto values = listValue();
+
+		// `{}` is an empty dict, so Python spells out empty sets.
+		if (values.empty())
+			return isFrozen ? "frozenset()" : "set()";
+
 		ostringstream oss;
+		if (isFrozen)
+			oss << "frozenset(";
 		oss << '{' << elementSeparator;
 
-		for (auto& value : listValue()) {
+		for (auto& value : values) {
 			oss << indentation << value->repr(pretty) << ',' << elementSeparator;
 		}
 
-		oss << elementSeparator << '}';
+		oss << '}';
+		if (isFrozen)
+			oss << ')';
 		return oss.str();
 	}
 

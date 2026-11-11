@@ -18,15 +18,19 @@ namespace PyExt::Remote {
 
 	auto PyCellObject::objectReference() const -> unique_ptr<PyObject>
 	{
+		// A cell is empty until its variable is first assigned (and again after `del`).
 		auto objPtr = remoteType().Field("ob_ref").GetPtr();
-		return make(objPtr);
+		return objPtr ? make(objPtr) : nullptr;
 	}
 
 
 	auto PyCellObject::repr(bool pretty) const -> string
 	{
 		string repr = PyObject::repr(pretty);
-		return repr + ": " + objectReference()->repr(pretty);
+		auto contents = objectReference();
+		if (contents == nullptr)
+			return repr + ": " + (pretty ? utils::escapeDml("<empty>") : "<empty>"s);
+		return repr + ": " + contents->repr(pretty);
 	}
 
 }

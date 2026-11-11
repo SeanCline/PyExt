@@ -16,11 +16,13 @@ namespace PyExt::Remote {
 		virtual ~PyStringValue() = default;
 
 	public: // Members.
+		/// The raw bytes for byte strings, or the UTF-8 encoded text for unicode strings.
 		virtual auto stringValue() const -> std::string = 0;
 
 	protected: // Helpers forimplementors of PyStringValue.
 		enum class QuoteType { Single, Double };
-		static auto escapeAndQuoteString(const std::string& str, QuoteType quoteType = QuoteType::Single) -> std::string;
+		/// `escapeNonAscii` should be true for raw bytes and false for text that is already UTF-8 encoded.
+		static auto escapeAndQuoteString(const std::string& str, QuoteType quoteType = QuoteType::Single, bool escapeNonAscii = true) -> std::string;
 	};
 
 }

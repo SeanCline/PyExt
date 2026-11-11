@@ -1,19 +1,20 @@
 #pragma once
 
 #include <stdexcept>
+#include <utility>
 
 namespace utils {
 
-	/// Converts from one type to another. If equality is cannot preserved an overflow_error is raised.
+	/// Converts from one integer type to another. If the value cannot be preserved an overflow_error is raised.
 	template <typename Target, typename Source>
 	auto lossless_cast(Source value) -> Target
 	{
-		auto to = static_cast<Target>(value);
-
-		if (static_cast<Source>(to) != value)
+		// A round trip through the target type isn't enough of a check on its own:
+		// -1 survives a trip through an unsigned type despite not being representable in it.
+		if (!std::in_range<Target>(value))
 			throw std::overflow_error("lossless_cast could not represent value in target type.");
 
-		return to;
+		return static_cast<Target>(value);
 	}
 
 }

@@ -112,8 +112,8 @@ namespace PyExt::Remote {
 	{
 		ostringstream oss;
 		auto exp = exporter();
-		oss << "exporter: " << (exp ? exp->repr(true) : "<none>") << "\n";
-		oss << "format: '" << format() << "'\n";
+		oss << "exporter: " << (exp ? exp->repr(true) : utils::escapeDml("<none>")) << "\n";
+		oss << "format: '" << utils::escapeDml(format()) << "'\n"; //< Formats such as "<i" would otherwise read as a DML tag.
 		oss << "itemsize: " << itemsize() << "\n";
 		oss << "len: " << length() << "\n";
 		oss << "readonly: " << (readonly() ? "True" : "False") << "\n";
