@@ -78,6 +78,12 @@ namespace PyExt::Remote {
 	}
 
 
+	auto PyThreadState::interpreterAddress() const -> RemoteType::Offset
+	{
+		return remoteType().Field("interp").GetPtr();
+	}
+
+
 	auto PyThreadState::allFrames() const -> vector<shared_ptr<PyFrame>>
 	{
 		vector<shared_ptr<PyFrame>> frames;

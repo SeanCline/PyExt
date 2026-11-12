@@ -50,6 +50,9 @@ namespace PyExt::Remote {
 		/// Returns a field by name in the `ob_base` member.
 		auto baseField(const std::string& fieldName) const -> ExtRemoteTyped;
 		auto hasBaseField(const std::string& fieldName) const -> bool;
+
+		/// Returns `text` as a link that runs !pyobj on this object when `pretty` is set, and as plain text otherwise.
+		auto linkToSelf(const std::string& text, bool pretty) const -> std::string;
 		using RemoteType::remoteType;
 
 	private:

@@ -5,6 +5,8 @@
 #include "PyDictObject.h"
 #include "PyDictKeysObject.h"
 #include "../ExtHelpers.h"
+#include "../PyLayout.h"
+#include "../ReprBuilder.h"
 
 #include <engextcpp.hpp>
 
@@ -41,7 +43,7 @@ namespace PyExt::Remote {
 		// 64-bit Python 3.14+ narrowed ob_refcnt to an unsigned 32-bit field, and immortal objects
 		// set its high bits. Reading it as signed would report a large negative count.
 		auto refcnt = baseField("ob_refcnt");
-		if (refcnt.GetTypeSize() == 4 && utils::getPointerSize() == 8)
+		if (refcnt.GetTypeSize() == 4 && Layout::pointerSize() == 8)
 			return static_cast<SSize>(refcnt.GetUlong());
 		return utils::readIntegral<SSize>(refcnt);
 	}
@@ -55,7 +57,7 @@ namespace PyExt::Remote {
 			return baseField("ob_ref_local").GetUlong() == 0xFFFFFFFF;
 
 		const auto count = refCount();
-		if (utils::getPointerSize() == 8)
+		if (Layout::pointerSize() == 8)
 			return static_cast<int32_t>(static_cast<uint32_t>(count)) < 0;
 		return count >= 0x3FFFFFFF;
 	}
@@ -94,21 +96,16 @@ namespace PyExt::Remote {
 		if (!type().isManagedDict())
 			return { };
 
-		auto pointerSize = utils::getPointerSize();
+		auto pointerSize = Layout::pointerSize();
 
 		// Py_TPFLAGS_MANAGED_DICT implies Py_TPFLAGS_PREHEADER, so the allocator
 		// always provisions the pre-header region (including the dict pointer)
 		// for any type that passes the isManagedDict() guard above.
-		// Free-threaded builds keep their GC state inside the object header, so the two GC
-		// pointers that normally sit between the pre-header and the object are absent.
-		const bool isFreeThreaded = hasBaseField("ob_tid");
-		const auto managedDictSlot = offset() - (isFreeThreaded ? 1 : 3) * pointerSize;
-
 		bool readManagedDictPointer = false;
 		Offset dictPtr = 0;
 		utils::ignoreExtensionError([&] {
 			// Python >= 3.13
-			auto managedDictPtr = managedDictSlot;
+			auto managedDictPtr = offset() + Layout::managedDictSlotOffset();
 			dictPtr = ExtRemoteTyped("PyManagedDictPointer", managedDictPtr, true).Field("dict").GetPtr();
 			readManagedDictPointer = true;
 		});
@@ -178,7 +175,7 @@ namespace PyExt::Remote {
 				obSize = -obSize;
 			dictOffset_ += type().basicSize() + obSize * type().itemSize();
 			// alignment
-			auto ptrSize = utils::getPointerSize();
+			auto ptrSize = Layout::pointerSize();
 			dictOffset_ = (dictOffset_ + (ptrSize - 1)) & ~(ptrSize - 1);
 		}
 		auto dictPtr = ExtRemoteTyped("(PyDictObject**)@$extin", offset() + dictOffset_);
@@ -189,32 +186,34 @@ namespace PyExt::Remote {
 
 	auto PyObject::repr(bool pretty) const -> string
 	{
-		string repr = "<" + type().name() + " object>";
-		if (pretty)
-			return utils::link(repr, "!pyobj 0n"s + to_string(offset()));
-		return repr;
+		return linkToSelf("<" + type().name() + " object>", pretty);
+	}
+
+
+	auto PyObject::linkToSelf(const string& text, bool pretty) const -> string
+	{
+		return utils::ReprBuilder(pretty).link(text, "!pyobj 0n" + to_string(offset())).str();
 	}
 
 
 	auto PyObject::details() const -> string
 	{
-		const auto sectionSeparator = "\n";
-		const auto elementSeparator = "\n";
-		const auto indentation = "\t";
-		ostringstream oss;
+		utils::ReprBuilder out(true); //< Details are always printed as DML.
 		bool empty = true;
+		auto startSection = [&] {
+			if (!empty)
+				out.text("\n");
+			empty = false;
+		};
 
 		// repr of built-in base types (not for built-in types itself)
 		auto const& types = PyTypeObject::builtinTypes();
-		if (std::find(begin(types), end(types), type().name()) == types.end()) {
+		if (find(begin(types), end(types), type().name()) == end(types)) {
 			for (auto const& typeObj : type().mro()->listValue()) {
 				auto const typeName = PyTypeObject(typeObj->offset()).name();
 				if (find(begin(types), end(types), typeName) != end(types)) {
-					if (!empty)
-						oss << sectionSeparator;
-					else
-						empty = false;
-					oss << utils::escapeDml(typeName) << " repr: " << make(offset(), typeName)->repr();
+					startSection();
+					out.text(typeName + " repr: ").markup(make(offset(), typeName)->repr(true));
 				}
 			}
 		}
@@ -222,29 +221,23 @@ namespace PyExt::Remote {
 		// __slots__ (including base types)
 		auto slots_ = slots();
 		if (slots_.size() > 0) {
-			if (!empty)
-				oss << sectionSeparator;
-			else
-				empty = false;
-			oss << "slots: {" << elementSeparator;
+			startSection();
+			out.text("slots: {\n");
 			for (auto const& [name, value] : slots_) {
 				if (value != nullptr)
-					oss << indentation << utils::escapeDml(name) << ": " << value->repr(true) << ',' << elementSeparator;
+					out.text("\t" + name + ": ").markup(value->repr(true)).text(",\n");
 			}
-			oss << '}';
+			out.text("}");
 		}
 
 		// __dict__
 		auto dictPtr = dict();
 		if (dictPtr != nullptr) {
-			if (!empty)
-				oss << sectionSeparator;
-			else
-				empty = false;
-			oss << "dict: " << dictPtr->repr(true);
+			startSection();
+			out.text("dict: ").markup(dictPtr->repr(true));
 		}
 
-		return oss.str();
+		return out.str();
 	}
 
 

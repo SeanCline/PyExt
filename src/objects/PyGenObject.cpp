@@ -6,6 +6,8 @@
 #include "PyFrame.h"
 #include "../fieldAsPyObject.h"
 #include "../ExtHelpers.h"
+#include "../PyLayout.h"
+#include "../ReprBuilder.h"
 
 #include <engextcpp.hpp>
 
@@ -21,30 +23,17 @@ namespace {
 	// Returns the lowercased name of a `_framestate` enumerator without its FRAME_ prefix, e.g. "suspended".
 	auto frameStateNameFromSymbols(int state) -> optional<string>
 	{
-		// Hide the wall of text GetSymbolTypeId prints when the enum isn't in the PDB.
-		ExtCaptureOutputA ignoreOut;
-		ignoreOut.Start();
-
-		ULONG typeId = 0;
-		ULONG64 moduleBase = 0;
-		auto& symbols = g_Ext->m_Symbols3;
-		if (FAILED(symbols->GetSymbolTypeId(utils::getFullSymbolName("_framestate").c_str(), &typeId, &moduleBase)))
+		auto name = PyExt::Layout::enumeratorName("_framestate", state);
+		if (!name.has_value())
 			return nullopt;
 
-		// Negative enumerators may be stored sign-extended or as their 32-bit pattern.
-		char name[128] = {};
-		if (FAILED(symbols->GetConstantName(moduleBase, typeId, static_cast<ULONG64>(static_cast<LONG64>(state)), name, sizeof(name), nullptr))
-			&& FAILED(symbols->GetConstantName(moduleBase, typeId, static_cast<ULONG>(state), name, sizeof(name), nullptr)))
-			return nullopt;
-
-		string result = name;
 		const string prefix = "FRAME_";
-		if (result.starts_with(prefix))
-			result.erase(0, prefix.size());
-		if (result.empty())
+		if (name->starts_with(prefix))
+			name->erase(0, prefix.size());
+		if (name->empty())
 			return nullopt;
-		transform(result.begin(), result.end(), result.begin(), [](unsigned char c) { return static_cast<char>(tolower(c)); });
-		return result;
+		transform(name->begin(), name->end(), name->begin(), [](unsigned char c) { return static_cast<char>(tolower(c)); });
+		return name;
 	}
 
 }
@@ -92,7 +81,7 @@ namespace PyExt::Remote {
 	{
 		auto state = frameState();
 		if (!state.has_value())
-			return { };
+			return legacyFrameStateString();
 
 		// The values of `enum _framestate` were renumbered in 3.13 and again in 3.15, so the
 		// debuggee's own symbols are the authority on what a value means.
@@ -100,7 +89,7 @@ namespace PyExt::Remote {
 			return *name;
 
 		// Fall back on what Include/internal/pycore_frame.h says for the versions we know about.
-		const auto minorVersion = (utils::pythonVersionHex().value_or(0) >> 16) & 0xFF;
+		const auto minorVersion = Layout::minorVersion().value_or(0);
 		if (minorVersion == 11 || minorVersion == 12) {
 			switch (*state) {
 			case -2: return "created";
@@ -120,6 +109,49 @@ namespace PyExt::Remote {
 			}
 		}
 		return "unknown state " + to_string(*state);
+	}
+
+
+	auto PyGenObjectBase::legacyFrameStateString() const -> string
+	{
+		auto frameFieldName = prefixedField("frame");
+		if (!remoteType().HasField(frameFieldName.c_str()))
+			return { };
+
+		// The generator lets go of its frame once it has finished.
+		auto frameField = remoteType().Field(frameFieldName.c_str());
+		if (frameField.GetPtr() == 0)
+			return "cleared";
+
+		// Python 3.10 keeps the state on the frame object.
+		if (frameField.HasField("f_state")) {
+			auto stateField = frameField.Field("f_state");
+			auto state = utils::readIntegral<int>(stateField);
+			if (auto name = frameStateNameFromSymbols(state); name.has_value())
+				return *name;
+
+			switch (state) {
+			case -2: return "created";
+			case -1: return "suspended";
+			case 0:  return "executing";
+			case 1:  return "returned";
+			case 2:  return "unwinding";
+			case 3:  return "raised";
+			case 4:  return "cleared";
+			}
+			return "unknown state " + to_string(state);
+		}
+
+		// Before that there is only a running flag, and the frame's last instruction to say whether it has started.
+		auto runningFieldName = prefixedField("running");
+		if (remoteType().HasField(runningFieldName.c_str())) {
+			auto runningField = remoteType().Field(runningFieldName.c_str());
+			if (utils::readIntegral<int>(runningField) != 0)
+				return "executing";
+		}
+
+		auto lastInstruction = frameField.Field("f_lasti");
+		return utils::readIntegral<int>(lastInstruction) < 0 ? "created" : "suspended";
 	}
 
 
@@ -161,25 +193,23 @@ namespace PyExt::Remote {
 			repr += " (" + state + ")";
 		repr += ">";
 
-		if (pretty)
-			return utils::link(repr, "!pyobj 0n"s + to_string(offset()));
-		return repr;
+		return linkToSelf(repr, pretty);
 	}
 
 
 	auto PyGenObjectBase::details() const -> string
 	{
-		ostringstream oss;
+		utils::ReprBuilder out(true); //< Details are always printed as DML.
 		auto qn = qualname();
 		if (qn != nullptr)
-			oss << "qualname: " << utils::escapeDml(qn->stringValue()) << "\n"; //< Names such as "<genexpr>" would otherwise read as a DML tag.
+			out.text("qualname: " + qn->stringValue() + "\n");
 		if (auto state = frameStateString(); !state.empty())
-			oss << "state: " << state << "\n";
+			out.text("state: " + state + "\n");
 
 		auto f = frame();
 		if (f != nullptr)
-			oss << f->details();
-		return oss.str();
+			out.markup(f->details());
+		return out.str();
 	}
 
 

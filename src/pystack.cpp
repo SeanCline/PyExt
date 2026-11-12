@@ -10,6 +10,7 @@
 using namespace PyExt::Remote;
 
 #include "ExtHelpers.h"
+#include "ReprBuilder.h"
 
 #include <engextcpp.hpp>
 
@@ -47,44 +48,42 @@ namespace {
 
 	auto frameToString(const PyFrame& frame) -> string
 	{
-		ostringstream oss;
-
 		auto codeObject = frame.code();
 		if (codeObject == nullptr)
 			throw runtime_error("Warning: PyFrameObject is missing PyCodeObject.");
 
 		auto filename = codeObject->filename();
-		oss << "File \"" << utils::link(filename, ".open " + filename, "Open source code.")
-			<< "\", line " << frame.currentLineNumber()
-			<< ", in " << utils::link(codeObject->name(), "!pyobj 0n" + to_string(codeObject->offset()), "Inspect PyCodeObject.");
-
-		return oss.str();
+		utils::ReprBuilder out(true);
+		out.text("File \"").link(filename, ".open " + filename, "Open source code.")
+			.text("\", line " + to_string(frame.currentLineNumber()) + ", in ")
+			.link(codeObject->name(), "!pyobj 0n" + to_string(codeObject->offset()), "Inspect PyCodeObject.");
+		return out.str();
 	}
 
 
 	auto frameToCommandString(const PyFrame& frame) -> string
 	{
-		ostringstream oss;
+		utils::ReprBuilder out(true);
 
 		auto* interpreterFrame = dynamic_cast<const PyInterpreterFrame*>(&frame);
 		if (interpreterFrame) {
 			// 3.11+
-			oss << utils::link("[Frame]", "!pyinterpreterframe 0n"s + to_string(interpreterFrame->offset()), "Inspect interpreter frame (including localsplus).") << " ";
+			out.link("[Frame]", "!pyinterpreterframe 0n"s + to_string(interpreterFrame->offset()), "Inspect interpreter frame (including localsplus).").text(" ");
 		} else {
 			// <3.11
 			auto& frameObject = dynamic_cast<const PyFrameObject&>(frame);
-			oss << utils::link("[Frame]", "!pyobj 0n"s + to_string(frameObject.offset()), "Inspect frame object (including localsplus).") << " ";
+			out.link("[Frame]", "!pyobj 0n"s + to_string(frameObject.offset()), "Inspect frame object (including localsplus).").text(" ");
 		}
 
 		auto locals = frame.locals();
 		if (locals != nullptr && locals->offset() != 0)
-			oss << utils::link("[Locals]", "!pyobj 0n"s + to_string(locals->offset()), "Inspect this frame's locals.") << " ";
+			out.link("[Locals]", "!pyobj 0n"s + to_string(locals->offset()), "Inspect this frame's locals.").text(" ");
 
 		auto globals = frame.globals();
 		if (globals != nullptr && globals->offset() != 0)
-			oss << utils::link("[Globals]", "!pyobj 0n"s + to_string(globals->offset()), "Inspect this frame's captured globals.") << " ";
+			out.link("[Globals]", "!pyobj 0n"s + to_string(globals->offset()), "Inspect this frame's captured globals.").text(" ");
 
-		return oss.str();
+		return out.str();
 	}
 
 }

@@ -2,6 +2,7 @@
 
 #include "PyDictObject.h"
 #include "../ExtHelpers.h"
+#include "../PyLayout.h"
 
 
 namespace PyExt::Remote {
@@ -33,7 +34,7 @@ namespace PyExt::Remote {
 			auto log2size = utils::readIntegral<uint8_t>(log2sizeField);
 			size = static_cast<PyObject::SSize>(1) << log2size;
 		}
-		auto pointerSize = utils::getPointerSize();
+		auto pointerSize = Layout::pointerSize();
 
 		int indexSize = 0;
 		if (size <= 0xff) {

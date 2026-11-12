@@ -13,7 +13,7 @@ namespace PyExt::Remote {
 	class PyFrameObject;
 	class PyInterpreterFrame;
 
-	/// Represents a PyInterpreterState instance in the debuggee's address space.
+	/// Represents a PyThreadState instance in the debuggee's address space.
 	/// @see https://github.com/python/cpython/blob/master/Include/pystate.h
 	class PYEXT_PUBLIC PyThreadState : private RemoteType
 	{
@@ -26,6 +26,8 @@ namespace PyExt::Remote {
 		auto currentFrame() const -> std::unique_ptr<PyFrame>;
 		auto tracing() const -> long;
 		auto thread_id() const -> long;
+		/// Address of the PyInterpreterState this thread belongs to.
+		auto interpreterAddress() const -> RemoteType::Offset;
 
 	public: // Utility functions around the members.
 		/// Returns a range of all the frames in this threadState.

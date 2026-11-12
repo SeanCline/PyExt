@@ -1,6 +1,7 @@
 #include "PyMemberDef.h"
 
 #include "ExtHelpers.h"
+#include "PyLayout.h"
 
 using namespace std;
 
@@ -55,7 +56,7 @@ namespace PyExt::Remote {
 
 	auto PyMemberDefManual::type() const -> int
 	{
-		auto addr = objectAddress + utils::getPointerSize();
+		auto addr = objectAddress + Layout::pointerSize();
 		auto type_ = ExtRemoteTyped("(int*)@$extin", addr).Dereference();
 		return utils::readIntegral<int>(type_);
 	}
@@ -63,7 +64,7 @@ namespace PyExt::Remote {
 
 	auto PyMemberDefManual::offset() const -> RemoteType::SSize
 	{
-		auto addr = objectAddress + utils::getPointerSize() * 2;
+		auto addr = objectAddress + Layout::pointerSize() * 2;
 		auto offset_ = ExtRemoteTyped("(Py_ssize_t*)@$extin", addr).Dereference();
 		return utils::readIntegral<RemoteType::SSize>(offset_);
 	}

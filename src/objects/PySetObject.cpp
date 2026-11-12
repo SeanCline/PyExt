@@ -2,6 +2,7 @@
 
 #include "PyTypeObject.h"
 #include "../ExtHelpers.h"
+#include "../ReprBuilder.h"
 
 #include <engextcpp.hpp>
 
@@ -89,19 +90,19 @@ namespace PyExt::Remote {
 		if (values.empty())
 			return isFrozen ? "frozenset()" : "set()";
 
-		ostringstream oss;
+		utils::ReprBuilder out(pretty);
 		if (isFrozen)
-			oss << "frozenset(";
-		oss << '{' << elementSeparator;
+			out.text("frozenset(");
+		out.text("{").text(elementSeparator);
 
 		for (auto& value : values) {
-			oss << indentation << value->repr(pretty) << ',' << elementSeparator;
+			out.text(indentation).markup(value->repr(pretty)).text(",").text(elementSeparator);
 		}
 
-		oss << '}';
+		out.text("}");
 		if (isFrozen)
-			oss << ')';
-		return oss.str();
+			out.text(")");
+		return out.str();
 	}
 
 }

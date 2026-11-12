@@ -1,6 +1,7 @@
 #include "PySliceObject.h"
 
 #include "../fieldAsPyObject.h"
+#include "../ReprBuilder.h"
 
 #include <string>
 using namespace std;
@@ -33,10 +34,22 @@ namespace PyExt::Remote {
 
 	auto PySliceObject::repr(bool pretty) const -> string
 	{
-		auto reprOrNone = [pretty](const unique_ptr<PyObject>& obj) {
-			return obj == nullptr ? "None"s : obj->repr(pretty);
+		utils::ReprBuilder out(pretty);
+		auto append = [&](const unique_ptr<PyObject>& obj) {
+			if (obj != nullptr)
+				out.markup(obj->repr(pretty));
+			else
+				out.text("None");
 		};
-		return "slice(" + reprOrNone(start()) + ", " + reprOrNone(stop()) + ", " + reprOrNone(step()) + ")";
+
+		out.text("slice(");
+		append(start());
+		out.text(", ");
+		append(stop());
+		out.text(", ");
+		append(step());
+		out.text(")");
+		return out.str();
 	}
 
 }

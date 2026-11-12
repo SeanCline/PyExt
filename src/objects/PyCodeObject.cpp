@@ -264,10 +264,7 @@ namespace PyExt::Remote {
 
 	auto PyCodeObject::repr(bool pretty) const -> string
 	{
-		string repr =  "<code object, file \"" + filename() + "\", line " + to_string(firstLineNumber()) + ">";
-		if (pretty)
-			return utils::link(repr, "!pyobj 0n"s + to_string(offset()));
-		return repr;
+		return linkToSelf("<code object, file \"" + filename() + "\", line " + to_string(firstLineNumber()) + ">", pretty);
 	}
 
 

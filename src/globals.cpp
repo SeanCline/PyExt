@@ -1,6 +1,7 @@
 #include "globals.h"
 #include "extension.h"
 #include "pyextpublic.h"
+#include "PyLayout.h"
 using namespace PyExt;
 
 #include <engextcpp.hpp>
@@ -17,6 +18,7 @@ namespace PyExt {
 	{
 		g_Ext = g_ExtInstancePtr;
 		g_Ext->Query(pClient);
+		Layout::resetCache(); //< Each test opens a dump of its own.
 	}
 
 

@@ -413,13 +413,9 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 			auto& genObj = dynamic_cast<PyGenObjectBase&>(TestHelpers::findValueByKey(localPairs, name));
 			INFO("Checking " << name);
 
-			// The numbering of the states has changed between versions, so every version is worth checking.
-			if (genObj.frameState().has_value()) {
-				REQUIRE(genObj.frameStateString() == expectedState);
-				REQUIRE(genObj.repr(false).find("(" + expectedState + ")>") != string::npos);
-			} else {
-				REQUIRE(genObj.frameStateString() == ""); //< Python <= 3.10 keeps the state elsewhere.
-			}
+			// Where the state is kept and how it's numbered has changed several times, so every version is worth checking.
+			REQUIRE(genObj.frameStateString() == expectedState);
+			REQUIRE(genObj.repr(false).find("(" + expectedState + ")>") != string::npos);
 		}
 	}
 
@@ -455,5 +451,19 @@ TEST_CASE("object_types.py has a stack frame with expected locals.", "[integrati
 		REQUIRE(frame_obj.currentLineNumber() > 0);
 		REQUIRE(frame_obj.globals() != nullptr);
 		REQUIRE_NOTHROW(frame_obj.details());
+	}
+
+
+	SECTION("Value of extension_type_obj.")
+	{
+		// Python 3.13+ keeps the dicts of extension modules' static types in a different table than
+		// the builtin types' dicts. Looking in the wrong one finds the dict of an unrelated type.
+		auto& extension_type_obj = dynamic_cast<PyTypeObject&>(TestHelpers::findValueByKey(localPairs, "extension_type_obj"));
+		REQUIRE(extension_type_obj.name() == "datetime.date");
+
+		auto typeDict = extension_type_obj.dict();
+		REQUIRE(typeDict != nullptr);
+		auto typeDictPairs = typeDict->pairValues();
+		REQUIRE_NOTHROW(TestHelpers::findValueByKey(typeDictPairs, "fromordinal"));
 	}
 }

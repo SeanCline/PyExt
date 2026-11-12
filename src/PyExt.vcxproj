@@ -133,6 +133,8 @@
     <ClCompile Include="PyFrame.cpp" />
     <ClCompile Include="PyInterpreterFrame.cpp" />
     <ClCompile Include="PyInterpreterState.cpp" />
+    <ClCompile Include="PyLayout.cpp" />
+    <ClCompile Include="ReprBuilder.cpp" />
     <ClInclude Include="..\include\PyCellObject.h" />
     <ClInclude Include="..\include\PyDictKeysObject.h" />
     <ClInclude Include="..\include\PyFrame.h" />
@@ -196,6 +198,8 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="..\include\pyextpublic.h" />
     <ClInclude Include="ExtHelpers.h" />
+    <ClInclude Include="PyLayout.h" />
+    <ClInclude Include="ReprBuilder.h" />
     <ClInclude Include="fieldAsPyObject.h" />
     <ClInclude Include="..\include\utils\lossless_cast.h" />
     <ClInclude Include="..\include\utils\ScopeExit.h" />

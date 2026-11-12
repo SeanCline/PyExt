@@ -26,7 +26,11 @@ namespace PyExt::Remote {
 		/// Returns the Python's global interpreter state instance.
 		static auto makeAutoInterpreterState() -> std::unique_ptr<PyInterpreterState>;
 
-		/// Returns a range of all interpreter states in the process, starting with the autoInterpreterState.
+		/// Returns the first entry of the process's list of interpreters.
+		/// Interpreters are added to the front of the list, so this is the newest one and the main interpreter is last.
+		static auto makeHeadInterpreterState() -> std::unique_ptr<PyInterpreterState>;
+
+		/// Returns a range of all interpreter states in the process, newest first.
 		static auto allInterpreterStates() -> std::generator<PyInterpreterState>;
 
 		/// Returns the PyThreadState associated with a thread id or None if no such thread exists.

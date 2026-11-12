@@ -1,6 +1,7 @@
 #include "PyRangeObject.h"
 
 #include "../fieldAsPyObject.h"
+#include "../ReprBuilder.h"
 
 #include <string>
 using namespace std;
@@ -39,16 +40,28 @@ namespace PyExt::Remote {
 
 	auto PyRangeObject::repr(bool pretty) const -> string
 	{
-		auto startObj = start();
-		auto stopObj = stop();
-		auto stepObj = step();
-		string s = startObj ? startObj->repr(pretty) : "?";
-		string e = stopObj ? stopObj->repr(pretty) : "?";
-		string st = stepObj ? stepObj->repr(pretty) : "?";
+		utils::ReprBuilder out(pretty);
+		auto append = [&](const unique_ptr<PyObject>& obj) {
+			if (obj != nullptr)
+				out.markup(obj->repr(pretty));
+			else
+				out.text("?");
+		};
+
+		out.text("range(");
+		append(start());
+		out.text(", ");
+		append(stop());
+
 		// Match CPython: range omits the step if it is exactly 1.
-		if (stepObj && stepObj->repr(false) == "1")
-			return "range(" + s + ", " + e + ")";
-		return "range(" + s + ", " + e + ", " + st + ")";
+		auto stepObj = step();
+		if (stepObj == nullptr || stepObj->repr(false) != "1") {
+			out.text(", ");
+			append(stepObj);
+		}
+
+		out.text(")");
+		return out.str();
 	}
 
 }

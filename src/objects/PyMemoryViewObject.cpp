@@ -2,11 +2,13 @@
 
 #include "../fieldAsPyObject.h"
 #include "../ExtHelpers.h"
+#include "../ReprBuilder.h"
 
 #include <engextcpp.hpp>
 
 #include <sstream>
 #include <string>
+#include <vector>
 using namespace std;
 
 namespace PyExt::Remote {
@@ -101,40 +103,38 @@ namespace PyExt::Remote {
 	{
 		ostringstream oss;
 		oss << "<memory at 0x" << hex << offset() << ">";
-		auto repr = oss.str();
-		if (pretty)
-			return utils::link(repr, "!pyobj 0n"s + to_string(offset()));
-		return repr;
+		return linkToSelf(oss.str(), pretty);
 	}
 
 
 	auto PyMemoryViewObject::details() const -> string
 	{
-		ostringstream oss;
-		auto exp = exporter();
-		oss << "exporter: " << (exp ? exp->repr(true) : utils::escapeDml("<none>")) << "\n";
-		oss << "format: '" << utils::escapeDml(format()) << "'\n"; //< Formats such as "<i" would otherwise read as a DML tag.
-		oss << "itemsize: " << itemsize() << "\n";
-		oss << "len: " << length() << "\n";
-		oss << "readonly: " << (readonly() ? "True" : "False") << "\n";
-		oss << "ndim: " << ndim() << "\n";
+		auto joined = [](const vector<SSize>& values) {
+			string result;
+			for (size_t i = 0; i < values.size(); ++i) {
+				result += to_string(values[i]);
+				if (i + 1 < values.size())
+					result += ", ";
+			}
+			return result;
+		};
 
-		auto dims = shape();
-		oss << "shape: (";
-		for (size_t i = 0; i < dims.size(); ++i) {
-			oss << dims[i];
-			if (i + 1 < dims.size()) oss << ", ";
-		}
-		oss << ")\n";
+		utils::ReprBuilder out(true); //< Details are always printed as DML.
+		out.text("exporter: ");
+		if (auto exp = exporter())
+			out.markup(exp->repr(true));
+		else
+			out.text("<none>");
+		out.text("\n");
 
-		auto str = strides();
-		oss << "strides: (";
-		for (size_t i = 0; i < str.size(); ++i) {
-			oss << str[i];
-			if (i + 1 < str.size()) oss << ", ";
-		}
-		oss << ")";
-		return oss.str();
+		out.text("format: '" + format() + "'\n");
+		out.text("itemsize: " + to_string(itemsize()) + "\n");
+		out.text("len: " + to_string(length()) + "\n");
+		out.text("readonly: "s + (readonly() ? "True" : "False") + "\n");
+		out.text("ndim: " + to_string(ndim()) + "\n");
+		out.text("shape: (" + joined(shape()) + ")\n");
+		out.text("strides: (" + joined(strides()) + ")");
+		return out.str();
 	}
 
 }

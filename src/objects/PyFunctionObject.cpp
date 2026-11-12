@@ -98,14 +98,9 @@ namespace PyExt::Remote {
 	auto PyFunctionObject::repr(bool pretty) const -> string
 	{
 		auto nameObject = name();
-		string repr;
 		if (nameObject == nullptr)
-			repr = "<function>";
-		else
-			repr = "<function " + nameObject->stringValue() + ">";
-		if (pretty)
-			return utils::link(repr, "!pyobj 0n"s + to_string(offset()));
-		return repr;
+			return linkToSelf("<function>", pretty);
+		return linkToSelf("<function " + nameObject->stringValue() + ">", pretty);
 	}
 
 }

@@ -3,6 +3,7 @@
 #include "PyTypeObject.h"
 
 #include "../ExtHelpers.h"
+#include "../ReprBuilder.h"
 
 #include <string>
 using namespace std;
@@ -26,11 +27,15 @@ namespace PyExt::Remote {
 
 	auto PyCellObject::repr(bool pretty) const -> string
 	{
-		string repr = PyObject::repr(pretty);
+		utils::ReprBuilder out(pretty);
+		out.markup(PyObject::repr(pretty)).text(": ");
+
 		auto contents = objectReference();
 		if (contents == nullptr)
-			return repr + ": " + (pretty ? utils::escapeDml("<empty>") : "<empty>"s);
-		return repr + ": " + contents->repr(pretty);
+			out.text("<empty>");
+		else
+			out.markup(contents->repr(pretty));
+		return out.str();
 	}
 
 }

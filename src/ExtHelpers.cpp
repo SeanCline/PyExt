@@ -8,14 +8,6 @@ using namespace std;
 
 namespace utils {
 
-	auto getPointerSize() -> int
-	{
-		string objExpression = "sizeof(void*)"s;
-		ExtRemoteTyped remoteObj(objExpression.c_str());
-		return utils::readIntegral<int>(remoteObj);
-	}
-
-
 	auto escapeDml(string_view str) -> string
 	{
 		std::string buffer;
@@ -42,35 +34,6 @@ namespace utils {
 			oss << " alt=\"" << escapeDml(alt) << "\"";
 		oss << ">" << escapeDml(text) << "</link>";
 		return oss.str();
-	}
-
-
-	auto getFullSymbolName(string_view symbolName) -> string
-	{
-		// Locate the module through a symbol it defines rather than by guessing at the module's
-		// name, which varies ("python311", "python315t", "python315_d", ...).
-		// `_PyRuntime` (Python 3.7+) is used because it isn't part of the stable ABI. Stable ABI
-		// symbols are also exported from python3.dll as forwarders, and could resolve to that instead.
-		string moduleName;
-		ULONG64 symbolOffset = 0, moduleBase = 0;
-		ULONG moduleIndex = 0;
-		char nameBuffer[MAX_PATH] = {};
-		if (SUCCEEDED(g_Ext->m_Symbols->GetOffsetByName("_PyRuntime", &symbolOffset))
-			&& SUCCEEDED(g_Ext->m_Symbols->GetModuleByOffset(symbolOffset, 0, &moduleIndex, &moduleBase))
-			&& SUCCEEDED(g_Ext->m_Symbols->GetModuleNames(moduleIndex, moduleBase,
-				nullptr, 0, nullptr, nameBuffer, sizeof(nameBuffer), nullptr, nullptr, 0, nullptr)))
-		{
-			moduleName = nameBuffer;
-		} else {
-			ExtBuffer<char> buffer;
-			g_Ext->FindFirstModule("python???", &buffer, 0);
-			moduleName = buffer.GetBuffer();
-		}
-
-		string result = moduleName;
-		result += '!';
-		result += symbolName;
-		return result;
 	}
 
 
@@ -107,14 +70,17 @@ namespace utils {
 	}
 
 
-	auto pythonVersionHex() -> optional<uint32_t>
+	auto utf8ToAnsi(string_view utf8) -> string
 	{
-		optional<uint32_t> version;
-		ignoreExtensionError([&] {
-			ExtRemoteTyped remoteVersion("Py_Version");
-			version = readIntegral<uint32_t>(remoteVersion);
-		});
-		return version;
+		const auto wide = utf8ToWide(utf8);
+		if (wide.empty())
+			return { };
+
+		auto wideSize = static_cast<int>(wide.size());
+		auto ansiSize = ::WideCharToMultiByte(CP_ACP, 0, wide.data(), wideSize, nullptr, 0, nullptr, nullptr);
+		string ansi(static_cast<size_t>(ansiSize), '\0');
+		::WideCharToMultiByte(CP_ACP, 0, wide.data(), wideSize, ansi.data(), ansiSize, nullptr, nullptr);
+		return ansi;
 	}
 
 }

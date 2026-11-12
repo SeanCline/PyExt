@@ -2,10 +2,73 @@
 
 #include "../fieldAsPyObject.h"
 #include "../ExtHelpers.h"
+#include "../PyLayout.h"
+#include "PyInterpreterState.h"
+#include "PyThreadState.h"
 
 #include <engextcpp.hpp>
+#include <initializer_list>
+#include <optional>
 #include <string>
 using namespace std;
+
+namespace {
+
+	using PyExt::Remote::RemoteType;
+
+	// Static types are shared by every interpreter in the process, so their mutable state (such as
+	// tp_dict) is kept per interpreter in `interp->types`. Returns that struct for the interpreter
+	// the debugger's current thread belongs to, or for the main interpreter if it isn't a Python thread.
+	auto currentInterpreterTypes() -> ExtRemoteTyped
+	{
+		RemoteType::Offset interpreterAddress = 0;
+		utils::ignoreExtensionError([&] {
+			ULONG systemThreadId = 0;
+			if (FAILED(g_Ext->m_System->GetCurrentThreadSystemId(&systemThreadId)))
+				return;
+			auto threadState = PyExt::Remote::PyInterpreterState::findThreadStateBySystemThreadId(systemThreadId);
+			if (threadState.has_value())
+				interpreterAddress = threadState->interpreterAddress();
+		});
+
+		// The struct is named in full because some versions' symbols can't resolve the `PyInterpreterState` typedef.
+		optional<ExtRemoteTyped> types;
+		if (interpreterAddress != 0) {
+			utils::ignoreExtensionError([&] {
+				auto structName = PyExt::Layout::qualifiedSymbolName("_is");
+				types = ExtRemoteTyped(structName.c_str(), interpreterAddress, true).Field("types");
+			});
+		}
+
+		if (types.has_value())
+			return *types;
+		return ExtRemoteTyped("_PyRuntime.interpreters.main->types");
+	}
+
+
+	// Finds the tp_dict of a static type in whichever of the interpreter's tables holds its state.
+	auto findStaticTypeDict(ExtRemoteTyped types, RemoteType::SSize index, RemoteType::Offset typeAddress) -> RemoteType::Offset
+	{
+		// Python 3.13 added a second table for the static types that extension modules define.
+		// The two are indexed independently, so the same index is valid in both and the entry's
+		// own `type` pointer is what says which table a type belongs to.
+		for (auto tableName : { "builtins", "for_extensions" }) {
+			if (!types.HasField(tableName))
+				continue;
+
+			auto table = types.Field(tableName);
+			if (table.HasField("initialized"))  // Python >= 3.13
+				table = table.Field("initialized");
+
+			auto state = table.ArrayElement(index);
+			if (state.HasField("type") && state.Field("type").GetPtr() != typeAddress)
+				continue;
+			return state.Field("tp_dict").GetPtr();
+		}
+		return 0;
+	}
+
+}
 
 namespace PyExt::Remote {
 
@@ -70,7 +133,7 @@ namespace PyExt::Remote {
 			} else {
 				// The symbol "PyMemberDef" is not available in Python 3.11.
 				// (In Python 3.12 it is available again...)
-				auto ptrSize = utils::getPointerSize();
+				auto ptrSize = Layout::pointerSize();
 				auto memberDefSize = 5 * ptrSize;
 				while (ExtRemoteTyped("(void**)@$extin", ptr).Dereference().GetPtr() != 0) {
 					members.push_back(make_unique<PyMemberDefManual>(ptr));
@@ -142,27 +205,23 @@ namespace PyExt::Remote {
 
 	auto PyTypeObject::dict() const -> unique_ptr<PyDict>
 	{
-		Offset dictAddr;
+		Offset dictAddr = 0;
 		auto builtinIndex = getStaticBuiltinIndex();
 		if (builtinIndex != -1) {
-			auto builtins = ExtRemoteTyped("_PyRuntime.interpreters.main->types.builtins");  // TODO: Support multiple interpreters
-			if (builtins.HasField("initialized"))  // Python >= 3.13
-				builtins = builtins.Field("initialized");
-			auto builtinState = builtins.ArrayElement(builtinIndex);
-			dictAddr = builtinState.Field("tp_dict").GetPtr();
+			dictAddr = findStaticTypeDict(currentInterpreterTypes(), builtinIndex, offset());
 		} else {
 			dictAddr = remoteType().Field("tp_dict").GetPtr();
 		}
+
+		if (dictAddr == 0)
+			return nullptr;
 		return make_unique<PyDictObject>(dictAddr);
 	}
 
 
 	auto PyTypeObject::repr(bool pretty) const -> string
 	{
-		string repr = "<class '" + name() + "'>";
-		if (pretty)
-			return utils::link(repr, "!pyobj 0n"s + to_string(offset()));
-		return repr;
+		return linkToSelf("<class '" + name() + "'>", pretty);
 	}
 
 }

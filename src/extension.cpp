@@ -7,6 +7,7 @@
 #include "RemoteType.h"
 #include "PyInterpreterState.h"
 #include "ExtHelpers.h"
+#include "PyLayout.h"
 using namespace PyExt::Remote;
 
 #include <engextcpp.hpp>
@@ -48,11 +49,14 @@ namespace PyExt {
 	{
 		if (Flags == DEBUG_KNOWN_STRUCT_GET_SINGLE_LINE_OUTPUT)
 		{
+			Layout::resetCache();
 			auto pyObj = PyObject::make(Offset);
 
 			AppendString("Type: %s ", pyObj->type().name().c_str());
 
-			auto repr = pyObj->repr(false);
+			// There is no wide version of the append functions, so the best that can be done for
+			// non-ASCII text is to convert it to the code page those functions expect.
+			auto repr = utils::utf8ToAnsi(pyObj->repr(false));
 			if (!repr.empty()) {
 				if (repr.size() > m_AppendBufferChars
 					|| (ULONG_PTR)(m_AppendAt - m_AppendBuffer) > m_AppendBufferChars - repr.size()) {
@@ -145,6 +149,9 @@ namespace PyExt {
 
 	auto EXT_CLASS::ensureSymbolsLoaded() -> void
 	{
+		// Every command comes through here first, and the target may have changed since the last one.
+		Layout::resetCache();
+
 		// Hide the massive wall o'text `GetSymbolTypeId` prints when it fails to resolve a symbol.
 		// We'll print our own if it fails...
 		ExtCaptureOutputA ignoreOut;
@@ -159,6 +166,7 @@ namespace PyExt {
 
 		// See if triggering a reload and retrying helps matters.
 		m_Symbols->Reload("/f python*");
+		Layout::resetCache();
 
 		// Try again now that symbols are reloaded.
 		try {

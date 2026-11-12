@@ -2,6 +2,8 @@
 
 #include "PyTypeObject.h"
 #include "../ExtHelpers.h"
+#include "../PyLayout.h"
+#include "../ReprBuilder.h"
 #include "PyDictKeysObject.h"
 
 #include <engextcpp.hpp>
@@ -75,15 +77,15 @@ namespace PyExt::Remote {
 		const auto elementSeparator = (pretty) ? "\n" : " "; //< Use a newline when pretty-print is on.
 		const auto indentation = (pretty) ? "\t" : ""; //< Indent only when pretty is on.
 
-		ostringstream oss;
-		oss << '{' << elementSeparator;
+		utils::ReprBuilder out(pretty);
+		out.text("{").text(elementSeparator);
 
 		for (auto& [key, value] : pairValues()) {
-			oss << indentation << key->repr(pretty) << ": " << value->repr(pretty) << ',' << elementSeparator;
+			out.text(indentation).markup(key->repr(pretty)).text(": ").markup(value->repr(pretty)).text(",").text(elementSeparator);
 		}
 
-		oss << '}';
-		return oss.str();
+		out.text("}");
+		return out.str();
 	}
 
 
@@ -101,7 +103,7 @@ namespace PyExt::Remote {
 		auto table = keys->getEntriesTable();
 		auto tableSize = keys->getEntriesTableSize();
 		auto nextValue = valuesPtr;
-		auto ptrSize = utils::getPointerSize();
+		auto ptrSize = Layout::pointerSize();
 
 		for (auto i = 0; i < tableSize; ++i, nextValue += ptrSize) {
 			auto dictEntry = table.ArrayElement(i);
@@ -141,7 +143,7 @@ namespace PyExt::Remote {
 			utils::ignoreExtensionError([&] {
 				// Python >= 3.11
 				// Find full symbol name because there may be a name collision leading to truncated type info.
-				valuesArray = ExtRemoteTyped(utils::getFullSymbolName("_dictvalues").c_str(), valuesArray->GetPtr(), true);
+				valuesArray = ExtRemoteTyped(Layout::qualifiedSymbolName("_dictvalues").c_str(), valuesArray->GetPtr(), true);
 				valuesArray = valuesArray->Field("values");
 			});				
 		}
@@ -173,7 +175,7 @@ namespace PyExt::Remote {
 	{
 		// frozendict (Python 3.15+) shares dict's layout, so the type name is all that tells them apart.
 		if (type().name() == "frozendict")
-			return "frozendict(" + PyDict::repr(pretty) + ")";
+			return utils::ReprBuilder(pretty).text("frozendict(").markup(PyDict::repr(pretty)).text(")").str();
 		return PyDict::repr(pretty);
 	}
 

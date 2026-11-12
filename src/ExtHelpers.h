@@ -70,17 +70,16 @@ namespace utils {
 	}
 
 
-	auto getPointerSize() -> int;
 	auto escapeDml(std::string_view str) -> std::string;
 	auto link(std::string_view text, std::string_view cmd, std::string_view alt = {}) -> std::string;
-	auto getFullSymbolName(std::string_view symbolName) -> std::string;
 
 	/// Appends a code point to a UTF-8 string. Lone surrogates are encoded as-is rather than rejected,
 	/// since Python strings are allowed to contain them.
 	auto appendUtf8(std::string& out, char32_t codePoint) -> void;
 	auto utf8ToWide(std::string_view utf8) -> std::wstring;
 
-	/// Returns the debuggee's PY_VERSION_HEX, or nullopt before Python 3.11 where `Py_Version` isn't exported.
-	auto pythonVersionHex() -> std::optional<std::uint32_t>;
+	/// Converts UTF-8 to the debugger's ANSI code page for the output functions that have no wide
+	/// counterpart. Characters the code page can't represent are replaced.
+	auto utf8ToAnsi(std::string_view utf8) -> std::string;
 
 }

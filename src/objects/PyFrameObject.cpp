@@ -143,10 +143,7 @@ namespace PyExt::Remote {
 
 	auto PyFrameObject::repr(bool pretty) const -> string
 	{
-		string repr = "<frame object>";
-		if (pretty)
-			return utils::link(repr, "!pyobj 0n"s + to_string(offset()));
-		return repr;
+		return linkToSelf("<frame object>", pretty);
 	}
 
 

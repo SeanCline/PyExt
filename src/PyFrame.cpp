@@ -1,9 +1,9 @@
 #include "PyFrame.h"
 
 #include "PyObject.h"
+#include "ReprBuilder.h"
 
 #include <string>
-#include <sstream>
 using namespace std;
 
 namespace PyExt::Remote {
@@ -15,20 +15,16 @@ namespace PyExt::Remote {
 
 	auto PyFrame::details() const -> string
 	{
-		const auto elementSeparator = "\n";
-		const auto indentation = "\t";
+		utils::ReprBuilder out(true); //< Details are always printed as DML.
+		out.text("localsplus: {\n");
 
-		ostringstream oss;
-		oss << "localsplus: {" << elementSeparator;
-
-		for (auto const& pairValue : localsplus()) {
-			auto const& key = pairValue.first;
-			auto const& value = pairValue.second;
+		for (auto const& [name, value] : localsplus()) {
+			// The names come from PyCodeObject as reprs, so they're already markup.
 			if (value != nullptr)
-				oss << indentation << key << ": " << value->repr(true) << ',' << elementSeparator;
+				out.text("\t").markup(name).text(": ").markup(value->repr(true)).text(",\n");
 		}
 
-		oss << '}';
-		return oss.str();
+		out.text("}");
+		return out.str();
 	}
 }

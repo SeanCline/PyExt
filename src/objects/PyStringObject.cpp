@@ -2,6 +2,7 @@
 
 #include "utils/lossless_cast.h"
 #include "../ExtHelpers.h"
+#include "../ReprBuilder.h"
 
 #include <engextcpp.hpp>
 
@@ -46,8 +47,7 @@ namespace PyExt::Remote {
 
 	auto PyBaseStringObject::repr(bool pretty) const -> string
 	{
-		string repr = escapeAndQuoteString(stringValue());
-		return pretty ? utils::escapeDml(repr) : repr;
+		return utils::ReprBuilder(pretty).text(escapeAndQuoteString(stringValue())).str();
 	}
 
 

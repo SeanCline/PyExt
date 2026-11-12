@@ -9,30 +9,12 @@
 
 #include "fieldAsPyObject.h"
 #include "ExtHelpers.h"
+#include "PyLayout.h"
 
 #include <engextcpp.hpp>
 
 #include <memory>
 using namespace std;
-
-namespace {
-
-	using Offset = PyExt::Remote::RemoteType::Offset;
-
-	// Recovers the object address from the bits of a _PyStackRef, or returns 0 if it doesn't refer to an object.
-	// Python 3.13 (free-threaded) and 3.14+ keep ownership tags in the low bits, and can store a small
-	// integer in place of a pointer. Objects are always at least 4-byte aligned, so masking is also
-	// harmless on the plain PyObject* that older versions store.
-	auto stackRefToAddress(Offset bits) -> Offset
-	{
-		constexpr Offset tagMask = 3; //< Py_TAG_BITS
-		constexpr Offset intTag = 3;  //< Py_INT_TAG
-		if ((bits & tagMask) == intTag)
-			return 0;
-		return bits & ~tagMask;
-	}
-
-}
 
 namespace PyExt::Remote {
 
@@ -63,7 +45,7 @@ namespace PyExt::Remote {
 		auto pyObjAddrs = readOffsetArray(f_localsplus, numLocalsplus);
 		vector<pair<string, unique_ptr<PyObject>>> localsplus(numLocalsplus);
 		for (size_t i = 0; i < numLocalsplus; ++i) {
-			auto addr = stackRefToAddress(pyObjAddrs.at(i));
+			auto addr = Layout::stackRefToAddress(pyObjAddrs.at(i));
 			auto objPtr = addr ? PyObject::make(addr) : nullptr;
 			localsplus[i] = make_pair(names.at(i), move(objPtr));
 		}
@@ -84,9 +66,9 @@ namespace PyExt::Remote {
 		auto readRef = [](ExtRemoteTyped field) -> Offset {
 			if (field.HasField("bits")) {
 				auto bitsField = field.Field("bits");
-				return stackRefToAddress(utils::readIntegral<Offset>(bitsField));
+				return Layout::stackRefToAddress(utils::readIntegral<Offset>(bitsField));
 			}
-			return stackRefToAddress(field.GetPtr());
+			return Layout::stackRefToAddress(field.GetPtr());
 		};
 
 		// Try f_executable (Python 3.11+).

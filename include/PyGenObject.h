@@ -24,7 +24,7 @@ namespace PyExt::Remote {
 		auto qualname() const -> std::unique_ptr<PyStringValue>;
 		/// The raw `gi_frame_state` value, whose meaning depends on the Python version. nullopt before Python 3.11.
 		auto frameState() const -> std::optional<int>;
-		/// A lowercase name for the state such as "suspended", or empty if the state isn't available.
+		/// A lowercase name for the state such as "suspended", on every version.
 		auto frameStateString() const -> std::string;
 		auto frame() const -> std::unique_ptr<PyFrame>;
 		auto repr(bool pretty = true) const -> std::string override;
@@ -41,6 +41,9 @@ namespace PyExt::Remote {
 #pragma warning (pop)
 
 		auto prefixedField(const std::string& suffix) const -> std::string;
+
+		/// Works out the state on Python <= 3.10, which doesn't store one on the generator itself.
+		auto legacyFrameStateString() const -> std::string;
 	};
 
 

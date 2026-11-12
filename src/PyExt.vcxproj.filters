@@ -141,6 +141,12 @@
     <ClCompile Include="pysetautointerpreterstate.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="PyLayout.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ReprBuilder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="ExtHelpers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -247,6 +253,12 @@
     </ClInclude>
     <ClInclude Include="..\include\utils\ScopeExit.h">
       <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="PyLayout.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ReprBuilder.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ExtHelpers.h">
       <Filter>Header Files</Filter>

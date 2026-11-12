@@ -1,6 +1,7 @@
 #include "RemoteType.h"
 
 #include "ExtHelpers.h"
+#include "PyLayout.h"
 #include <engextcpp.hpp>
 
 #include <string>
@@ -17,7 +18,7 @@ namespace PyExt::Remote {
 
 	RemoteType::RemoteType(Offset objectAddress, const std::string& symbolName)
 		: symbolName_(symbolName),
-		  remoteType_(make_shared<ExtRemoteTyped>(symbolName.c_str(), objectAddress, true))
+		  remoteType_(make_shared<ExtRemoteTyped>(Layout::typedPointer(symbolName, objectAddress)))
 	{
 	}
 
@@ -53,7 +54,7 @@ namespace PyExt::Remote {
 
 	auto RemoteType::readOffsetArray(/*const*/ ExtRemoteTyped& remoteArray, std::uint64_t numElements) -> vector<Offset>
 	{
-		auto ptrSize = utils::getPointerSize();
+		auto ptrSize = Layout::pointerSize();
 		switch (ptrSize) {
 		case 4: {
 			// x86 - 32 Bit Python

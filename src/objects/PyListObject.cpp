@@ -1,6 +1,7 @@
 #include "PyListObject.h"
 
 #include "utils/lossless_cast.h"
+#include "../ReprBuilder.h"
 
 #include <engextcpp.hpp>
 
@@ -52,21 +53,21 @@ namespace PyExt::Remote {
 
 	auto PyListObject::repr(bool pretty) const -> string
 	{
-		ostringstream oss;
-		oss << "[ ";
+		utils::ReprBuilder out(pretty);
+		out.text("[ ");
 
 		auto count = numItems();
 		for (SSize i = 0; i < count; ++i) {
 			auto elem = at(i);
 			if (elem != nullptr)
-				oss << elem->repr(pretty);
+				out.markup(elem->repr(pretty));
 
 			if (i + 1 < count)
-				oss << ", ";
+				out.text(", ");
 		}
 
-		oss << " ]";
-		return oss.str();
+		out.text(" ]");
+		return out.str();
 	}
 
 }

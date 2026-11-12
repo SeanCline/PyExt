@@ -104,5 +104,8 @@ empty_cell_obj = _make_empty_cell()
 
 frame_obj = sys._getframe()
 
+import datetime
+extension_type_obj = datetime.date # A type implemented in C by an extension module rather than by the interpreter core.
+
 # Generate the dump with all of the objects above in the global scope for the test harness to inspect.
 win32debug.dump_process("object_types.dmp")
