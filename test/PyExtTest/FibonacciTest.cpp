@@ -21,7 +21,7 @@ using namespace PyExt::Remote;
 
 TEST_CASE("fibonacci_test.py has the expected line numbers.", "[integration][fibonacci_test]")
 {
-	auto dump = PythonDumpFile(TestConfigData::instance().fibonaciiDumpFileNameOrDefault());
+	auto dump = PythonDumpFile(TestConfigData::instance().fibonacciDumpFileNameOrDefault());
 
 	// Set up pyext.dll so it thinks DbgEng is calling into it.
 	PyExt::InitializeGlobalsForTest(dump.pClient.Get());

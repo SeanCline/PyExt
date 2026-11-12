@@ -13,7 +13,7 @@ struct TestConfigData {
 	}
 
 	std::string fibonacciDumpFileName;
-	auto fibonaciiDumpFileNameOrDefault() const -> std::string
+	auto fibonacciDumpFileNameOrDefault() const -> std::string
 	{
 		return fibonacciDumpFileName.empty() ? "fibonacci_test.dmp" : fibonacciDumpFileName;
 	}
@@ -39,7 +39,7 @@ struct TestConfigData {
 	std::string symbolPath;
 	auto symbolPathOrDefault() const -> std::string
 	{
-		return symbolPath.empty() ? "srv*c:\\symbols\\*http://pythonsymbols.sdcline.com/symbols/" : symbolPath;
+		return symbolPath.empty() ? "srv*c:\\symbols\\*https://pythonsymbols.sdcline.com/symbols/" : symbolPath;
 	}
 
 };

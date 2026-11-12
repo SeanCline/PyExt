@@ -90,7 +90,7 @@ namespace PyExt {
 
 		if (sympath.find("pythonsymbols.sdcline.com/symbols") == string::npos) {
 			Out("Adding symbol server to path...\n");
-			sympath = concatenatePaths(sympath, "srv*http://pythonsymbols.sdcline.com/symbols");
+			sympath = concatenatePaths(sympath, "srv*https://pythonsymbols.sdcline.com/symbols");
 		} else {
 			Out("Python symbol server already in path.\n");
 		}
