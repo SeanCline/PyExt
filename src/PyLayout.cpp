@@ -6,7 +6,6 @@
 
 #include <cstdint>
 #include <functional>
-#include <initializer_list>
 #include <map>
 #include <optional>
 #include <string>
@@ -25,50 +24,6 @@ namespace PyExt::Layout {
 
 	namespace {
 
-		struct PythonModule
-		{
-			string name;
-			ULONG64 base = 0;
-		};
-
-
-		auto findPythonModule() -> PythonModule
-		{
-			PythonModule module;
-			auto& symbols = g_Ext->m_Symbols;
-
-			// Locate the module through a symbol it defines rather than by guessing at the module's
-			// name, which varies ("python311", "python315t", "python315_d", ...).
-			// `_PyRuntime` (Python 3.7+) is used because it isn't part of the stable ABI. Stable ABI
-			// symbols are also exported from python3.dll as forwarders, and could resolve to that instead.
-			ULONG64 symbolOffset = 0;
-			ULONG moduleIndex = 0;
-			char nameBuffer[MAX_PATH] = {};
-			if (SUCCEEDED(symbols->GetOffsetByName("_PyRuntime", &symbolOffset))
-				&& SUCCEEDED(symbols->GetModuleByOffset(symbolOffset, 0, &moduleIndex, &module.base))
-				&& SUCCEEDED(symbols->GetModuleNames(moduleIndex, module.base,
-					nullptr, 0, nullptr, nameBuffer, sizeof(nameBuffer), nullptr, nullptr, 0, nullptr)))
-			{
-				module.name = nameBuffer;
-				return module;
-			}
-
-			// Older versions are always named "python" followed by their two or three digit version.
-			for (auto pattern : { "python???", "python??" }) {
-				try {
-					ExtBuffer<char> buffer;
-					g_Ext->FindFirstModule(pattern, &buffer, 0); //< Throws when nothing matches.
-					if (SUCCEEDED(symbols->GetModuleByModuleName(buffer.GetBuffer(), 0, nullptr, &module.base))) {
-						module.name = buffer.GetBuffer();
-						return module;
-					}
-				} catch (ExtException&) { }
-			}
-
-			return { };
-		}
-
-
 		struct TypeInfo
 		{
 			ULONG64 moduleBase = 0;
@@ -79,7 +34,7 @@ namespace PyExt::Layout {
 		// Looking anything up by name makes the debugger search symbols, which is slow enough to dominate
 		// the time it takes to print a large container when it's repeated for every element.
 		// These hold for as long as the target can't change underneath us. See resetCache().
-		optional<PythonModule> cachedModule;
+		optional<string> cachedModuleName;
 		map<string, TypeInfo, less<>> cachedTypes;
 
 	}
@@ -87,16 +42,25 @@ namespace PyExt::Layout {
 
 	auto resetCache() -> void
 	{
-		cachedModule.reset();
+		cachedModuleName.reset();
 		cachedTypes.clear();
 	}
 
 
 	auto pythonModuleName() -> string
 	{
-		if (!cachedModule.has_value())
-			cachedModule = findPythonModule();
-		return cachedModule->name;
+		if (!cachedModuleName.has_value()) {
+			// The runtime is the one module named "python" followed by its version: "python27", "python315",
+			// "python315t", "python315_d". Requiring two digits skips python.exe and the python3.dll forwarder.
+			try {
+				ExtBuffer<char> name;
+				g_Ext->FindFirstModule("python[0-9][0-9]*", &name);
+				cachedModuleName = name.GetBuffer();
+			} catch (ExtException&) {
+				cachedModuleName = ""; //< No such module, as when Python is linked statically into the executable.
+			}
+		}
+		return *cachedModuleName;
 	}
 
 
@@ -138,26 +102,6 @@ namespace PyExt::Layout {
 	}
 
 
-	auto versionHex() -> optional<uint32_t>
-	{
-		optional<uint32_t> version;
-		utils::ignoreExtensionError([&] {
-			ExtRemoteTyped remoteVersion("Py_Version");
-			version = utils::readIntegral<uint32_t>(remoteVersion);
-		});
-		return version;
-	}
-
-
-	auto minorVersion() -> optional<int>
-	{
-		auto version = versionHex();
-		if (!version.has_value())
-			return nullopt;
-		return static_cast<int>((*version >> 16) & 0xFF);
-	}
-
-
 	auto isFreeThreaded() -> bool
 	{
 		// Free-threaded builds record the owning thread of every object.
@@ -171,23 +115,13 @@ namespace PyExt::Layout {
 
 	auto enumeratorName(string_view enumName, int64_t value) -> optional<string>
 	{
-		// Hide the wall of text GetSymbolTypeId prints when the enum isn't in the PDB.
-		ExtCaptureOutputA ignoreOut;
-		ignoreOut.Start();
-
 		ULONG typeId = 0;
 		ULONG64 moduleBase = 0;
-		auto& symbols = g_Ext->m_Symbols3;
-		if (FAILED(symbols->GetSymbolTypeId(qualifiedSymbolName(enumName).c_str(), &typeId, &moduleBase)))
+		if (FAILED(g_Ext->m_Symbols3->GetSymbolTypeId(qualifiedSymbolName(enumName).c_str(), &typeId, &moduleBase)))
 			return nullopt;
 
-		// Negative enumerators may be stored sign-extended or as their 32-bit pattern.
 		char name[256] = {};
-		if (FAILED(symbols->GetConstantName(moduleBase, typeId, static_cast<ULONG64>(value), name, sizeof(name), nullptr))
-			&& FAILED(symbols->GetConstantName(moduleBase, typeId, static_cast<ULONG>(value), name, sizeof(name), nullptr)))
-			return nullopt;
-
-		if (name[0] == '\0')
+		if (FAILED(g_Ext->m_Symbols3->GetConstantName(moduleBase, typeId, static_cast<ULONG64>(value), name, sizeof(name), nullptr)))
 			return nullopt;
 		return name;
 	}

@@ -32,22 +32,17 @@ namespace PyExt::Layout {
 	auto pointerSize() -> int;
 
 	/// Name of the module that holds the Python runtime, such as "python315" or "python315t".
+	/// Empty if there is no such module.
 	auto pythonModuleName() -> std::string;
 
 	/// Qualifies a symbol with the Python module's name. An unqualified name makes the debugger search
 	/// every module in the process, which is slow and can find a different module's type of the same name.
 	auto qualifiedSymbolName(std::string_view symbolName) -> std::string;
 
-	/// The debuggee's PY_VERSION_HEX, or nullopt before Python 3.11 where `Py_Version` isn't exported.
-	auto versionHex() -> std::optional<std::uint32_t>;
-
-	/// The Y of Python X.Y, or nullopt when versionHex() is unavailable.
-	auto minorVersion() -> std::optional<int>;
-
 	/// True for builds without a GIL (the "t" builds of Python 3.13+), which use a different object header.
 	auto isFreeThreaded() -> bool;
 
-	/// Looks up the name CPython's own source gives to a value of one of its enums.
+	/// Looks up the name CPython's own source gives to a value of one of its enums, such as "FRAME_SUSPENDED".
 	/// Returns nullopt if the enum isn't in the symbols or has no enumerator with that value.
 	auto enumeratorName(std::string_view enumName, std::int64_t value) -> std::optional<std::string>;
 

@@ -73,10 +73,11 @@ namespace utils {
 	auto escapeDml(std::string_view str) -> std::string;
 	auto link(std::string_view text, std::string_view cmd, std::string_view alt = {}) -> std::string;
 
-	/// Appends a code point to a UTF-8 string. Lone surrogates are encoded as-is rather than rejected,
-	/// since Python strings are allowed to contain them.
+	/// Appends a code point to a UTF-8 string.
+	/// Anything that isn't a valid code point, such as a lone surrogate, becomes U+FFFD.
 	auto appendUtf8(std::string& out, char32_t codePoint) -> void;
 	auto utf8ToWide(std::string_view utf8) -> std::wstring;
+	auto wideToUtf8(std::wstring_view wide) -> std::string;
 
 	/// Converts UTF-8 to the debugger's ANSI code page for the output functions that have no wide
 	/// counterpart. Characters the code page can't represent are replaced.

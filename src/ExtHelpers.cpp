@@ -1,5 +1,7 @@
 #include "ExtHelpers.h"
 
+#include <climits>
+#include <cuchar>
 #include <string>
 #include <string_view>
 #include <sstream>
@@ -39,21 +41,14 @@ namespace utils {
 
 	auto appendUtf8(string& out, char32_t codePoint) -> void
 	{
-		if (codePoint < 0x80) {
-			out += static_cast<char>(codePoint);
-		} else if (codePoint < 0x800) {
-			out += static_cast<char>(0xC0 | (codePoint >> 6));
-			out += static_cast<char>(0x80 | (codePoint & 0x3F));
-		} else if (codePoint < 0x10000) {
-			out += static_cast<char>(0xE0 | (codePoint >> 12));
-			out += static_cast<char>(0x80 | ((codePoint >> 6) & 0x3F));
-			out += static_cast<char>(0x80 | (codePoint & 0x3F));
-		} else {
-			out += static_cast<char>(0xF0 | ((codePoint >> 18) & 0x07));
-			out += static_cast<char>(0x80 | ((codePoint >> 12) & 0x3F));
-			out += static_cast<char>(0x80 | ((codePoint >> 6) & 0x3F));
-			out += static_cast<char>(0x80 | (codePoint & 0x3F));
-		}
+		// Microsoft's c32rtomb always produces UTF-8, whatever the locale.
+		char utf8[MB_LEN_MAX];
+		mbstate_t state{};
+		auto length = c32rtomb(utf8, codePoint, &state);
+		if (length == static_cast<size_t>(-1))
+			out += "\xEF\xBF\xBD"; //< U+FFFD REPLACEMENT CHARACTER
+		else
+			out.append(utf8, length);
 	}
 
 
@@ -70,17 +65,28 @@ namespace utils {
 	}
 
 
-	auto utf8ToAnsi(string_view utf8) -> string
+	static auto wideToMultiByte(wstring_view wide, UINT codePage) -> string
 	{
-		const auto wide = utf8ToWide(utf8);
 		if (wide.empty())
 			return { };
 
 		auto wideSize = static_cast<int>(wide.size());
-		auto ansiSize = ::WideCharToMultiByte(CP_ACP, 0, wide.data(), wideSize, nullptr, 0, nullptr, nullptr);
-		string ansi(static_cast<size_t>(ansiSize), '\0');
-		::WideCharToMultiByte(CP_ACP, 0, wide.data(), wideSize, ansi.data(), ansiSize, nullptr, nullptr);
-		return ansi;
+		auto size = ::WideCharToMultiByte(codePage, 0, wide.data(), wideSize, nullptr, 0, nullptr, nullptr);
+		string result(static_cast<size_t>(size), '\0');
+		::WideCharToMultiByte(codePage, 0, wide.data(), wideSize, result.data(), size, nullptr, nullptr);
+		return result;
+	}
+
+
+	auto wideToUtf8(wstring_view wide) -> string
+	{
+		return wideToMultiByte(wide, CP_UTF8);
+	}
+
+
+	auto utf8ToAnsi(string_view utf8) -> string
+	{
+		return wideToMultiByte(utf8ToWide(utf8), CP_ACP);
 	}
 
 }

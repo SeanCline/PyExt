@@ -126,27 +126,6 @@ namespace PyExt::Remote {
 			return utf8;
 		}
 
-
-		// Converts UTF-16 to UTF-8, combining surrogate pairs.
-		auto utf16ToUtf8(const vector<wchar_t>& codeUnits) -> string
-		{
-			string utf8;
-			utf8.reserve(codeUnits.size());
-			for (size_t i = 0; i < codeUnits.size(); ++i) {
-				char32_t codePoint = codeUnits[i];
-				const bool isHighSurrogate = codePoint >= 0xD800 && codePoint <= 0xDBFF;
-				if (isHighSurrogate && i + 1 < codeUnits.size()) {
-					char32_t low = codeUnits[i + 1];
-					if (low >= 0xDC00 && low <= 0xDFFF) {
-						codePoint = 0x10000 + ((codePoint - 0xD800) << 10) + (low - 0xDC00);
-						++i;
-					}
-				}
-				utils::appendUtf8(utf8, codePoint);
-			}
-			return utf8;
-		}
-
 	}
 
 
@@ -168,7 +147,8 @@ namespace PyExt::Remote {
 			auto wstrField = getField(remoteType(), "wstr");
 			if (wstrField.GetPtr() == 0)
 				return { };
-			return utf16ToUtf8(utils::readArray<wchar_t>(wstrField, length));
+			auto wstr = utils::readArray<wchar_t>(wstrField, length);
+			return utils::wideToUtf8({ wstr.data(), wstr.size() });
 		}
 
 		Offset dataPtr = 0;

@@ -11,8 +11,8 @@
 
 #include <engextcpp.hpp>
 
-#include <algorithm>
 #include <cctype>
+#include <cstring>
 #include <optional>
 #include <sstream>
 #include <string>
@@ -20,20 +20,21 @@ using namespace std;
 
 namespace {
 
-	// Returns the lowercased name of a `_framestate` enumerator without its FRAME_ prefix, e.g. "suspended".
-	auto frameStateNameFromSymbols(int state) -> optional<string>
+	// Names a value of CPython's `enum _framestate` the way the rest of PyExt's output is written:
+	// "FRAME_SUSPENDED" becomes "suspended".
+	//
+	// The enum's values were renumbered in Python 3.13 and again in 3.15, so the name is looked up
+	// in the debuggee's symbols rather than in a table of our own that would go stale.
+	auto frameStateName(int state) -> string
 	{
 		auto name = PyExt::Layout::enumeratorName("_framestate", state);
-		if (!name.has_value())
-			return nullopt;
+		if (!name.has_value() || !name->starts_with("FRAME_"))
+			return "unknown state " + to_string(state);
 
-		const string prefix = "FRAME_";
-		if (name->starts_with(prefix))
-			name->erase(0, prefix.size());
-		if (name->empty())
-			return nullopt;
-		transform(name->begin(), name->end(), name->begin(), [](unsigned char c) { return static_cast<char>(tolower(c)); });
-		return name;
+		name->erase(0, strlen("FRAME_"));
+		for (auto& c : *name)
+			c = static_cast<char>(tolower(static_cast<unsigned char>(c)));
+		return *name;
 	}
 
 }
@@ -82,33 +83,7 @@ namespace PyExt::Remote {
 		auto state = frameState();
 		if (!state.has_value())
 			return legacyFrameStateString();
-
-		// The values of `enum _framestate` were renumbered in 3.13 and again in 3.15, so the
-		// debuggee's own symbols are the authority on what a value means.
-		if (auto name = frameStateNameFromSymbols(*state); name.has_value())
-			return *name;
-
-		// Fall back on what Include/internal/pycore_frame.h says for the versions we know about.
-		const auto minorVersion = Layout::minorVersion().value_or(0);
-		if (minorVersion == 11 || minorVersion == 12) {
-			switch (*state) {
-			case -2: return "created";
-			case -1: return "suspended";
-			case 0:  return "executing";
-			case 1:  return "completed";
-			case 4:  return "cleared";
-			}
-		} else if (minorVersion == 13 || minorVersion == 14) {
-			switch (*state) {
-			case -3: return "created";
-			case -2: return "suspended";
-			case -1: return "suspended_yield_from";
-			case 0:  return "executing";
-			case 1:  return "completed";
-			case 4:  return "cleared";
-			}
-		}
-		return "unknown state " + to_string(*state);
+		return frameStateName(*state);
 	}
 
 
@@ -126,20 +101,7 @@ namespace PyExt::Remote {
 		// Python 3.10 keeps the state on the frame object.
 		if (frameField.HasField("f_state")) {
 			auto stateField = frameField.Field("f_state");
-			auto state = utils::readIntegral<int>(stateField);
-			if (auto name = frameStateNameFromSymbols(state); name.has_value())
-				return *name;
-
-			switch (state) {
-			case -2: return "created";
-			case -1: return "suspended";
-			case 0:  return "executing";
-			case 1:  return "returned";
-			case 2:  return "unwinding";
-			case 3:  return "raised";
-			case 4:  return "cleared";
-			}
-			return "unknown state " + to_string(state);
+			return frameStateName(utils::readIntegral<int>(stateField));
 		}
 
 		// Before that there is only a running flag, and the frame's last instruction to say whether it has started.
